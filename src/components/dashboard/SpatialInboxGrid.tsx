@@ -20,6 +20,7 @@ interface SpatialInboxGridProps {
   onAddNewTask: () => void;
   selectedAssignee: Assignee;
   onAssigneeChange: (assignee: Assignee) => void;
+  isWidgetMode?: boolean;
 }
 
 export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
@@ -29,11 +30,22 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
   onAddNewTask,
   selectedAssignee,
   onAssigneeChange,
+  isWidgetMode = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<RoomArea>('Все');
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'all' | 'Дом' | 'Финансы'>('all');
+  const [selectedProject, setSelectedProject] = useState<string>('all');
+  const [isGroupedByProject, setIsGroupedByProject] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
+
+  // Extract distinct projects
+  const availableProjects = React.useMemo(() => {
+    const set = new Set<string>();
+    tasks.forEach((t) => {
+      if (t.projectName) set.add(t.projectName);
+    });
+    return Array.from(set);
+  }, [tasks]);
 
   // Filter inbox tasks
   const inboxTasks = tasks.filter((t) => {
@@ -51,8 +63,8 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
       return false;
     }
 
-    // Category filter
-    if (selectedCategoryFilter !== 'all' && t.category !== selectedCategoryFilter) {
+    // Project filter
+    if (selectedProject !== 'all' && t.projectName !== selectedProject) {
       return false;
     }
 
@@ -89,20 +101,50 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
   const rooms: RoomArea[] = ['Все', 'Ванная', 'Кухня', 'Балкон', 'Комната'];
 
   return (
-    <div className="w-full rounded-[14px] p-4 bg-[#12161f]/60 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.12)] flex flex-col gap-3.5">
+    <div className={`w-full rounded-[14px] p-4 transition-all ${
+      isWidgetMode 
+        ? 'bg-transparent border border-white/[0.06] shadow-none' 
+        : 'bg-[#12161f]/60 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.12)]'
+    } flex flex-col gap-3.5`}>
       {/* Inbox Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
         {/* Title & Badge */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <h2 className="text-[12.5px] font-bold text-white uppercase tracking-wider">
             Входящие и без срока
           </h2>
           <span className="px-2 py-0.5 rounded-full bg-white/[0.1] text-amber-300 font-mono-num text-[11px] font-bold border border-white/[0.08]">
             {inboxTasks.length}
           </span>
-          <span className="hidden sm:inline text-[11px] text-zinc-400">
-            TickTick Inbox Live
-          </span>
+          {availableProjects.length > 0 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setSelectedProject('all')}
+                className={`h-5 px-2 rounded text-[10.5px] font-medium transition-all ${
+                  selectedProject === 'all'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    : 'text-zinc-400 hover:text-white bg-white/[0.04]'
+                }`}
+              >
+                Все списки
+              </button>
+              {availableProjects.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setSelectedProject(p)}
+                  className={`h-5 px-2 rounded text-[10.5px] font-medium transition-all ${
+                    selectedProject === p
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      : 'text-zinc-400 hover:text-white bg-white/[0.04]'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Filters and Search Bar */}
@@ -158,7 +200,7 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Поиск..."
-              className="h-7 w-[140px] sm:w-[170px] pl-7 pr-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11.5px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 transition-all"
+              className="h-7 w-[130px] sm:w-[150px] pl-7 pr-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11.5px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-amber-400/50 transition-all"
             />
           </div>
 

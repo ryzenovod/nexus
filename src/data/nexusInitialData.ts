@@ -32,6 +32,7 @@ export const initialTasks: NexusTask[] = [
     "date": "2026-11-02",
     "isOverdue": true,
     "isRegular": true,
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T19:10:42.000+0000",
     "order": 0,
     "tags": [
@@ -50,6 +51,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-31T13:44:20.000+0000",
     "order": 1,
     "tags": [
@@ -65,6 +67,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:19:44.000+0000",
     "order": 3,
     "tags": [
@@ -82,6 +85,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T19:13:45.000+0000",
     "order": 5,
     "tags": [
@@ -98,6 +102,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T19:10:50.000+0000",
     "order": 7,
     "tags": [
@@ -114,6 +119,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T19:10:11.000+0000",
     "order": 9,
     "tags": [
@@ -129,6 +135,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T19:10:08.000+0000",
     "order": 11,
     "tags": [
@@ -146,6 +153,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:44:16.000+0000",
     "order": 13,
     "tags": [
@@ -161,6 +169,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:20:16.000+0000",
     "order": 15,
     "tags": [
@@ -178,6 +187,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:39:23.000+0000",
     "order": 17,
     "tags": [
@@ -193,6 +203,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:39:14.000+0000",
     "order": 19,
     "tags": [
@@ -208,6 +219,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:38:44.000+0000",
     "order": 21,
     "tags": [
@@ -223,6 +235,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:20:03.000+0000",
     "order": 23,
     "tags": [
@@ -240,6 +253,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:31:14.000+0000",
     "order": 25,
     "tags": [
@@ -255,6 +269,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:31:20.000+0000",
     "order": 27,
     "tags": [
@@ -270,6 +285,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:31:26.000+0000",
     "order": 29,
     "tags": [
@@ -285,6 +301,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:32:12.000+0000",
     "order": 31,
     "tags": [
@@ -300,6 +317,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:34:37.000+0000",
     "order": 33,
     "tags": [
@@ -315,6 +333,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Балкон",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:37:31.000+0000",
     "order": 35,
     "tags": [
@@ -330,6 +349,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Балкон",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:19:51.000+0000",
     "order": 37,
     "tags": [
@@ -347,6 +367,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:46:27.000+0000",
     "order": 39,
     "tags": [
@@ -362,6 +383,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:37:05.000+0000",
     "order": 41,
     "tags": [
@@ -377,6 +399,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:30:59.000+0000",
     "order": 43,
     "tags": [
@@ -392,6 +415,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Балкон",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:26:19.000+0000",
     "order": 45,
     "tags": [
@@ -407,6 +431,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:23:10.000+0000",
     "order": 47,
     "tags": [
@@ -422,6 +447,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T13:51:53.000+0000",
     "order": 49,
     "tags": [
@@ -437,6 +463,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T13:52:18.000+0000",
     "order": 51,
     "tags": [
@@ -452,6 +479,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T13:52:30.000+0000",
     "order": 53,
     "tags": [
@@ -467,6 +495,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Балкон",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:26:35.000+0000",
     "order": 55,
     "tags": [
@@ -482,6 +511,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Балкон",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:26:27.000+0000",
     "order": 57,
     "tags": [
@@ -497,6 +527,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:26:49.000+0000",
     "order": 59,
     "tags": [
@@ -512,6 +543,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-25T18:20:10.000+0000",
     "order": 61,
     "tags": [
@@ -529,6 +561,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:28:03.000+0000",
     "order": 63,
     "tags": [
@@ -544,6 +577,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:28:12.000+0000",
     "order": 65,
     "tags": [
@@ -559,6 +593,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:28:41.000+0000",
     "order": 67,
     "tags": [
@@ -574,6 +609,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:29:01.000+0000",
     "order": 69,
     "tags": [
@@ -589,6 +625,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Все",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:30:39.000+0000",
     "order": 71,
     "tags": [
@@ -604,6 +641,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:30:43.000+0000",
     "order": 73,
     "tags": [
@@ -619,6 +657,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:30:48.000+0000",
     "order": 75,
     "tags": [
@@ -634,6 +673,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:31:18.000+0000",
     "order": 77,
     "tags": [
@@ -649,6 +689,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:33:13.000+0000",
     "order": 79,
     "tags": [
@@ -664,6 +705,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:35:04.000+0000",
     "order": 81,
     "tags": [
@@ -679,6 +721,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:35:09.000+0000",
     "order": 83,
     "tags": [
@@ -694,6 +737,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:35:15.000+0000",
     "order": 85,
     "tags": [
@@ -709,6 +753,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:36:09.000+0000",
     "order": 87,
     "tags": [
@@ -724,6 +769,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:36:26.000+0000",
     "order": 89,
     "tags": [
@@ -739,6 +785,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:36:34.000+0000",
     "order": 91,
     "tags": [
@@ -754,6 +801,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:36:43.000+0000",
     "order": 93,
     "tags": [
@@ -769,6 +817,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Комната",
     "assignee": "egor",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:36:53.000+0000",
     "order": 95,
     "tags": [
@@ -784,6 +833,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-21T14:37:54.000+0000",
     "order": 97,
     "tags": [
@@ -799,6 +849,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:32:00.000+0000",
     "order": 99,
     "tags": [
@@ -814,6 +865,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:32:29.000+0000",
     "order": 101,
     "tags": [
@@ -829,6 +881,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:34:42.000+0000",
     "order": 103,
     "tags": [
@@ -844,6 +897,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Балкон",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:36:34.000+0000",
     "order": 105,
     "tags": [
@@ -859,6 +913,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Кухня",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-07T14:36:43.000+0000",
     "order": 107,
     "tags": [
@@ -874,6 +929,7 @@ export const initialTasks: NexusTask[] = [
     "room": "Ванная",
     "assignee": "together",
     "date": "inbox",
+    "projectName": "📦Для дома!",
     "createdAt": "2026-10-09T14:38:45.000+0000",
     "order": 109,
     "tags": [
@@ -884,173 +940,147 @@ export const initialTasks: NexusTask[] = [
 
 export const initialWishlist: WishlistItem[] = [
   {
-    id: 'wish-1',
-    title: 'Тарелки плоские?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Уточнить диаметр и материал вместе',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ac657b23f3092eba2b02aa2",
+    "title": "Тарелки плоские?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-07T14:31:14.000+0000"
   },
   {
-    id: 'wish-2',
-    title: 'Тарелки глубокие?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Боулы для пасты/супа',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ac657b83f3092eba2b02ab0",
+    "title": "Тарелки глубокие?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-07T14:31:20.000+0000"
   },
   {
-    id: 'wish-3',
-    title: 'Нож еще надо?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Шеф или универсальный',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ac657be3f3092eba2b02abe",
+    "title": "Нож еще надо?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-07T14:31:26.000+0000"
   },
   {
-    id: 'wish-4',
-    title: 'Поварешки, лопатка?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Силиконовые жаропрочные',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ac657ec3f3092eba2b02af6",
+    "title": "Поварешки, лопатка?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-07T14:32:12.000+0000"
   },
   {
-    id: 'wish-5',
-    title: 'Стаканы?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Набор высоких стаканов',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ac6587d3f3092eba2b02b82",
+    "title": "Стаканы?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-07T14:34:37.000+0000"
   },
   {
-    id: 'wish-6',
-    title: 'Скатерть?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Размер на кухонный стол',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ad8d043bf00032b8b10cc14",
+    "title": "Что делаем 4 ноября?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-21T14:46:27.000+0000"
   },
   {
-    id: 'wish-7',
-    title: 'Сушилка для посуды?',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'С поддоном',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ad8cc8fbf00032b8b10c9f7",
+    "title": "Перестановка?",
+    "category": "Комната",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-21T14:30:39.000+0000"
   },
   {
-    id: 'wish-8',
-    title: 'Сковорода поменьше',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Для яичницы и быстрых завтраков',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ad8cdd9bf00032b8b10cb5f",
+    "title": "Скатерть?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-21T14:36:09.000+0000"
   },
   {
-    id: 'wish-9',
-    title: 'Салатник / под тесто',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Большая стеклянная или металлическая миска',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ad8cdeabf00032b8b10cb6d",
+    "title": "Подставка под ложки?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-21T14:36:26.000+0000"
   },
   {
-    id: 'wish-10',
-    title: 'Заварник (в посылке + купить?)',
-    category: 'Кухня',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Проверить посылку, если нет — выбрать стеклянный с фильтром',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ad8cdf2bf00032b8b10cb7b",
+    "title": "Сушилка для посуды?",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-21T14:36:34.000+0000"
   },
   {
-    id: 'wish-11',
-    title: 'Коврик в ванную',
-    category: 'Ванная',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Быстросохнущий / диатомитовый или мягкий',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
-  },
-  {
-    id: 'wish-12',
-    title: 'Подушка мне',
-    category: 'Комната',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'Анатомическая / удобная',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'egor',
-    createdAt: '2026-11-02T10:00:00Z'
-  },
-  {
-    id: 'wish-13',
-    title: 'Корзина для белья',
-    category: 'Ванная',
-    estimatedPrice: 0,
-    link: '',
-    notes: 'В ванную или коридор',
-    egorVote: null,
-    anyaVote: null,
-    status: 'pending',
-    addedBy: 'together',
-    createdAt: '2026-11-02T10:00:00Z'
+    "id": "wish-6ac658823f3092eba2b02b92",
+    "title": "Заварник (в посылке + купить?)",
+    "category": "Кухня",
+    "estimatedPrice": 0,
+    "link": "",
+    "notes": "Автоматически подтянуто из TickTick",
+    "egorVote": null,
+    "anyaVote": null,
+    "status": "pending",
+    "addedBy": "together",
+    "createdAt": "2026-10-07T14:34:42.000+0000"
   }
 ];
 

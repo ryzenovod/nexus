@@ -41,105 +41,73 @@ export async function testSupabaseConnection(url: string, anonKey: string): Prom
 
 export const SUPABASE_SQL_SCHEMA = `-- =========================================================
 -- NEXUS COUPLE LIFE OS // DATABASE MIGRATION SCRIPT
+-- Unified table for Live Feed from fetch_data.py + Couple Shared State
 -- Run this script in your Supabase Project -> SQL Editor
 -- =========================================================
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- 1. Tasks Table (Command Center & Inbox)
-CREATE TABLE IF NOT EXISTS nexus_tasks (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  notes TEXT,
-  completed BOOLEAN DEFAULT FALSE,
-  bracket_color TEXT NOT NULL DEFAULT 'active',
-  category TEXT NOT NULL DEFAULT 'Дом',
-  room TEXT DEFAULT 'Все',
-  assignee TEXT NOT NULL DEFAULT 'together',
-  date TEXT NOT NULL DEFAULT 'inbox',
-  is_overdue BOOLEAN DEFAULT FALSE,
-  is_regular BOOLEAN DEFAULT FALSE,
-  regular_period TEXT,
-  is_hub BOOLEAN DEFAULT FALSE,
-  subtask_count INTEGER DEFAULT 0,
-  price NUMERIC,
-  link TEXT,
-  tags TEXT[],
-  "order" INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+create table if not exists public.nexus_sync (
+  id text primary key,
+  payload jsonb not null default '{}'::jsonb,
+  shared_state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now()
 );
 
--- 2. Wishlist & Household Purchases Table
-CREATE TABLE IF NOT EXISTS nexus_wishlist (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  category TEXT NOT NULL,
-  estimated_price NUMERIC DEFAULT 0,
-  link TEXT,
-  notes TEXT,
-  egor_vote TEXT,
-  anya_vote TEXT,
-  status TEXT DEFAULT 'pending',
-  added_by TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+alter table public.nexus_sync enable row level security;
 
--- 3. Finance Transactions
-CREATE TABLE IF NOT EXISTS nexus_finances (
-  id TEXT PRIMARY KEY,
-  date TEXT NOT NULL,
-  title TEXT NOT NULL,
-  amount NUMERIC NOT NULL,
-  type TEXT NOT NULL DEFAULT 'expense',
-  category TEXT NOT NULL,
-  paid_by TEXT NOT NULL,
-  split_ratio TEXT NOT NULL DEFAULT '50/50',
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+drop policy if exists "Allow public read/write for couple" on public.nexus_sync;
+create policy "Allow public read/write for couple" on public.nexus_sync for all using (true) with check (true);
 
--- 4. Study & Work Items
-CREATE TABLE IF NOT EXISTS nexus_study_work (
-  id TEXT PRIMARY KEY,
-  space TEXT NOT NULL,
-  "user" TEXT NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  course_or_project TEXT,
-  status TEXT NOT NULL DEFAULT 'backlog',
-  priority TEXT NOT NULL DEFAULT 'medium',
-  deadline TEXT,
-  timezone_note TEXT,
-  tags TEXT[],
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 5. Row Level Security (RLS) - Public anon access for couple sync
-ALTER TABLE nexus_tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nexus_wishlist ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nexus_finances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nexus_study_work ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow public anon access for nexus_tasks" ON nexus_tasks;
-CREATE POLICY "Allow public anon access for nexus_tasks" ON nexus_tasks FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public anon access for nexus_wishlist" ON nexus_wishlist;
-CREATE POLICY "Allow public anon access for nexus_wishlist" ON nexus_wishlist FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public anon access for nexus_finances" ON nexus_finances;
-CREATE POLICY "Allow public anon access for nexus_finances" ON nexus_finances FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public anon access for nexus_study_work" ON nexus_study_work;
-CREATE POLICY "Allow public anon access for nexus_study_work" ON nexus_study_work FOR ALL USING (true) WITH CHECK (true);
-
--- Enable Realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_wishlist;
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_finances;
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_study_work;
+-- Enable Realtime for instant push across all 4 devices
+alter publication supabase_realtime add table public.nexus_sync;
 `;
+
+export async function fetchNexusSyncFeed(url: string, anonKey: string): Promise<{ payload: any; shared_state?: any } | null> {
+  try {
+    const endpoint = `${url.replace(/\/$/, '')}/rest/v1/nexus_sync?id=eq.main_feed&select=*`;
+    const resp = await fetch(endpoint, {
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+    });
+    if (!resp.ok) return null;
+    const rows = await resp.json();
+    if (Array.isArray(rows) && rows.length > 0) {
+      return {
+        payload: rows[0].payload,
+        shared_state: rows[0].shared_state,
+      };
+    }
+    return null;
+  } catch (e) {
+    console.warn('Failed to fetch from Supabase nexus_sync:', e);
+    return null;
+  }
+}
+
+export async function pushSharedStateToNexusSync(url: string, anonKey: string, sharedState: any): Promise<boolean> {
+  try {
+    const endpoint = `${url.replace(/\/$/, '')}/rest/v1/nexus_sync`;
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        id: 'main_feed',
+        shared_state: sharedState,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+    return resp.ok;
+  } catch (e) {
+    console.warn('Failed to push shared state to Supabase:', e);
+    return false;
+  }
+}
 
 export interface SyncPayload {
   tasks: NexusTask[];

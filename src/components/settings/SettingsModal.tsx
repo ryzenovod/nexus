@@ -33,7 +33,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     supabaseConfig,
     setSupabaseConfig,
     syncWithSupabase,
+    syncWithLivePipeline,
+    pushCloudState,
+    saveSupabaseToLocalEnv,
     isSyncing,
+    isSyncingLive,
     resetToDefaultData,
     tasks,
     budget,
@@ -46,6 +50,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [url, setUrl] = useState(supabaseConfig.url || '');
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey || '');
   const [copiedSql, setCopiedSql] = useState(false);
+  const [envSaveStatus, setEnvSaveStatus] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
 
@@ -83,6 +88,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
     setCopiedSql(true);
     setTimeout(() => setCopiedSql(false), 2000);
+  };
+
+  const handleSaveToLocalEnv = async () => {
+    if (!url.trim() || !anonKey.trim()) {
+      setEnvSaveStatus('Сначала укажите URL и Anon Key выше');
+      setTimeout(() => setEnvSaveStatus(null), 3000);
+      return;
+    }
+    const res = await saveSupabaseToLocalEnv(url.trim(), anonKey.trim());
+    setEnvSaveStatus(res.message || 'Ключи сохранены!');
+    // Also copy bash command
+    navigator.clipboard.writeText(`echo "SUPABASE_URL=\\"${url.trim()}\\"\\nSUPABASE_KEY=\\"${anonKey.trim()}\\"" > ~/.config/ubersicht-dashboard/.env`);
+    setTimeout(() => setEnvSaveStatus(null), 6000);
   };
 
   // Export all state to JSON
@@ -253,35 +271,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             )}
 
+            {envSaveStatus && (
+              <div className="rounded-lg p-2.5 text-xs bg-sky-500/10 border border-sky-500/30 text-sky-300 font-mono whitespace-pre-line">
+                {envSaveStatus}
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleTestConnection}
                   disabled={isTesting}
-                  className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+                  className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer"
                 >
                   {isTesting ? 'Проверка...' : 'Проверить и сохранить'}
                 </button>
 
-                {supabaseConfig.isConnected && (
-                  <button
-                    type="button"
-                    onClick={() => syncWithSupabase()}
-                    disabled={isSyncing}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/20 px-3 py-1.5 text-xs font-semibold text-white transition-colors"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                    <span>Синхронизировать сейчас</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleSaveToLocalEnv}
+                  className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-1.5 text-xs font-semibold text-amber-200 transition-colors cursor-pointer"
+                  title="Записать ключи в ~/.config/ubersicht-dashboard/.env для автоматического пуша из Übersicht"
+                >
+                  <span>⚡️ Прописать ключи в fetch_data.py</span>
+                </button>
               </div>
 
               {/* One Click SQL Migration Copy */}
               <button
                 type="button"
                 onClick={handleCopySql}
-                className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.06] hover:bg-white/[0.12] px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors cursor-pointer"
               >
                 {copiedSql ? (
                   <>
@@ -290,8 +311,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" />
-                    <span>Скопировать SQL для Supabase</span>
+                    <Copy className="h-3.5 w-3.5 text-amber-400" />
+                    <span>📋 Скопировать готовый SQL для Supabase</span>
                   </>
                 )}
               </button>
