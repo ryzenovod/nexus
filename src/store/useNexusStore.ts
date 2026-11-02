@@ -40,7 +40,7 @@ import {
   initialHSECalculators,
   initialRUDNSubjects
 } from '../data/blueprintAndDatesData';
-import { getSupabaseClient } from '../services/supabaseClient';
+import { getSupabaseClient, executeBidirectionalSync } from '../services/supabaseClient';
 import { cozyAudio } from '../utils/CozyAudioSynthesizer';
 import { soundEffects } from '../utils/soundEffects';
 import { telegramBotService } from '../services/telegramBotService';
@@ -930,30 +930,19 @@ export const useNexusStore = create<NexusState>()(
         try {
           const client = getSupabaseClient(supabaseConfig.url, supabaseConfig.anonKey);
           if (client) {
-            const { tasks } = get();
-            for (const task of tasks) {
-              await client.from('nexus_tasks').upsert({
-                id: task.id,
-                title: task.title,
-                notes: task.notes,
-                completed: task.completed,
-                bracket_color: task.bracketColor,
-                category: task.category,
-                room: task.room,
-                assignee: task.assignee,
-                date: task.date,
-                is_overdue: task.isOverdue,
-                is_regular: task.isRegular,
-                regular_period: task.regularPeriod,
-                is_hub: task.isHub,
-                subtask_count: task.subtaskCount,
-                price: task.price,
-                link: task.link,
-                tags: task.tags,
-                order: task.order,
-              });
-            }
+            const { tasks, wishlist, transactions, studyWorkItems } = get();
+            const synced = await executeBidirectionalSync(client, {
+              tasks,
+              wishlist,
+              finances: transactions,
+              studyWork: studyWorkItems,
+            });
+
             set((state) => ({
+              tasks: synced.tasks,
+              wishlist: synced.wishlist,
+              transactions: synced.finances,
+              studyWorkItems: synced.studyWork,
               supabaseConfig: {
                 ...state.supabaseConfig,
                 isConnected: true,
