@@ -189,30 +189,30 @@ export const ApartmentBlueprint: React.FC = () => {
   const roomEstimatedRepairCost = roomPins.reduce((acc, p) => acc + (p.estimatedCost || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Banner & Room Switcher Pills */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0d0e19]/80 p-5 backdrop-blur-2xl shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 sm:p-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
               <Layers className="h-4 w-4" />
             </span>
             <div>
-              <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                Интерактивный Архитектурный План Квартиры
-                <span className="rounded-full bg-gradient-to-r from-amber-500/20 to-purple-500/20 px-2.5 py-0.5 text-[11px] font-mono text-amber-300 border border-amber-500/30">
-                  Starry Cozy Blueprint
+              <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+                <span>Интерактивный Архитектурный План Квартиры</span>
+                <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/[0.08]">
+                  План комнат
                 </span>
               </h2>
               <p className="text-xs text-zinc-400">
-                Кликай по комнатам — Котик Нексус перебегает в выбранную зону, зажигая тёплый свет `#f59e0b`!
+                Кликай по комнатам — Котик Нексус перебегает в выбранную зону, зажигая тёплый свет!
               </p>
             </div>
           </div>
         </div>
 
         {/* Room Switcher Pills with Live Percent */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {ROOMS_CONFIG.map((room) => {
             const stats = getRoomStats(room.id);
             const isSelected = selectedBlueprintRoom === room.id;
@@ -221,10 +221,10 @@ export const ApartmentBlueprint: React.FC = () => {
                 key={room.id}
                 type="button"
                 onClick={() => handleRoomClick(room.id)}
-                className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                   isSelected
-                    ? 'bg-amber-500/20 text-amber-200 border border-amber-500/50 shadow-lg shadow-amber-500/10'
-                    : 'bg-white/[0.04] text-zinc-400 border border-white/10 hover:bg-white/[0.08] hover:text-zinc-200'
+                    ? 'bg-white/[0.12] text-zinc-100 border border-white/[0.15]'
+                    : 'bg-white/[0.03] text-zinc-400 border border-white/[0.06] hover:text-zinc-200'
                 }`}
               >
                 <span>{room.icon}</span>

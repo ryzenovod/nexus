@@ -73,40 +73,42 @@ export const FinancesModule: React.FC = () => {
   const anyaSharePercent = 100 - egorSharePercent;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* 1. TOP SECTION: JOINT BUDGET DASHBOARD */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Total Joint Balance Card */}
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-950/40 via-[#0f1115]/80 to-black/80 backdrop-blur-2xl p-5 shadow-glass">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
-              Совместный бюджет пары
-            </span>
-            <span className="flex h-6 items-center rounded-full bg-emerald-500/20 px-2 font-mono text-[11px] font-bold text-emerald-400 border border-emerald-500/30">
-              Взносы: {budget.depositDates}
-            </span>
-          </div>
-
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="font-mono text-3xl font-extrabold text-white tracking-tight">
-              {budget.currentBalance.toLocaleString('ru-RU')} ₽
-            </span>
-            <span className="text-xs text-zinc-400">
-              / цель {budget.totalTarget.toLocaleString('ru-RU')} ₽
-            </span>
-          </div>
-
-          {/* Progress Bar of Target */}
-          <div className="mt-4 space-y-1.5">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-black/50 border border-white/5">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-amber-400 to-emerald-400 transition-all duration-500"
-                style={{ width: `${Math.min(100, (budget.currentBalance / budget.totalTarget) * 100)}%` }}
-              />
+        <div className="rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                Совместный бюджет пары
+              </span>
+              <span className="flex h-5 items-center rounded bg-emerald-500/10 px-1.5 font-mono text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
+                Взносы: {budget.depositDates}
+              </span>
             </div>
-            <div className="flex justify-between text-[11px] text-zinc-400">
-              <span>Целевой фонд месяца</span>
-              <span>{Math.round((budget.currentBalance / budget.totalTarget) * 100)}% собрано</span>
+
+            <div className="mt-2.5 flex items-baseline gap-2">
+              <span className="font-mono text-2xl font-bold text-zinc-100 tracking-tight">
+                {budget.currentBalance.toLocaleString('ru-RU')} ₽
+              </span>
+              <span className="text-xs text-zinc-500">
+                / {budget.totalTarget.toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+
+            {/* Progress Bar of Target */}
+            <div className="mt-3 space-y-1">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+                <div
+                  className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                  style={{ width: `${Math.min(100, (budget.currentBalance / budget.totalTarget) * 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
+                <span>Целевой фонд</span>
+                <span>{Math.round((budget.currentBalance / budget.totalTarget) * 100)}% собрано</span>
+              </div>
             </div>
           </div>
 
@@ -117,7 +119,7 @@ export const FinancesModule: React.FC = () => {
               setNewTxCategory('Общий счет');
               setShowAddTxModal(true);
             }}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-white/10 py-2 text-xs font-medium text-white hover:bg-white/20 transition-all"
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-white py-1.5 text-xs font-medium text-zinc-950 transition-colors"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
             <span>Пополнить общий счет</span>
@@ -125,57 +127,57 @@ export const FinancesModule: React.FC = () => {
         </div>
 
         {/* Egor Contribution Card */}
-        <div className="rounded-2xl border border-indigo-500/30 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-400">
-                E
-              </span>
-              <span className="text-sm font-bold text-zinc-100">Вклад Егора</span>
+        <div className="rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-blue-400" />
+                <span className="text-xs font-semibold text-zinc-200">Вклад Егора</span>
+              </div>
+              <span className="font-mono text-[11px] text-zinc-400">{egorSharePercent}% доли</span>
             </div>
-            <span className="font-mono text-xs text-indigo-300">{egorSharePercent}% доли</span>
+
+            <div className="mt-2.5">
+              <span className="font-mono text-xl font-bold text-zinc-100">
+                {budget.egorContribution.toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+
+            <p className="mt-1.5 text-[11px] text-zinc-400 leading-relaxed">
+              Аренда, интернет, техника, ремонт душевой кабины и закупка в Леруа.
+            </p>
           </div>
 
-          <div className="mt-3">
-            <span className="font-mono text-2xl font-bold text-white">
-              {budget.egorContribution.toLocaleString('ru-RU')} ₽
-            </span>
-          </div>
-
-          <p className="mt-2 text-xs text-zinc-400">
-            Оплачивает: аренду, интернет, технику, ремонт душевой кабины и закупку в Леруа.
-          </p>
-
-          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
-            <span>Статус за ноябрь:</span>
+          <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
+            <span>Статус:</span>
             <span className="text-emerald-400 font-medium">Переведено в полном объеме</span>
           </div>
         </div>
 
         {/* Anya Contribution Card */}
-        <div className="rounded-2xl border border-rose-500/30 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/20 text-xs font-bold text-rose-400">
-                A
-              </span>
-              <span className="text-sm font-bold text-zinc-100">Вклад Ани</span>
+        <div className="rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-pink-400" />
+                <span className="text-xs font-semibold text-zinc-200">Вклад Ани</span>
+              </div>
+              <span className="font-mono text-[11px] text-zinc-400">{anyaSharePercent}% доли</span>
             </div>
-            <span className="font-mono text-xs text-rose-300">{anyaSharePercent}% доли</span>
+
+            <div className="mt-2.5">
+              <span className="font-mono text-xl font-bold text-zinc-100">
+                {budget.anyaContribution.toLocaleString('ru-RU')} ₽
+              </span>
+            </div>
+
+            <p className="mt-1.5 text-[11px] text-zinc-400 leading-relaxed">
+              Совместные продукты (ВкусВилл по Сберу 5%), уют дома, текстиль и посуда.
+            </p>
           </div>
 
-          <div className="mt-3">
-            <span className="font-mono text-2xl font-bold text-white">
-              {budget.anyaContribution.toLocaleString('ru-RU')} ₽
-            </span>
-          </div>
-
-          <p className="mt-2 text-xs text-zinc-400">
-            Оплачивает: совместные продукты (ВкусВилл по Сберу 5%), уют дома, текстиль и посуду.
-          </p>
-
-          <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
-            <span>Статус за ноябрь:</span>
+          <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
+            <span>Статус:</span>
             <span className="text-emerald-400 font-medium">Переведено в полном объеме</span>
           </div>
         </div>
@@ -223,9 +225,9 @@ export const FinancesModule: React.FC = () => {
               <div
                 key={bill.id}
                 style={{
-                  borderLeft: bill.status === 'overdue' ? '3.5px solid #ef4444' : '3.5px solid #f59e0b',
+                  borderLeft: bill.status === 'overdue' ? '3px solid #ef4444' : '3px solid #eab308',
                 }}
-                className="relative rounded-xl border-y border-r border-white/10 bg-black/30 p-4 space-y-3"
+                className="relative rounded-r-lg border-y border-r border-white/[0.07] bg-[rgba(24,24,28,0.65)] hover:bg-[rgba(32,32,38,0.85)] p-3.5 space-y-2.5 transition-colors"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">

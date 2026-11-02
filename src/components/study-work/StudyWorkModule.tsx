@@ -168,14 +168,14 @@ export const StudyWorkModule: React.FC = () => {
     <div className="space-y-4">
       {/* Sub-Navigation Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
-        <div className="flex items-center gap-1.5">
+        <div className="inline-flex items-center gap-1 rounded-lg border border-white/[0.06] bg-white/[0.03] p-1 text-xs">
           <button
             type="button"
             onClick={() => setActiveSubTab('kanban')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'kanban'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <GraduationCap className="h-3.5 w-3.5" />
@@ -185,23 +185,23 @@ export const StudyWorkModule: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('radar')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'radar'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <Radio className="h-3.5 w-3.5 text-amber-400" />
+            <Radio className="h-3.5 w-3.5" />
             <span>Радар ЦФО ⇄ ДФО 📡</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab('academic')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'academic'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <BookOpen className="h-3.5 w-3.5" />
@@ -211,10 +211,10 @@ export const StudyWorkModule: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('focus')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'focus'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <Timer className="h-3.5 w-3.5" />

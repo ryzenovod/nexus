@@ -42,13 +42,13 @@ const DayColumn: React.FC<DayColumnProps> = ({
       ref={setNodeRef}
       style={{
         border: isToday
-          ? '1px solid rgba(245, 158, 11, 0.38)'
+          ? '1px solid rgba(245, 158, 11, 0.3)'
           : isOver
-          ? '1px solid rgba(255, 255, 255, 0.3)'
+          ? '1px solid rgba(255, 255, 255, 0.25)'
           : '1px solid rgba(255, 255, 255, 0.07)',
       }}
-      className={`flex flex-col rounded-lg bg-zinc-900/60 backdrop-blur-[20px] p-2 transition-all duration-150 min-h-[190px] ${
-        isOver ? 'bg-zinc-800/80' : ''
+      className={`flex flex-col rounded-lg bg-[rgba(18,18,21,0.65)] backdrop-blur-[24px] p-2 transition-all duration-150 min-h-[150px] ${
+        isOver ? 'bg-[rgba(32,32,38,0.85)]' : ''
       }`}
     >
       {/* Day Header */}
@@ -61,7 +61,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
             {formattedDate}
           </span>
           {isToday && (
-            <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1 py-0.2 font-mono text-[9px] font-semibold text-amber-300 border border-amber-500/20">
+            <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1 py-0.2 font-mono text-[9px] font-semibold text-amber-300 border border-amber-500/25">
               СЕГОДНЯ
             </span>
           )}
@@ -78,7 +78,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
       </div>
 
       {/* Task List */}
-      <div className="flex-1 space-y-1.5 overflow-y-auto max-h-[360px] pr-0.5 no-scrollbar flex flex-col">
+      <div className="flex-1 space-y-1.5 overflow-y-auto max-h-[340px] pr-0.5 no-scrollbar flex flex-col">
         {tasks.map((task) => (
           <SortableGlassCard
             key={task.id}
@@ -91,7 +91,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
         ))}
 
         {tasks.length === 0 && (
-          <div className="flex flex-1 items-center justify-center py-6 text-center text-xs text-zinc-600 tracking-wide select-none">
+          <div className="flex flex-1 items-center justify-center py-4 text-center text-xs text-zinc-600 tracking-wide select-none">
             Свободно
           </div>
         )}

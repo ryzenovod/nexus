@@ -2,19 +2,16 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
-  Sparkles, 
-  Heart, 
-  Zap, 
-  Crown, 
-  Glasses, 
+  Utensils, 
+  Shirt, 
   Volume2, 
   VolumeX, 
-  Award,
-  Shirt,
-  Utensils
+  Sparkles,
+  Trophy 
 } from 'lucide-react';
 import { useNexusStore } from '../../store/useNexusStore';
 import { CyberCatMascot } from './CyberCatMascot';
+import { CoupleGamification } from '../../types/nexus';
 import { soundEffects } from '../../utils/soundEffects';
 
 interface TamagotchiRoomModalProps {
@@ -26,27 +23,30 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const {
-    gamification,
-    equipCosmetic,
-    feedMascot,
-    soundMuted,
+  const { 
+    gamification, 
+    feedMascot, 
+    equipCosmetic, 
+    soundMuted, 
     setSoundMuted,
+    tasks 
   } = useNexusStore();
 
   if (!isOpen) return null;
 
-  const cosmetics = [
-    { id: 'none' as const, label: 'Чистый кибер-котик', icon: '🐾', minLevel: 1 },
-    { id: 'glasses' as const, label: 'Очки ботаника ВШЭ', icon: '🤓', minLevel: 1 },
-    { id: 'crown' as const, label: 'Золотая корона Лидера', icon: '👑', minLevel: 1 },
-    { id: 'scarf' as const, label: 'Тёплый шарфик (Москва)', icon: '🧣', minLevel: 1 },
-    { id: 'cat_headphones' as const, label: 'Razer Purple Наушники', icon: '🎧', minLevel: 1 },
-    { id: 'wings' as const, label: 'Кибер-крылья', icon: '🦋', minLevel: 1 },
-  ];
+  // Completed tasks count = fish treats available to feed
+  const treatsCount = tasks.filter((t) => t.completed).length;
 
-  const treatsCount = gamification.treats || 0;
-  const hungerLevel = gamification.hungerLevel || 80;
+  const cosmetics: { 
+    id: CoupleGamification['equippedCosmetic']; 
+    label: string; 
+    icon: string;
+  }[] = [
+    { id: 'none', label: 'Без аксессуаров', icon: '🐾' },
+    { id: 'crown', label: 'Корона победителя', icon: '👑' },
+    { id: 'glasses', label: 'Очки исследователя', icon: '👓' },
+    { id: 'scarf', label: 'Уютный шарфик', icon: '🧣' },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -56,52 +56,52 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/85 backdrop-blur-2xl"
+        className="absolute inset-0 bg-black/75 backdrop-blur-md"
       />
 
-      {/* Modal Container */}
+      {/* Modal Surface */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 20 }}
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94, y: 20 }}
-        className="relative z-10 w-full max-w-xl overflow-hidden rounded-3xl border border-purple-500/30 bg-[#0d091e] shadow-2xl"
+        exit={{ opacity: 0, scale: 0.96, y: 12 }}
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-xl border border-white/[0.08] bg-[#09090b] shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-transparent">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3.5 bg-zinc-900/50">
           <div className="flex items-center gap-2.5">
-            <span className="text-2xl">🐱</span>
+            <span className="text-xl">🐱</span>
             <div>
-              <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                Тамагочи-Комната Котика Нексуса
-                <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-purple-300 border border-purple-500/30">
-                  Ур. {gamification.level}
+              <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+                <span>Тамагочи-Комната Котика Нексуса</span>
+                <span className="rounded bg-white/[0.05] px-1.5 py-0.2 text-[10px] font-mono text-zinc-300 border border-white/[0.08]">
+                  Lv. {gamification.level}
                 </span>
               </h3>
-              <p className="text-xs text-zinc-400">
-                Забота о талисмане пары, примерка гардероба и угощения
+              <p className="text-[11px] text-zinc-400">
+                Забота о талисмане пары, гардероб и угощения
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {/* Sound Toggle */}
             <button
               type="button"
               onClick={() => setSoundMuted(!soundMuted)}
-              className={`rounded-xl p-2 transition-colors border ${
+              className={`rounded-lg p-1.5 transition-colors border ${
                 !soundMuted
-                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                  : 'bg-white/5 text-zinc-500 border-white/10 hover:text-zinc-200'
+                  ? 'bg-white/[0.08] text-zinc-200 border-white/[0.12]'
+                  : 'bg-white/[0.02] text-zinc-500 border-white/[0.06] hover:text-zinc-200'
               }`}
               title={soundMuted ? 'Включить звуковые эффекты UI' : 'Заглушить звуковые эффекты UI'}
             >
-              {soundMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              {soundMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl p-2 text-zinc-400 hover:bg-white/10 hover:text-zinc-100 transition-colors"
+              className="rounded-lg p-1.5 text-zinc-400 hover:bg-white/10 hover:text-zinc-100 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -109,7 +109,7 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
         </div>
 
         {/* Mascot Center Stage */}
-        <div className="p-6 flex flex-col items-center justify-center space-y-4 bg-gradient-to-b from-transparent to-black/40">
+        <div className="p-5 flex flex-col items-center justify-center space-y-3.5 bg-zinc-950/40">
           <div className="relative">
             <CyberCatMascot
               gamification={gamification}
@@ -119,44 +119,27 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
 
           {/* Level Title */}
           <div className="text-center">
-            <h4 className="text-sm font-bold text-amber-300 flex items-center justify-center gap-1.5">
-              <Zap className="h-4 w-4 fill-current" />
-              <span>{gamification.levelTitle}</span>
-            </h4>
-            <span className="text-xs text-zinc-400 font-mono">
-              Опыт пары: {gamification.xp} / {gamification.nextLevelXp} XP
+            <span className="font-mono text-xs font-semibold text-zinc-200">
+              «{gamification.levelTitle}»
             </span>
+            <p className="text-[11px] text-zinc-500 mt-0.5">
+              Нажмите на котика, чтобы почесать за ушком и услышать мурчание
+            </p>
           </div>
 
-          {/* Hunger / Happiness Bar */}
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/50 p-4 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-300 flex items-center gap-1.5 font-medium">
-                <Heart className="h-3.5 w-3.5 text-rose-400 fill-current" />
-                Сытость и счастье котика:
-              </span>
-              <span className="font-mono font-bold text-rose-300">{hungerLevel}%</span>
-            </div>
-
-            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 transition-all duration-300"
-                style={{ width: `${hungerLevel}%` }}
-              />
-            </div>
-
-            {/* Feed Button */}
-            <div className="flex items-center justify-between pt-2">
+          {/* Feeding Action Panel */}
+          <div className="w-full rounded-lg border border-white/[0.06] bg-zinc-900/60 p-3">
+            <div className="flex items-center justify-between">
               <span className="font-mono text-xs text-zinc-400">
-                Рыбок в запасе: <strong className="text-amber-300">{treatsCount} 🐟</strong>
-                <span className="block text-[10px] text-zinc-500">(дается за каждое выполненное дело)</span>
+                Рыбок в запасе: <strong className="text-zinc-200">{treatsCount} 🐟</strong>
+                <span className="block text-[10px] text-zinc-500">(1 рыбка за каждую выполненную задачу)</span>
               </span>
 
               <button
                 type="button"
                 disabled={treatsCount <= 0}
                 onClick={feedMascot}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-3.5 py-1.5 text-xs font-bold text-black shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-95 disabled:opacity-40 transition-all"
+                className="flex items-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-white px-3 py-1.5 text-xs font-medium text-zinc-950 disabled:opacity-40 transition-colors shadow-sm"
               >
                 <Utensils className="h-3.5 w-3.5" />
                 <span>Покормить (+20 XP)</span>
@@ -166,15 +149,15 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
         </div>
 
         {/* Wardrobe Selector */}
-        <div className="border-t border-white/10 p-6 bg-black/30 space-y-3">
+        <div className="border-t border-white/[0.06] p-5 bg-zinc-950/80 space-y-2.5">
           <div className="flex items-center gap-2">
-            <Shirt className="h-4 w-4 text-purple-400" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+            <Shirt className="h-3.5 w-3.5 text-zinc-400" />
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
               Гардероб & Аксессуары
             </h4>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {cosmetics.map((cosmetic) => {
               const isEquipped = gamification.equippedCosmetic === cosmetic.id;
 
@@ -186,19 +169,17 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
                     soundEffects.playClick();
                     equipCosmetic(cosmetic.id);
                   }}
-                  className={`flex items-center gap-2.5 rounded-xl p-2.5 text-xs font-medium text-left transition-all border ${
+                  className={`flex flex-col items-center gap-1 rounded-lg p-2 text-xs font-medium text-center transition-colors border ${
                     isEquipped
-                      ? 'border-purple-500/60 bg-purple-500/20 text-purple-200 shadow-md shadow-purple-500/10'
-                      : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:border-white/20 hover:text-zinc-200'
+                      ? 'border-white/30 bg-white/[0.1] text-zinc-100'
+                      : 'border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:border-white/[0.12] hover:text-zinc-200'
                   }`}
                 >
-                  <span className="text-xl shrink-0">{cosmetic.icon}</span>
-                  <div className="truncate">
-                    <span className="block truncate font-semibold">{cosmetic.label}</span>
-                    {isEquipped && (
-                      <span className="text-[10px] text-amber-300 font-mono">Надето</span>
-                    )}
-                  </div>
+                  <span className="text-lg">{cosmetic.icon}</span>
+                  <span className="text-[11px] leading-tight line-clamp-1">{cosmetic.label}</span>
+                  {isEquipped && (
+                    <span className="text-[9px] text-zinc-400 font-mono">Надето</span>
+                  )}
                 </button>
               );
             })}

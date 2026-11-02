@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply bg-[#0b0d11] text-zinc-100 antialiased font-sans;
+    @apply bg-[#09090b] text-zinc-100 antialiased font-sans;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
