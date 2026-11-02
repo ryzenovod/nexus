@@ -10,6 +10,7 @@ interface SortableGlassCardProps {
   onClick?: (task: NexusTask) => void;
   onDelete?: (id: string) => void;
   compact?: boolean;
+  mode?: 'week' | 'inbox';
 }
 
 export const SortableGlassCard: React.FC<SortableGlassCardProps> = ({
@@ -18,6 +19,7 @@ export const SortableGlassCard: React.FC<SortableGlassCardProps> = ({
   onClick,
   onDelete,
   compact = false,
+  mode,
 }) => {
   const {
     attributes,
@@ -43,6 +45,7 @@ export const SortableGlassCard: React.FC<SortableGlassCardProps> = ({
         onClick={onClick}
         onDelete={onDelete}
         compact={compact}
+        mode={mode}
         isDragging={isDragging}
       />
     </div>

@@ -2,14 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
-  Calendar, 
-  User, 
-  Tag, 
-  Clock, 
-  DollarSign, 
-  Link as LinkIcon, 
   Trash2,
-  Check
+  Calendar,
+  ExternalLink,
+  DollarSign,
+  Tag
 } from 'lucide-react';
 import { 
   NexusTask, 
@@ -135,320 +132,280 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     onClose();
   };
 
+  const categories: TaskCategory[] = [
+    '📦 Для дома!',
+    '🎓 ВШЭ (Егор)',
+    '🎓 РУДН (Аня)',
+    '🏆 Я-Профессионал',
+    '💼 Работа (Егор)',
+    '🚀 Проекты',
+    '💰 Финансы',
+    '🛒 Покупки',
+    '📋 Общее',
+  ];
+
+  const rooms: RoomArea[] = ['Все', 'Ванная', 'Балкон', 'Комната', 'Кухня'];
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 overflow-hidden">
+        {/* Soft Backdrop */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-          className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-[#12141a] p-6 shadow-2xl overflow-hidden"
-        >
-          {/* Top Bar */}
-          <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-            <h3 className="text-base font-bold text-white">
-              {taskToEdit ? 'Редактировать задачу' : 'Новая задача NEXUS'}
-            </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg p-1 text-zinc-400 hover:text-zinc-100 hover:bg-white/10"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        />
 
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-            {/* Title */}
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">
-                Название задачи
-              </label>
-              <input
-                type="text"
-                required
-                autoFocus
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Например: Клей. Крючок в ванной"
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-amber-500/60 focus:outline-none focus:ring-1 focus:ring-amber-500/60"
-              />
-            </div>
+        {/* Linear-Style Slide-Over Drawer */}
+        <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 350 }}
+            className="w-screen max-w-md bg-[#0c0c0e] border-l border-white/[0.08] shadow-2xl flex flex-col justify-between overflow-y-auto z-10"
+          >
+            {/* Header bar */}
+            <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
+              <span className="text-xs font-mono uppercase tracking-wider text-zinc-500">
+                {taskToEdit ? 'Детали задачи' : 'Новая задача'}
+              </span>
 
-            {/* Notes */}
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">
-                Заметки / детали
-              </label>
-              <textarea
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Уточнения, артикул, размеры, инструкция..."
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-amber-500/60 focus:outline-none focus:ring-1 focus:ring-amber-500/60"
-              />
-            </div>
+              <div className="flex items-center gap-1">
+                {taskToEdit && onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDelete(taskToEdit.id);
+                      onClose();
+                    }}
+                    className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    title="Удалить задачу"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
 
-            {/* Indicator Bracket Color Picker */}
-            <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1.5">
-                Цвет индикатора (скобки)
-              </label>
-              <div className="grid grid-cols-5 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setBracketColor('critical')}
-                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
-                    bracketColor === 'critical'
-                      ? 'border-red-500 bg-red-500/20 text-red-200 ring-1 ring-red-500'
-                      : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="h-3 w-1 rounded-full bg-red-500" />
-                  <span>Критично</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBracketColor('active')}
-                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
-                    bracketColor === 'active'
-                      ? 'border-emerald-500 bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-500'
-                      : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="h-3 w-1 rounded-full bg-emerald-500" />
-                  <span>Дом/Уют</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBracketColor('finance')}
-                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
-                    bracketColor === 'finance'
-                      ? 'border-yellow-500 bg-yellow-500/20 text-yellow-200 ring-1 ring-yellow-500'
-                      : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="h-3 w-1 rounded-full bg-yellow-500" />
-                  <span>Финансы</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBracketColor('cyber')}
-                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
-                    bracketColor === 'cyber'
-                      ? 'border-zinc-400 bg-white/[0.1] text-zinc-100'
-                      : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="h-3 w-1 rounded-full bg-zinc-400" />
-                  <span>Учеба</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setBracketColor('neutral')}
-                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
-                    bracketColor === 'neutral'
-                      ? 'border-slate-500 bg-slate-500/20 text-slate-200 ring-1 ring-slate-500'
-                      : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
-                  }`}
-                >
-                  <span className="h-3 w-1 rounded-full bg-slate-500" />
-                  <span>Вишлист</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Row: Assignee & Room */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Исполнитель
-                </label>
-                <select
-                  value={assignee}
-                  onChange={(e) => setAssignee(e.target.value as Assignee)}
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                >
-                  <option value="together">Вместе (Егор + Аня)</option>
-                  <option value="egor">Егор</option>
-                  <option value="anya">Аня</option>
-                  <option value="all">Все</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Комната / Зона
-                </label>
-                <select
-                  value={room}
-                  onChange={(e) => setRoom(e.target.value as RoomArea)}
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                >
-                  <option value="Все">Все зоны / Общее</option>
-                  <option value="Ванная">Ванная</option>
-                  <option value="Балкон">Балкон</option>
-                  <option value="Комната">Комната</option>
-                  <option value="Кухня">Кухня</option>
-                  <option value="Коридор">Коридор</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Row: Date & Category */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Срок выполнения
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={date === 'inbox' ? '' : date}
-                    onChange={(e) => setDate(e.target.value || 'inbox')}
-                    className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                  />
-                  {date !== 'inbox' && (
-                    <button
-                      type="button"
-                      onClick={() => setDate('inbox')}
-                      className="rounded bg-white/10 px-2 text-[10px] text-zinc-300 hover:bg-white/20"
-                    >
-                      Инбокс
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Категория
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as TaskCategory)}
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                >
-                  <option value="📦 Для дома!">📦 Для дома!</option>
-                  <option value="💰 Финансы">💰 Финансы</option>
-                  <option value="🛒 Покупки">🛒 Покупки</option>
-                  <option value="🎓 ВШЭ (Егор)">🎓 ВШЭ (Егор)</option>
-                  <option value="🎓 РУДН (Аня)">🎓 РУДН (Аня)</option>
-                  <option value="🏆 Я-Профессионал">🏆 Я-Профессионал</option>
-                  <option value="💼 Работа (Егор)">💼 Работа (Егор)</option>
-                  <option value="🚀 Проекты">🚀 Проекты</option>
-                  <option value="📋 Общее">📋 Общее</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Flags: Overdue & Regular */}
-            <div className="flex flex-wrap items-center gap-4 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-300">
-                <input
-                  type="checkbox"
-                  checked={isOverdue}
-                  onChange={(e) => setIsOverdue(e.target.checked)}
-                  className="rounded border-white/20 bg-black/40 text-red-500 focus:ring-0"
-                />
-                <span className="text-red-300">Пометить как [ПРОСРОЧЕНО]</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-300">
-                <input
-                  type="checkbox"
-                  checked={isRegular}
-                  onChange={(e) => setIsRegular(e.target.checked)}
-                  className="rounded border-white/20 bg-black/40 text-amber-500 focus:ring-0"
-                />
-                <span>Регулярное повторение</span>
-              </label>
-            </div>
-
-            {isRegular && (
-              <div>
-                <input
-                  type="text"
-                  value={regularPeriod}
-                  onChange={(e) => setRegularPeriod(e.target.value)}
-                  placeholder="Период (например: 15–26 числа каждого месяца)"
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                />
-              </div>
-            )}
-
-            {/* Price & Link */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Сумма (₽)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Ссылка (Ozon, WB, mos.ru)
-                </label>
-                <input
-                  type="url"
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60"
-                />
-              </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
-              {taskToEdit && onDelete ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDelete(taskToEdit.id);
-                    onClose();
-                  }}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Удалить</span>
-                </button>
-              ) : (
-                <div />
-              )}
-
-              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg px-3 py-2 text-xs font-medium text-zinc-400 hover:bg-white/10 transition-colors"
+                  className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
                 >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-white px-4 py-2 text-xs font-medium text-zinc-950 transition-colors shadow-sm"
-                >
-                  <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-                  <span>{taskToEdit ? 'Сохранить' : 'Создать'}</span>
+                  <X className="h-4 w-4" />
                 </button>
               </div>
             </div>
-          </form>
-        </motion.div>
+
+            {/* Main Form Body */}
+            <form id="task-drawer-form" onSubmit={handleSubmit} className="flex-1 p-5 space-y-4">
+              {/* Title Input */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                  Название задачи
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Например: Клей. Крючок в ванной"
+                  className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-zinc-400 focus:outline-none"
+                />
+              </div>
+
+              {/* Indicator Bracket Color */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-400 mb-1.5">
+                  Скобка индикатора
+                </label>
+                <div className="grid grid-cols-4 gap-1.5 text-xs">
+                  {[
+                    { id: 'critical', label: 'Срочно', color: 'bg-red-500' },
+                    { id: 'active', label: 'Ремонт', color: 'bg-emerald-500' },
+                    { id: 'finance', label: 'ЖКХ', color: 'bg-amber-500' },
+                    { id: 'neutral', label: 'Вишлист', color: 'bg-zinc-500' },
+                  ].map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setBracketColor(b.id as BracketColor)}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                        bracketColor === b.id
+                          ? 'bg-white/[0.1] text-zinc-100'
+                          : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${b.color}`} />
+                      <span>{b.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assignee & Room Row */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Assignee */}
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Исполнитель
+                  </label>
+                  <div className="flex rounded-md bg-white/[0.03] p-0.5 text-xs">
+                    {[
+                      { id: 'together', label: 'Вместе' },
+                      { id: 'egor', label: 'Егор' },
+                      { id: 'anya', label: 'Аня' },
+                    ].map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => setAssignee(a.id as Assignee)}
+                        className={`flex-1 rounded py-1 text-center font-medium transition-colors ${
+                          assignee === a.id
+                            ? 'bg-white/[0.1] text-zinc-100'
+                            : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Room */}
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Зона квартиры
+                  </label>
+                  <select
+                    value={room}
+                    onChange={(e) => setRoom(e.target.value as RoomArea)}
+                    className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-400"
+                  >
+                    {rooms.map((r) => (
+                      <option key={r} value={r} className="bg-zinc-900 text-zinc-200">
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Category & Date Row */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Category */}
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Категория
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as TaskCategory)}
+                    className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-400"
+                  >
+                    {categories.map((c) => (
+                      <option key={c} value={c} className="bg-zinc-900 text-zinc-200">
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Дата плана
+                  </label>
+                  <input
+                    type="text"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    placeholder="inbox или 2026-11-02"
+                    className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-2.5 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-400 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Price & External Link Row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Цена (₽)
+                  </label>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="1685"
+                    className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-2.5 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-400 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                    Ссылка на товар / макет
+                  </label>
+                  <input
+                    type="url"
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-2.5 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-400"
+                  />
+                </div>
+              </div>
+
+              {/* Notes / Description */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                  Заметки & Детали
+                </label>
+                <textarea
+                  rows={4}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Добавьте артикул, размеры, шаги выполнения или инструкцию..."
+                  className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-400 leading-relaxed"
+                />
+              </div>
+
+              {/* Tags Input */}
+              <div>
+                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                  Теги (через запятую)
+                </label>
+                <input
+                  type="text"
+                  value={tagsInput}
+                  onChange={(e) => setTagsInput(e.target.value)}
+                  placeholder="ванная, сантехника, леруа"
+                  className="w-full rounded-md border border-white/[0.08] bg-zinc-950/70 px-2.5 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-400"
+                />
+              </div>
+            </form>
+
+            {/* Bottom Actions Footer */}
+            <div className="p-4 border-t border-white/[0.06] flex items-center justify-between bg-zinc-950/40">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                Отмена
+              </button>
+
+              <button
+                type="submit"
+                form="task-drawer-form"
+                className="px-4 py-1.5 rounded-md bg-white text-zinc-950 text-xs font-medium hover:bg-zinc-200 transition-colors shadow-sm"
+              >
+                {taskToEdit ? 'Сохранить изменения' : 'Создать задачу'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </AnimatePresence>
   );

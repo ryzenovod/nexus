@@ -86,6 +86,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
             onToggle={onToggleTask}
             onClick={onTaskClick}
             onDelete={onDeleteTask}
+            mode="week"
             compact
           />
         ))}

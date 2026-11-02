@@ -402,6 +402,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
                 onToggle={onToggleTask}
                 onClick={onTaskClick}
                 onDelete={onDeleteTask}
+                mode="inbox"
               />
             ))}
 
