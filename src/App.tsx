@@ -77,39 +77,67 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col antialiased">
-      {/* ── Official shadcn/ui Navbar ── */}
-      <Navbar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onOpenNewTask={() => handleOpenNewTask('inbox')}
-        onOpenSearch={() => setActiveCommandPalette(true)}
-        onOpenCatRoom={() => setActiveCatRoom(true)}
-      />
+    <div className="min-h-screen twilight-sky-bg text-foreground flex flex-col antialiased relative selection:bg-purple-500/30">
+      {/* Background stars & twilight horizon mesh */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Ambient horizon purples and warm amber */}
+        <div 
+          className="absolute -top-[10%] left-[10%] w-[50vw] h-[40vw] rounded-full blur-[140px] opacity-35"
+          style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 70%)' }}
+        />
+        <div 
+          className="absolute bottom-0 right-[5%] w-[45vw] h-[35vw] rounded-full blur-[160px] opacity-25"
+          style={{ background: 'radial-gradient(circle, rgba(245, 158, 11, 0.28) 0%, transparent 70%)' }}
+        />
+        {/* Subtle twinkling stars layer */}
+        <svg className="absolute inset-0 w-full h-full opacity-65" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8%" cy="12%" r="1" fill="#fff" opacity="0.8" />
+          <circle cx="22%" cy="6%" r="1.2" fill="#fef08a" opacity="0.9" />
+          <circle cx="38%" cy="18%" r="0.8" fill="#fff" opacity="0.6" />
+          <circle cx="58%" cy="10%" r="1.4" fill="#fef08a" opacity="0.75" />
+          <circle cx="75%" cy="20%" r="1" fill="#fff" opacity="0.7" />
+          <circle cx="90%" cy="7%" r="1.2" fill="#fff" opacity="0.85" />
+          <circle cx="15%" cy="38%" r="0.8" fill="#fff" opacity="0.5" />
+          <circle cx="82%" cy="45%" r="1" fill="#fff" opacity="0.65" />
+          <circle cx="30%" cy="65%" r="1.2" fill="#fef08a" opacity="0.7" />
+          <circle cx="85%" cy="75%" r="1" fill="#fff" opacity="0.5" />
+        </svg>
+      </div>
 
-      {/* ── Main Viewport ── */}
-      <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto">
-        {activeTab === 'overview' && (
-          <ShadcnOverview
-            tasks={tasks}
-            onToggleTask={toggleTaskCompletion}
-            onTaskClick={handleTaskClick}
-            onAddTask={(date) => handleOpenNewTask(date || 'inbox')}
-            onDeleteTask={deleteTask}
-            activeWeekOffset={activeWeekOffset}
-            onOffsetChange={setActiveWeekOffset}
-            selectedAssignee={selectedAssignee}
-            onAssigneeChange={setSelectedAssignee}
-            onNavigateTab={setActiveTab}
-          />
-        )}
+      <div className="relative z-10 flex flex-col flex-1">
+        {/* ── Official shadcn/ui Navbar ── */}
+        <Navbar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onOpenNewTask={() => handleOpenNewTask('inbox')}
+          onOpenSearch={() => setActiveCommandPalette(true)}
+          onOpenCatRoom={() => setActiveCatRoom(true)}
+        />
 
-        {activeTab === 'finances' && <ShadcnFinances />}
+        {/* ── Main Viewport ── */}
+        <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          {activeTab === 'overview' && (
+            <ShadcnOverview
+              tasks={tasks}
+              onToggleTask={toggleTaskCompletion}
+              onTaskClick={handleTaskClick}
+              onAddTask={(date) => handleOpenNewTask(date || 'inbox')}
+              onDeleteTask={deleteTask}
+              activeWeekOffset={activeWeekOffset}
+              onOffsetChange={setActiveWeekOffset}
+              selectedAssignee={selectedAssignee}
+              onAssigneeChange={setSelectedAssignee}
+              onNavigateTab={setActiveTab}
+            />
+          )}
 
-        {activeTab === 'wishlist' && <ShadcnWishlist />}
+          {activeTab === 'finances' && <ShadcnFinances />}
 
-        {activeTab === 'study-work' && <ShadcnStudyWork />}
-      </main>
+          {activeTab === 'wishlist' && <ShadcnWishlist />}
+
+          {activeTab === 'study-work' && <ShadcnStudyWork />}
+        </main>
+      </div>
 
       {/* ── shadcn Task Modal Dialog ── */}
       <ShadcnTaskDialog

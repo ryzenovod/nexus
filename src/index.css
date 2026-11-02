@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    --background: 260 40% 4%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 4.9%;
+    --card: 260 30% 6%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 4.9%;
+    --popover: 260 30% 6%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
     --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 260 20% 14%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --muted: 260 20% 14%;
+    --muted-foreground: 260 10% 65%;
+    --accent: 260 20% 14%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 260 20% 18%;
+    --input: 260 20% 18%;
+    --ring: 260 20% 80%;
     --radius: 0.5rem;
   }
 
@@ -40,6 +40,16 @@
 .font-mono-num {
   font-family: 'JetBrains Mono', monospace;
   font-variant-numeric: tabular-nums;
+}
+
+/* Deep twilight night sky background */
+.twilight-sky-bg {
+  background: 
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(120, 119, 198, 0.22), transparent 70%),
+    radial-gradient(circle 800px at 85% 95%, rgba(245, 158, 11, 0.14), transparent 60%),
+    radial-gradient(circle 900px at 15% 85%, rgba(46, 16, 101, 0.45), transparent 70%),
+    linear-gradient(to bottom, #090714 0%, #0d0a1b 40%, #170d2b 75%, #221035 100%);
+  background-attachment: fixed;
 }
 
 /* Custom subtle scrollbar */

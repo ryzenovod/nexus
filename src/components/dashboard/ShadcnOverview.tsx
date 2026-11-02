@@ -8,7 +8,11 @@ import {
   ChevronRight, 
   Plus, 
   Clock, 
-  Layers
+  Layers,
+  Calendar,
+  MapPin,
+  AlignLeft,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,10 +55,11 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
   onAssigneeChange,
   onNavigateTab,
 }) => {
-  const { gcalEvents, budget } = useNexusStore();
+  const { gcalEvents, budget, addTask } = useNexusStore();
   const [selectedRoom, setSelectedRoom] = useState<string>('Все');
   const [taskSearch, setTaskSearch] = useState<string>('');
   const [activeHubTask, setActiveHubTask] = useState<NexusTask | null>(null);
+  const [selectedCalendarEvent, setSelectedCalendarEvent] = useState<any | null>(null);
   const [hubChecklistState, setHubChecklistState] = useState<Record<string, boolean>>({});
 
   // Local ISO date formatter without UTC rollover
@@ -370,7 +375,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
 
                 {/* Day Items List */}
                 <div className="flex-1 space-y-1.5 overflow-y-auto max-h-[260px] [scrollbar-width:none]">
-                  {/* Calendar Events */}
+                  {/* Calendar Events (Clickable to open Sheet inspector) */}
                   {day.events.map((ev, eIdx) => {
                     const time = ev.start?.dateTime
                       ? new Date(ev.start.dateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
@@ -378,7 +383,9 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                     return (
                       <div
                         key={ev.id || eIdx}
-                        className="flex items-center gap-1.5 p-1.5 rounded-md bg-sky-500/10 border border-sky-500/20 text-sky-200 text-xs"
+                        onClick={() => setSelectedCalendarEvent({ ...ev, formattedTime: time, dateIso: day.iso, dayLabel: `${day.dayName}, ${day.dayNumber}` })}
+                        className="flex items-center gap-1.5 p-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/25 text-sky-200 text-xs cursor-pointer transition-colors"
+                        title="Нажмите для просмотра события и добавления в задачи"
                       >
                         <Clock className="h-3 w-3 text-sky-400 shrink-0" />
                         <span className="text-[10px] font-mono shrink-0">{time}</span>
@@ -623,6 +630,86 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                 Подзадачи пока не добавлены
               </div>
             )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* ── 5. SHADCN SHEET DRAWER FOR CALENDAR EVENTS ── */}
+      <Sheet open={Boolean(selectedCalendarEvent)} onOpenChange={(open) => !open && setSelectedCalendarEvent(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
+          <SheetHeader>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs text-sky-400 border-sky-400/30 gap-1">
+                <Clock className="h-3 w-3" />
+                <span>Google Calendar Live</span>
+              </Badge>
+              {selectedCalendarEvent?.dayLabel && (
+                <Badge variant="secondary" className="text-xs">
+                  {selectedCalendarEvent.dayLabel}
+                </Badge>
+              )}
+            </div>
+            <SheetTitle className="text-lg font-bold mt-2">
+              {selectedCalendarEvent?.summary || 'Событие календаря'}
+            </SheetTitle>
+            <SheetDescription className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>Время: {selectedCalendarEvent?.formattedTime || 'весь день'}</span>
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 space-y-4 mt-6">
+            {selectedCalendarEvent?.location && (
+              <div className="p-3 rounded-lg border bg-muted/20 space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                  <MapPin className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Место проведения</span>
+                </div>
+                <p className="text-xs text-foreground pl-5">{selectedCalendarEvent.location}</p>
+              </div>
+            )}
+
+            {selectedCalendarEvent?.description && (
+              <div className="p-3 rounded-lg border bg-muted/20 space-y-1">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                  <AlignLeft className="h-3.5 w-3.5 text-sky-400" />
+                  <span>Описание / Заметки</span>
+                </div>
+                <p className="text-xs text-foreground/90 whitespace-pre-wrap pl-5">
+                  {selectedCalendarEvent.description}
+                </p>
+              </div>
+            )}
+
+            <div className="p-4 rounded-xl border border-sky-500/20 bg-sky-500/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-sky-400" />
+                <span className="text-xs font-semibold text-sky-200">Синхронизация с планом Nexus</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Вы можете одним кликом преобразовать это событие в задачу плана, чтобы отслеживать её выполнение и получать XP маскота котика.
+              </p>
+              <Button
+                onClick={() => {
+                  if (selectedCalendarEvent) {
+                    addTask({
+                      title: selectedCalendarEvent.summary || 'Событие из календаря',
+                      date: selectedCalendarEvent.dateIso,
+                      category: 'Проекты',
+                      assignee: 'together',
+                      completed: false,
+                      bracketColor: 'active',
+                      tags: ['Календарь', 'GCal'],
+                    });
+                    setSelectedCalendarEvent(null);
+                  }
+                }}
+                className="w-full h-8 text-xs font-semibold gap-1.5 bg-sky-500 hover:bg-sky-600 text-white cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Превратить в задачу плана</span>
+              </Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

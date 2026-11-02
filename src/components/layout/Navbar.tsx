@@ -102,8 +102,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               {/* Level Pill */}
-              <span className="absolute -bottom-1 -right-1.5 h-3.5 px-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-mono font-bold leading-none flex items-center justify-center">
-                L{gamification.level}
+              <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-mono font-bold leading-none flex items-center justify-center shadow-xs">
+                {gamification.level}
               </span>
             </div>
 

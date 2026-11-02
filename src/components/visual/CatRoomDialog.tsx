@@ -92,7 +92,7 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => setSoundMuted(!soundMuted)}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 p-0 mr-8 text-muted-foreground hover:text-foreground cursor-pointer"
             title={soundMuted ? 'Включить звук' : 'Выключить звук'}
           >
             {soundMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
