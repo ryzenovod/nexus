@@ -1123,8 +1123,32 @@ export const useNexusStore = create<NexusState>()(
             }
           }
 
+          // Also update task deadlines and parentId from TickTick live items
+          const timedItems: any[] = rawData.ticktick?.results || [];
+          if (timedItems.length > 0 || inboxItems.length > 0) {
+            const liveTasksMap = new Map<string, any>();
+            [...timedItems, ...inboxItems].forEach((t) => {
+              if (t.id) liveTasksMap.set(t.id, t);
+            });
+
+            set((state) => ({
+              tasks: state.tasks.map((existingTask) => {
+                const live = liveTasksMap.get(existingTask.id);
+                if (live) {
+                  return {
+                    ...existingTask,
+                    parentId: live.parentId || existingTask.parentId,
+                    date: live.dueDateLocal || (live.dueDate ? live.dueDate.slice(0, 10) : existingTask.date),
+                    isOverdue: Boolean(live.isOverdue),
+                  };
+                }
+                return existingTask;
+              }),
+            }));
+          }
+
           set((state) => ({
-            gcalEvents: gcalItems,
+            gcalEvents: gcalItems.length > 0 ? gcalItems : state.gcalEvents,
             wishlist: newWishes.length > 0 ? [...state.wishlist, ...newWishes] : state.wishlist,
             lastSyncTime: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
           }));
@@ -1210,6 +1234,28 @@ export const useNexusStore = create<NexusState>()(
         if (state.budget && state.budget.egorContribution === 40000 && state.budget.anyaContribution === 40000 && state.budget.currentBalance === 0) {
           state.budget.egorContribution = 0;
           state.budget.anyaContribution = 0;
+        }
+        // Ensure parentId and isHub are preserved on tasks in rehydrated state
+        if (state.tasks && state.tasks.length > 0) {
+          const initialMap = new Map(initialTasks.map((t) => [t.id, t]));
+          state.tasks = state.tasks.map((task) => {
+            const init = initialMap.get(task.id);
+            if (init) {
+              return {
+                ...task,
+                parentId: task.parentId || init.parentId,
+                isHub: init.isHub !== undefined ? init.isHub : task.isHub,
+                subtaskCount: init.subtaskCount !== undefined ? init.subtaskCount : task.subtaskCount,
+              };
+            }
+            return task;
+          });
+
+          // Ensure 'диаскин' is present if missing
+          if (!state.tasks.some((t) => t.title.toLowerCase().includes('диаскин'))) {
+            const diaskin = initialTasks.find((t) => t.title.toLowerCase().includes('диаскин'));
+            if (diaskin) state.tasks.push(diaskin);
+          }
         }
       }
     }

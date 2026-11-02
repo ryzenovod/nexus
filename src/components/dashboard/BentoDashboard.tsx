@@ -36,7 +36,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
   onOpenTamagotchi,
   isWidgetMode = false,
 }) => {
-  const { gcalEvents } = useNexusStore();
+  const { gcalEvents, updateTask } = useNexusStore();
   const [viewMode, setViewMode] = useState<'spatial' | 'bento'>(
     isWidgetMode ? 'spatial' : 'spatial'
   );
@@ -123,6 +123,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
                 onToggleTask={onToggleTask}
                 onTaskClick={onTaskClick}
                 onAddTaskForDay={(dateStr) => onAddTask(dateStr)}
+                onScheduleTask={(taskId, dateStr) => updateTask(taskId, { date: dateStr })}
               />
 
               {/* 2. Spatial Inbox & Undated Grid (TickTick Tasks with Room Filter) */}

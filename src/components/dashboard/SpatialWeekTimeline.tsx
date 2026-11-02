@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, CheckCircle2, Circle, Clock, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { NexusTask, GCalEvent } from '../../types/nexus';
 
@@ -10,6 +10,7 @@ interface SpatialWeekTimelineProps {
   onToggleTask: (id: string) => void;
   onTaskClick: (task: NexusTask) => void;
   onAddTaskForDay: (dateStr: string) => void;
+  onScheduleTask?: (taskId: string, dateStr: string) => void;
 }
 
 export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
@@ -20,7 +21,10 @@ export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
   onToggleTask,
   onTaskClick,
   onAddTaskForDay,
+  onScheduleTask,
 }) => {
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+
   const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
   const monthNames = [
     'янв', 'фев', 'мар', 'апр', 'май', 'июн',
@@ -43,6 +47,11 @@ export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
     });
   }
 
+  const currentWeekEndIso = days[6].iso;
+  const futureTimedTasks = tasks.filter(
+    (t) => !t.completed && t.date && t.date !== 'inbox' && t.date > currentWeekEndIso
+  );
+
   const getPriorityClass = (task: NexusTask) => {
     if (task.bracketColor === 'critical' || task.isOverdue) {
       return 'border-l-[3px] border-[#ff6b6b] bg-[#ff6b6b]/10 text-white hover:bg-[#ff6b6b]/15';
@@ -60,14 +69,36 @@ export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
     <div className="w-full flex flex-col gap-3">
       {/* Header with week navigation */}
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <h2 className="text-[13px] font-bold text-white tracking-wide uppercase">
-            7-Day Spatial Timeline
-          </h2>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <h2 className="text-[13px] font-bold text-white tracking-wide uppercase">
+              7-Day Spatial Timeline
+            </h2>
+          </div>
+
           <span className="text-[11px] text-zinc-400 font-mono-num">
             TickTick & GCal Live
           </span>
+
+          {/* Quick jump to future deadline if outside current 7 days */}
+          {futureTimedTasks.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const firstDate = new Date(futureTimedTasks[0].date);
+                const diffDays = Math.round((firstDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                const targetOffset = Math.floor(diffDays / 7);
+                onOffsetChange(targetOffset > 0 ? targetOffset : 1);
+              }}
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-[11px] text-amber-300 font-medium transition-all cursor-pointer"
+              title={`Перейти к неделе с задачей: ${futureTimedTasks[0].title}`}
+            >
+              <Clock size={11} className="text-amber-400" />
+              <span>Впереди: {futureTimedTasks[0].title} ({futureTimedTasks[0].date})</span>
+              <span className="text-[9.5px] opacity-75">→</span>
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 bg-white/[0.03] p-0.5 rounded-full border border-white/[0.06]">
@@ -122,8 +153,26 @@ export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
           return (
             <div
               key={day.iso}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragOverDay !== day.iso) setDragOverDay(day.iso);
+              }}
+              onDragLeave={() => {
+                if (dragOverDay === day.iso) setDragOverDay(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const taskId = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('application/nexus-task-id');
+                if (taskId && onScheduleTask) {
+                  onScheduleTask(taskId, day.iso);
+                }
+                setDragOverDay(null);
+              }}
               className={`rounded-[14px] p-3 flex flex-col transition-all duration-200 border ${
-                day.isToday
+                dragOverDay === day.iso
+                  ? 'ring-2 ring-amber-400 border-amber-400 bg-amber-500/15'
+                  : day.isToday
                   ? 'bg-[#181b26]/85 border-amber-500/40 shadow-[0_8px_24px_rgba(255,159,67,0.12),inset_0_1px_0_rgba(255,190,118,0.25)] ring-1 ring-amber-500/20'
                   : 'bg-[#12161f]/60 hover:bg-[#181e2a]/75 border-white/[0.08] hover:border-white/[0.16] shadow-[0_6px_20px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.08)]'
               } backdrop-blur-2xl`}
@@ -158,9 +207,21 @@ export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
               {/* Day Items List */}
               <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5 [scrollbar-width:thin]">
                 {totalItems === 0 ? (
-                  <div className="h-full flex items-center justify-center min-h-[80px]">
-                    <span className="text-[11px] text-zinc-500/60 font-medium">
-                      Свободно
+                  /* Compact Stylish Drop-Slot for Empty Days */
+                  <div
+                    onClick={() => onAddTaskForDay(day.iso)}
+                    className={`h-full min-h-[90px] rounded-xl border border-dashed flex flex-col items-center justify-center gap-1.5 p-2 transition-all cursor-pointer group/drop ${
+                      dragOverDay === day.iso
+                        ? 'border-amber-400 bg-amber-500/20 text-amber-200 scale-[1.02]'
+                        : 'border-white/[0.08] hover:border-white/[0.2] bg-white/[0.01] hover:bg-white/[0.03] text-zinc-500 hover:text-zinc-300'
+                    }`}
+                    title="Кликните, чтобы добавить задачу, или перетащите сюда задачу из Входящих"
+                  >
+                    <div className="w-5 h-5 rounded-md bg-white/[0.04] group-hover/drop:bg-amber-400/20 group-hover/drop:text-amber-300 flex items-center justify-center transition-colors">
+                      <Plus size={11} strokeWidth={2.4} />
+                    </div>
+                    <span className="text-[10px] font-medium tracking-tight text-center leading-tight">
+                      {dragOverDay === day.iso ? 'Отпустите для переноса' : 'Свободно · Перетащите сюда'}
                     </span>
                   </div>
                 ) : (
@@ -180,13 +241,19 @@ export const SpatialWeekTimeline: React.FC<SpatialWeekTimelineProps> = ({
                       </div>
                     ))}
 
-                    {/* TickTick Tasks */}
+                    {/* TickTick Tasks (Draggable) */}
                     {dayTasks.map((task) => {
                       const isOverdue = day.isToday && task.isOverdue;
 
                       return (
                         <div
                           key={task.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', task.id);
+                            e.dataTransfer.setData('application/nexus-task-id', task.id);
+                            e.dataTransfer.effectAllowed = 'move';
+                          }}
                           onClick={() => onTaskClick(task)}
                           className={`p-1.5 px-2 rounded-lg text-[11.5px] transition-all cursor-pointer group flex items-start gap-1.5 ${getPriorityClass(
                             task
