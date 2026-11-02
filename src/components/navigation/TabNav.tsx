@@ -4,7 +4,8 @@ import {
   CreditCard, 
   Gift, 
   GraduationCap, 
-  Timer
+  Timer,
+  Trophy
 } from 'lucide-react';
 
 export type NexusTab = 'command-center' | 'finances' | 'wishlist' | 'study-work' | 'pomodoro';
@@ -23,40 +24,40 @@ export const TabNav: React.FC<TabNavProps> = ({
   const tabs = [
     {
       id: 'command-center' as NexusTab,
-      label: 'Центр управления',
+      label: 'Центр управления (Задачи)',
       shortLabel: 'Задачи',
       icon: LayoutDashboard,
     },
     {
       id: 'finances' as NexusTab,
-      label: 'Финансы & ЖКХ',
+      label: 'Финансы & ЖКХ Москвы',
       shortLabel: 'Финансы',
       icon: CreditCard,
     },
     {
       id: 'wishlist' as NexusTab,
-      label: 'Берем или нет?',
+      label: 'Берем или нет? 🐾',
       shortLabel: 'Вишлист',
       icon: Gift,
       badge: wishlistPendingCount > 0 ? wishlistPendingCount : undefined,
     },
     {
       id: 'study-work' as NexusTab,
-      label: 'Учеба & Работа',
-      shortLabel: 'Учеба',
-      icon: GraduationCap,
+      label: 'ВШЭ x РУДН x Я-Профи',
+      shortLabel: 'Учеба/Я-Профи',
+      icon: Trophy,
     },
     {
       id: 'pomodoro' as NexusTab,
-      label: 'Фокус-таймер',
-      shortLabel: 'Pomodoro',
+      label: 'Cozy Focus Room',
+      shortLabel: 'Focus Room',
       icon: Timer,
     },
   ];
 
   return (
-    <div className="border-b border-white/[0.08] bg-[#0b0d11]/40 px-4">
-      <div className="mx-auto flex max-w-[1720px] items-center gap-1 overflow-x-auto py-2 no-scrollbar">
+    <div className="border-b border-white/[0.08] bg-[#090714]/60 backdrop-blur-2xl px-4">
+      <div className="mx-auto flex max-w-[1720px] items-center gap-1.5 overflow-x-auto py-2 no-scrollbar">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -66,9 +67,9 @@ export const TabNav: React.FC<TabNavProps> = ({
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`relative flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`relative flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all ${
                 isActive
-                  ? 'bg-white/[0.1] text-white shadow-sm'
+                  ? 'bg-purple-500/20 text-purple-200 border border-purple-500/40 shadow-sm shadow-purple-500/20'
                   : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
               }`}
             >
@@ -77,13 +78,13 @@ export const TabNav: React.FC<TabNavProps> = ({
               <span className="md:hidden">{tab.shortLabel}</span>
 
               {tab.badge !== undefined && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500/20 px-1 font-mono text-[9px] font-bold text-amber-300 border border-amber-500/40">
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500/30 px-1 font-mono text-[9px] font-bold text-rose-300 border border-rose-500/40">
                   {tab.badge}
                 </span>
               )}
 
               {isActive && (
-                <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-amber-500" />
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-gradient-to-r from-amber-400 via-pink-400 to-purple-400" />
               )}
             </button>
           );

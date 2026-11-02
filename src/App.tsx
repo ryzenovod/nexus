@@ -21,6 +21,7 @@ import { StudyWorkModule } from './components/study-work/StudyWorkModule';
 import { CommandPalette } from './components/command-palette/CommandPalette';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { GlassCard } from './components/visual/GlassCard';
+import { StarryTwilightCanvas } from './components/visual/StarryTwilightCanvas';
 import { NexusTask } from './types/nexus';
 
 export const App: React.FC = () => {
@@ -48,6 +49,8 @@ export const App: React.FC = () => {
     wishlist,
     tickPomodoro,
     pomodoroIsRunning,
+    atmosphereMode,
+    setAtmosphereMode,
   } = useNexusStore();
 
   const [activeTab, setActiveTab] = useState<NexusTab>('command-center');
@@ -67,6 +70,13 @@ export const App: React.FC = () => {
     return false;
   });
 
+  // If ?mode=widget is enabled, automatically switch atmosphere to 'transparent'
+  useEffect(() => {
+    if (isWidgetMode) {
+      setAtmosphereMode('transparent');
+    }
+  }, [isWidgetMode, setAtmosphereMode]);
+
   // Background Pomodoro ticker
   useEffect(() => {
     let interval: any = null;
@@ -81,7 +91,6 @@ export const App: React.FC = () => {
   // Keyboard shortcut listener for numbers 1-5 for tab switching
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in an input
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
@@ -103,7 +112,6 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Configure DnD sensors with minimum drag activation distance
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -129,7 +137,6 @@ export const App: React.FC = () => {
     const taskId = String(active.id);
     const overId = String(over.id);
 
-    // If dropped over a day column
     if (overId.startsWith('droppable-day-')) {
       const targetDate = overId.replace('droppable-day-', '');
       moveTaskToDate(taskId, targetDate);
@@ -153,24 +160,18 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen text-zinc-100 transition-colors ${
-        isWidgetMode
+      className={`relative min-h-screen text-zinc-100 transition-colors ${
+        atmosphereMode === 'transparent' || isWidgetMode
           ? 'bg-transparent overflow-hidden'
-          : 'bg-[#0b0d11] bg-radial-gradient'
+          : 'bg-[#090714]'
       }`}
     >
-      {/* Background glow effects */}
-      {!isWidgetMode && (
-        <div className="pointer-events-none fixed inset-0 overflow-hidden">
-          <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-amber-500/5 blur-[120px]" />
-          <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-500/5 blur-[120px]" />
-          <div className="absolute -bottom-40 left-1/3 h-[500px] w-[500px] rounded-full bg-emerald-500/5 blur-[120px]" />
-        </div>
-      )}
+      {/* Procedural Animated Canvas: Starry Twilight & Shooting Stars */}
+      <StarryTwilightCanvas mode={atmosphereMode} />
 
-      {/* Main Top Header (hidden in compact widget mode) */}
+      {/* Main Top Header */}
       {!isWidgetMode && (
-        <>
+        <div className="relative z-30">
           <Header
             onOpenSettings={() => setActiveSettingsModal(true)}
             onOpenCommandPalette={() => setActiveCommandPalette(true)}
@@ -188,12 +189,12 @@ export const App: React.FC = () => {
             onTabChange={setActiveTab}
             wishlistPendingCount={pendingWishlistCount}
           />
-        </>
+        </div>
       )}
 
       {/* Main Content Area */}
       <main
-        className={`mx-auto max-w-[1720px] pb-24 md:pb-12 ${
+        className={`relative z-10 mx-auto max-w-[1720px] pb-24 md:pb-12 ${
           isWidgetMode ? 'p-3' : 'p-4 sm:p-6'
         }`}
       >
@@ -202,7 +203,7 @@ export const App: React.FC = () => {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          {/* TAB 1: COMMAND CENTER (WIDGET ENHANCED) */}
+          {/* TAB 1: COMMAND CENTER */}
           {(activeTab === 'command-center' || isWidgetMode) && (
             <div className="space-y-6">
               {/* Upper Section: 7 Day Columns Planner */}
@@ -243,13 +244,13 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: FINANCES & ЖКХ */}
+          {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK ADVISOR */}
           {activeTab === 'finances' && !isWidgetMode && <FinancesModule />}
 
-          {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ?») */}
+          {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ? 🐾») */}
           {activeTab === 'wishlist' && !isWidgetMode && <WishlistModule />}
 
-          {/* TAB 4: STUDY, WORK & POMODORO */}
+          {/* TAB 4 & 5: ВШЭ x РУДН x Я-ПРОФИ & COZY FOCUS ROOM */}
           {(activeTab === 'study-work' || activeTab === 'pomodoro') && !isWidgetMode && (
             <StudyWorkModule />
           )}
@@ -257,7 +258,7 @@ export const App: React.FC = () => {
           {/* Drag Overlay for smooth preview */}
           <DragOverlay>
             {activeDraggingTask && (
-              <div className="w-64 opacity-90 shadow-2xl">
+              <div className="w-64 opacity-95 shadow-2xl">
                 <GlassCard
                   task={activeDraggingTask}
                   onToggle={() => {}}

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, 
   CreditCard, 
   Gift, 
-  GraduationCap, 
+  Trophy, 
   Plus, 
   Search 
 } from 'lucide-react';
@@ -25,13 +25,13 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
   wishlistBadge = 0,
 }) => {
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#0b0d11]/90 backdrop-blur-3xl px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-purple-500/20 bg-[#090714]/90 backdrop-blur-3xl px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl">
       <div className="flex items-center justify-around gap-1">
         <button
           type="button"
           onClick={() => onTabChange('command-center')}
           className={`flex flex-col items-center gap-1 p-1 text-[10px] transition-colors ${
-            activeTab === 'command-center' ? 'text-amber-400' : 'text-zinc-400'
+            activeTab === 'command-center' ? 'text-amber-400 font-bold' : 'text-zinc-400'
           }`}
         >
           <LayoutDashboard className="h-5 w-5" />
@@ -42,7 +42,7 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
           type="button"
           onClick={() => onTabChange('finances')}
           className={`flex flex-col items-center gap-1 p-1 text-[10px] transition-colors ${
-            activeTab === 'finances' ? 'text-amber-400' : 'text-zinc-400'
+            activeTab === 'finances' ? 'text-amber-400 font-bold' : 'text-zinc-400'
           }`}
         >
           <CreditCard className="h-5 w-5" />
@@ -53,16 +53,16 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
         <button
           type="button"
           onClick={onOpenNewTask}
-          className="flex -mt-4 h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/40 active:scale-95 transition-transform"
+          className="flex -mt-4 h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 via-pink-500 to-purple-500 text-black shadow-lg shadow-purple-500/40 active:scale-95 transition-transform"
         >
-          <Plus className="h-6 w-6 stroke-[3]" />
+          <Plus className="h-6 w-6 stroke-[3] text-white" />
         </button>
 
         <button
           type="button"
           onClick={() => onTabChange('wishlist')}
           className={`relative flex flex-col items-center gap-1 p-1 text-[10px] transition-colors ${
-            activeTab === 'wishlist' ? 'text-amber-400' : 'text-zinc-400'
+            activeTab === 'wishlist' ? 'text-amber-400 font-bold' : 'text-zinc-400'
           }`}
         >
           <Gift className="h-5 w-5" />
@@ -78,10 +78,10 @@ export const MobileBottomBar: React.FC<MobileBottomBarProps> = ({
           type="button"
           onClick={() => onTabChange('study-work')}
           className={`flex flex-col items-center gap-1 p-1 text-[10px] transition-colors ${
-            activeTab === 'study-work' ? 'text-amber-400' : 'text-zinc-400'
+            activeTab === 'study-work' ? 'text-amber-400 font-bold' : 'text-zinc-400'
           }`}
         >
-          <GraduationCap className="h-5 w-5" />
+          <Trophy className="h-5 w-5" />
           <span>Учеба</span>
         </button>
 

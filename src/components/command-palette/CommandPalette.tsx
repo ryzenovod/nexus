@@ -93,12 +93,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       category = '💰 Финансы';
       bracketColor = 'finance';
       cleanTitle = cleanTitle.replace(/#финансы|#деньги|#жкх/gi, '');
-    } else if (text.includes('#учеба') || text.includes('#вшэ')) {
-      category = '🎓 Учеба';
-      bracketColor = 'active';
-      cleanTitle = cleanTitle.replace(/#учеба|#вшэ/gi, '');
+    } else if (text.includes('#япрофи') || text.includes('#дфо') || text.includes('#цфо')) {
+      category = '🏆 Я-Профессионал';
+      bracketColor = 'critical';
+      cleanTitle = cleanTitle.replace(/#япрофи|#дфо|#цфо/gi, '');
+    } else if (text.includes('#вшэ')) {
+      category = '🎓 ВШЭ (Егор)';
+      bracketColor = 'cyber';
+      cleanTitle = cleanTitle.replace(/#вшэ/gi, '');
+    } else if (text.includes('#рудн') || text.includes('#учеба')) {
+      category = '🎓 РУДН (Аня)';
+      bracketColor = 'cyber';
+      cleanTitle = cleanTitle.replace(/#рудн|#учеба/gi, '');
     } else if (text.includes('#работа') || text.includes('#openmap')) {
-      category = '💼 Работа';
+      category = '💼 Работа (Егор)';
       bracketColor = 'critical';
       cleanTitle = cleanTitle.replace(/#работа|#openmap/gi, '');
     } else if (text.includes('#покупки') || text.includes('#вишлист')) {

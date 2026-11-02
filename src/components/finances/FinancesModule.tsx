@@ -1,39 +1,28 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { 
-  CreditCard, 
-  TrendingUp, 
   ArrowUpRight, 
   ArrowDownLeft, 
   Plus, 
   Check, 
-  AlertCircle, 
   ExternalLink, 
-  Flame, 
   Droplets, 
   Zap, 
   Wifi, 
   Building2, 
-  Gift, 
   Calendar,
-  DollarSign
+  Layers
 } from 'lucide-react';
 import { useNexusStore } from '../../store/useNexusStore';
-import { FinanceTransaction } from '../../types/nexus';
+import { CashbackAdvisor } from './CashbackAdvisor';
 
 export const FinancesModule: React.FC = () => {
   const {
     budget,
     transactions,
-    cashbackCards,
     utilityBills,
     addTransaction,
-    deleteTransaction,
-    toggleCashbackClaimed,
     updateMeterReadings,
     payUtilityBill,
-    tasks,
-    toggleTaskCompletion,
   } = useNexusStore();
 
   const [showAddTxModal, setShowAddTxModal] = useState(false);
@@ -42,7 +31,6 @@ export const FinancesModule: React.FC = () => {
   const [newTxType, setNewTxType] = useState<'expense' | 'transfer'>('expense');
   const [newTxCategory, setNewTxCategory] = useState('Продукты');
   const [newTxPaidBy, setNewTxPaidBy] = useState<'egor' | 'anya' | 'joint'>('joint');
-  const [newTxSplit, setNewTxSplit] = useState<'50/50' | 'egor_100' | 'anya_100'>('50/50');
   const [newTxNotes, setNewTxNotes] = useState('');
 
   // Selected bill for readings input
@@ -62,7 +50,7 @@ export const FinancesModule: React.FC = () => {
       type: newTxType,
       category: newTxCategory,
       paidBy: newTxPaidBy,
-      splitRatio: newTxSplit,
+      splitRatio: '50/50',
       notes: newTxNotes.trim() || undefined,
     });
 
@@ -81,9 +69,6 @@ export const FinancesModule: React.FC = () => {
     setEditingReadingsBillId(null);
   };
 
-  // Find cashback task
-  const gpbTask = tasks.find((t) => t.id === 'task-fin-4');
-
   const egorSharePercent = Math.round((budget.egorContribution / budget.totalTarget) * 100);
   const anyaSharePercent = 100 - egorSharePercent;
 
@@ -95,10 +80,10 @@ export const FinancesModule: React.FC = () => {
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-950/40 via-[#0f1115]/80 to-black/80 backdrop-blur-2xl p-5 shadow-glass">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
-              Совместный баланс
+              Совместный бюджет пары
             </span>
             <span className="flex h-6 items-center rounded-full bg-emerald-500/20 px-2 font-mono text-[11px] font-bold text-emerald-400 border border-emerald-500/30">
-              Активен
+              Взносы: {budget.depositDates}
             </span>
           </div>
 
@@ -135,7 +120,7 @@ export const FinancesModule: React.FC = () => {
             className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-white/10 py-2 text-xs font-medium text-white hover:bg-white/20 transition-all"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
-            <span>Пополнить совместный счет</span>
+            <span>Пополнить общий счет</span>
           </button>
         </div>
 
@@ -186,7 +171,7 @@ export const FinancesModule: React.FC = () => {
           </div>
 
           <p className="mt-2 text-xs text-zinc-400">
-            Оплачивает: совместные продукты (ВкусВилл), уют дома, текстиль и утварь для кухни.
+            Оплачивает: совместные продукты (ВкусВилл по Сберу 5%), уют дома, текстиль и посуду.
           </p>
 
           <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-400">
@@ -196,7 +181,10 @@ export const FinancesModule: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. ЖКХ-ТЕРМИНАЛ С ДИНАМИКОЙ ПЛАТЕЖЕЙ */}
+      {/* 2. CASHBACK ADVISOR (SMART SPLIT) */}
+      <CashbackAdvisor />
+
+      {/* 3. ЖКХ-ТЕРМИНАЛ МОСКВЫ С ДИНАМИКОЙ ПЛАТЕЖЕЙ */}
       <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
           <div className="flex items-center gap-2.5">
@@ -205,7 +193,7 @@ export const FinancesModule: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white uppercase tracking-tight">
-                ЖКХ-Терминал квартиры & Счета
+                ЖКХ-Терминал Москвы & Счета
               </h2>
               <p className="text-xs text-zinc-400">
                 Домиленд, Мосэнергосбыт, ЕПД mos.ru, Wi-Fi с динамикой начислений
@@ -214,7 +202,7 @@ export const FinancesModule: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-400">Окно передачи показаний:</span>
+            <span className="text-zinc-400">Окно передачи показаний счетчиков:</span>
             <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono font-semibold text-amber-300 border border-amber-500/30">
               15–26 число
             </span>
@@ -235,7 +223,7 @@ export const FinancesModule: React.FC = () => {
               <div
                 key={bill.id}
                 style={{
-                  borderLeft: bill.status === 'overdue' ? '3.5px solid #ef4444' : '3.5px solid #eab308',
+                  borderLeft: bill.status === 'overdue' ? '3.5px solid #ef4444' : '3.5px solid #f59e0b',
                 }}
                 className="relative rounded-xl border-y border-r border-white/10 bg-black/30 p-4 space-y-3"
               >
@@ -286,7 +274,7 @@ export const FinancesModule: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Readings Info if required */}
+                {/* Readings Info */}
                 {bill.readingsRequired && (
                   <div className="rounded-lg bg-white/[0.04] p-2 text-[11px] space-y-1 border border-white/[0.06]">
                     <div className="flex justify-between text-zinc-300">
@@ -384,108 +372,7 @@ export const FinancesModule: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. КЭШБЭК-РАДАР (ГАЗПРОМБАНК, Т-БАНК, АЛЬФА, СБЕР) */}
-      <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              <Gift className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-white uppercase tracking-tight">
-                Кэшбэк-радар Егора & Ани (Ноябрь 2026)
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Максимизация выгоды с каждой покупки по картам Газпромбанк, Т-Банк, Альфа, Сбер
-              </p>
-            </div>
-          </div>
-
-          {/* Quick action: Gazprombank Cashback */}
-          {gpbTask && (
-            <button
-              type="button"
-              onClick={() => toggleTaskCompletion(gpbTask.id)}
-              className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold border transition-all ${
-                gpbTask.completed
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
-              }`}
-            >
-              <Check className="h-3.5 w-3.5" />
-              <span>{gpbTask.completed ? 'Кэшбэк с Газпромбанка забран ✓' : 'Забрать кэшбэк с Газпромбанка!'}</span>
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cashbackCards.map((card) => (
-            <div
-              key={card.id}
-              className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3 relative overflow-hidden"
-            >
-              {/* Top Bank Strip */}
-              <div
-                className="absolute top-0 left-0 right-0 h-1"
-                style={{ backgroundColor: card.bankColor }}
-              />
-
-              <div className="flex items-center justify-between pt-1">
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    {card.bankName}
-                  </h3>
-                  <span className="text-[11px] text-zinc-400">
-                    Карта {card.user === 'egor' ? 'Егора' : 'Ани'}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => toggleCashbackClaimed(card.id)}
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-semibold border transition-colors ${
-                    card.claimed
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                  }`}
-                >
-                  {card.claimed ? 'Кэшбэк активен ✓' : 'Не забран!'}
-                </button>
-              </div>
-
-              {/* Categories list */}
-              <div className="space-y-1.5">
-                {card.categories.map((cat, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-xs border border-white/[0.04]"
-                  >
-                    <div>
-                      <span className="text-zinc-200">{cat.category}</span>
-                      {cat.note && (
-                        <span className="block text-[10px] text-zinc-400">
-                          {cat.note}
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-mono font-bold text-emerald-400 ml-2">
-                      {cat.percent}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {card.actionRequired && !card.claimed && (
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-2 text-[11px] text-amber-300">
-                  {card.actionRequired}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. ИСТОРИЯ ОПЕРАЦИЙ И ТРАТ */}
+      {/* 4. ИСТОРИЯ ОПЕРАЦИЙ */}
       <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
           <h2 className="text-sm font-bold text-white uppercase tracking-tight">
