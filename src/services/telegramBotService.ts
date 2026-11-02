@@ -231,29 +231,29 @@ class TelegramBotService {
     }
 
     // 3. Category detection
-    let category: TaskCategory = '📋 Общее';
+    let category: TaskCategory = 'Общее';
     let bracketColor: BracketColor = 'active';
 
     if (lower.includes('вшэ') || lower.includes('hse') || lower.includes('магистр') || lower.includes('консенсус')) {
-      category = '🎓 ВШЭ (Егор)';
+      category = 'ВШЭ';
       assignee = 'egor';
       bracketColor = 'cyber';
     } else if (lower.includes('рудн') || lower.includes('психолог') || lower.includes('брс')) {
-      category = '🎓 РУДН (Аня)';
+      category = 'РУДН';
       assignee = 'anya';
       bracketColor = 'cyber';
     } else if (lower.includes('япрофи') || lower.includes('дфо') || lower.includes('цфо') || lower.includes('вебинар')) {
-      category = '🏆 Я-Профессионал';
+      category = 'Я-Профи';
       assignee = 'anya';
       bracketColor = 'cyber';
     } else if (lower.includes('купить') || lower.includes('покупк') || lower.includes('заказать')) {
-      category = '🛒 Покупки';
+      category = 'Покупки';
       bracketColor = 'neutral';
     } else if (lower.includes('жкх') || lower.includes('счетчик') || lower.includes('оплат') || lower.includes('деньги')) {
-      category = '💰 Финансы';
+      category = 'Финансы';
       bracketColor = 'finance';
     } else if (lower.includes('ремонт') || lower.includes('дом') || lower.includes('затирк') || lower.includes('люстр')) {
-      category = '📦 Для дома!';
+      category = 'Дом';
       bracketColor = 'active';
     }
 

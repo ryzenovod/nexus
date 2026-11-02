@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS nexus_tasks (
   notes TEXT,
   completed BOOLEAN DEFAULT FALSE,
   bracket_color TEXT NOT NULL DEFAULT 'active',
-  category TEXT NOT NULL DEFAULT '📦 Для дома!',
+  category TEXT NOT NULL DEFAULT 'Дом',
   room TEXT DEFAULT 'Все',
   assignee TEXT NOT NULL DEFAULT 'together',
   date TEXT NOT NULL DEFAULT 'inbox',

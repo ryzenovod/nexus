@@ -128,29 +128,29 @@ export class IcsScheduleParser {
     forcedAssignee?: Assignee
   ): NexusTask[] {
     return events.map((ev, idx) => {
-      let category: TaskCategory = forcedCategory || '🎓 ВШЭ (Егор)';
+      let category: TaskCategory = forcedCategory || 'ВШЭ';
       let assignee: Assignee = forcedAssignee || 'egor';
 
       const lowerSummary = ev.summary.toLowerCase();
       const lowerDesc = (ev.description || '').toLowerCase();
 
       if (lowerSummary.includes('рудн') || lowerDesc.includes('рудн') || lowerSummary.includes('психол')) {
-        category = '🎓 РУДН (Аня)';
+        category = 'РУДН';
         assignee = 'anya';
       } else if (lowerSummary.includes('вшэ') || lowerSummary.includes('hse') || lowerSummary.includes('магистр')) {
-        category = '🎓 ВШЭ (Егор)';
+        category = 'ВШЭ';
         assignee = 'egor';
       }
 
       const notesParts: string[] = [];
       if (ev.startTime) {
-        notesParts.push(`⏰ Время: ${ev.startTime}${ev.endTime ? ` - ${ev.endTime}` : ''}`);
+        notesParts.push(`Время: ${ev.startTime}${ev.endTime ? ` - ${ev.endTime}` : ''}`);
       }
       if (ev.location) {
-        notesParts.push(`📍 Аудитория / Ссылка: ${ev.location}`);
+        notesParts.push(`Аудитория / Ссылка: ${ev.location}`);
       }
       if (ev.description) {
-        notesParts.push(`📝 ${ev.description}`);
+        notesParts.push(`${ev.description}`);
       }
 
       return {

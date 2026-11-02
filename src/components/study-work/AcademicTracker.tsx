@@ -101,10 +101,10 @@ END:VCALENDAR`;
   // HSE 10-point scale interpretation
   const getHseGradeLabel = (score: number) => {
     const rounded = Math.round(score);
-    if (rounded >= 8) return { label: 'Отлично 🌟', color: '#22c55e', bg: 'rgba(34,197,94,0.15)' };
-    if (rounded >= 6) return { label: 'Хорошо 👍', color: '#38bdf8', bg: 'rgba(56,189,248,0.15)' };
-    if (rounded >= 4) return { label: 'Удовлетворительно ⚖️', color: '#eab308', bg: 'rgba(234,179,8,0.15)' };
-    return { label: 'Неудовлетворительно 🚨', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' };
+    if (rounded >= 8) return { label: 'Отлично', color: '#22c55e', bg: 'rgba(34,197,94,0.15)' };
+    if (rounded >= 6) return { label: 'Хорошо', color: '#38bdf8', bg: 'rgba(56,189,248,0.15)' };
+    if (rounded >= 4) return { label: 'Удовлетворительно', color: '#eab308', bg: 'rgba(234,179,8,0.15)' };
+    return { label: 'Неудовлетворительно', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' };
   };
 
   // RUDN ECTS translation

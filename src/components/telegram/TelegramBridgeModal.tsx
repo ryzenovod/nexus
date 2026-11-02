@@ -158,7 +158,7 @@ export const TelegramBridgeModal: React.FC<TelegramBridgeModalProps> = ({
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            ⚡️ Быстрые пуши
+            Быстрые пуши
           </button>
           <button
             type="button"
@@ -169,7 +169,7 @@ export const TelegramBridgeModal: React.FC<TelegramBridgeModalProps> = ({
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            🔑 Токены & Чаты
+            Токены & Чаты
           </button>
           <button
             type="button"
@@ -180,7 +180,7 @@ export const TelegramBridgeModal: React.FC<TelegramBridgeModalProps> = ({
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            📖 Инструкция @BotFather
+            Инструкция @BotFather
           </button>
         </div>
 
@@ -370,7 +370,7 @@ export const TelegramBridgeModal: React.FC<TelegramBridgeModalProps> = ({
                 </label>
 
                 <label className="flex items-center justify-between text-xs text-zinc-300 cursor-pointer">
-                  <span>Оповещать в общий чат при обоюдном лайке в вишлисте 💜</span>
+                  <span>Оповещать в общий чат при обоюдном лайке в вишлисте</span>
                   <input
                     type="checkbox"
                     checked={telegramConfig.autoNotifyWishlist}

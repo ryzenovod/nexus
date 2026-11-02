@@ -8,7 +8,7 @@ import {
   useSensor, 
   useSensors 
 } from '@dnd-kit/core';
-import { Plus, Menu } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useNexusStore } from './store/useNexusStore';
 import { Sidebar } from './components/navigation/Sidebar';
 import { NexusTab } from './components/navigation/TabNav';
@@ -65,7 +65,6 @@ export const App: React.FC = () => {
   const [activeTelegramModal, setActiveTelegramModal] = useState(false);
   const [activeTamagotchiModal, setActiveTamagotchiModal] = useState(false);
   const [activeDraggingTask, setActiveDraggingTask] = useState<NexusTask | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Widget Mode: checked via URL query ?mode=widget or toggle
   const [isWidgetMode, setIsWidgetMode] = useState(() => {
@@ -204,45 +203,42 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* RULE 1 & 5: RIGHT MAIN CANVAS (LINEAR STYLE AIR & INDIGO DEPTH) */}
-      <div className="flex-1 overflow-y-auto relative flex flex-col min-w-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)]">
+      {/* RULE 1 & 4: RIGHT MAIN CANVAS (NO GLOBAL SCROLL, PERFECT 100VH VIEWPORT) */}
+      <div className="flex-1 h-screen overflow-hidden flex flex-col min-w-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.12),transparent)]">
         {/* Top Slim Header Bar */}
         {!isWidgetMode && (
-          <header className="sticky top-0 z-20 px-6 py-4 flex items-center justify-between border-b border-white/[0.05] bg-[#09090b]/80 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <h1 className="text-base font-semibold tracking-tight text-zinc-100">
-                {tabTitles[activeTab]}
-              </h1>
-            </div>
+          <header className="px-6 py-3 flex items-center justify-between border-b border-white/[0.05] bg-[#09090b]/80 backdrop-blur-xl shrink-0">
+            <h1 className="text-sm font-semibold tracking-tight text-zinc-100">
+              {tabTitles[activeTab]}
+            </h1>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setInitialTaskDate('inbox');
-                  setSelectedTaskToEdit(null);
-                  setActiveTaskModal(true);
-                }}
-                className="flex items-center gap-1.5 rounded-md bg-white text-zinc-950 hover:bg-zinc-200 px-3 py-1.5 text-xs font-medium transition-colors shadow-sm"
-              >
-                <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                <span>+ Задача</span>
-              </button>
-            </div>
+            {/* Clean White Action Button (One Plus icon, text 'Новая задача', NO '+ +') */}
+            <button
+              type="button"
+              onClick={() => {
+                setInitialTaskDate('inbox');
+                setSelectedTaskToEdit(null);
+                setActiveTaskModal(true);
+              }}
+              className="flex items-center gap-1.5 rounded-md bg-white text-zinc-950 hover:bg-zinc-200 px-3 py-1.5 text-xs font-medium transition-colors shadow-sm cursor-pointer"
+            >
+              <Plus size={14} strokeWidth={2.2} />
+              <span>Новая задача</span>
+            </button>
           </header>
         )}
 
-        {/* Main Workspace Body */}
-        <main className={`flex-1 ${isWidgetMode ? 'p-2 sm:p-3' : 'px-6 py-5'} pb-24 md:pb-8`}>
+        {/* Main Content Viewport */}
+        <div className={`flex-1 overflow-hidden min-h-0 ${isWidgetMode ? 'p-2' : 'px-6 py-4'}`}>
           <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            {/* TAB 1: COMMAND CENTER (Week Planner + 4-Column Inbox Grid) */}
+            {/* TAB 1: COMMAND CENTER (Week 35% + Inbox 65% in 100vh without page scroll!) */}
             {(activeTab === 'command-center' || isWidgetMode) && (
-              <div className="space-y-5">
-                {/* Upper Section: 7 Day Columns Planner */}
+              <div className="h-full flex flex-col min-h-0 space-y-3">
+                {/* Upper Section: 7 Day Columns Matrix */}
                 <WeekPlanner
                   tasks={tasks}
                   activeWeekOffset={activeWeekOffset}
@@ -253,7 +249,7 @@ export const App: React.FC = () => {
                   onAddTaskForDay={handleOpenNewTaskForDate}
                 />
 
-                {/* Lower Section: 4-Column Flat Widget Grid */}
+                {/* Lower Section: 4-Column Hairline Cockpit Matrix with its own internal scroll */}
                 <InboxGrid
                   tasks={tasks}
                   searchQuery={searchQuery}
@@ -281,13 +277,25 @@ export const App: React.FC = () => {
             )}
 
             {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK */}
-            {activeTab === 'finances' && !isWidgetMode && <FinancesModule />}
+            {activeTab === 'finances' && !isWidgetMode && (
+              <div className="h-full overflow-y-auto pr-1">
+                <FinancesModule />
+              </div>
+            )}
 
             {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ?») + РЕМОНТ КВАРТИРЫ + СВИДАНИЯ */}
-            {activeTab === 'wishlist' && !isWidgetMode && <WishlistModule />}
+            {activeTab === 'wishlist' && !isWidgetMode && (
+              <div className="h-full overflow-y-auto pr-1">
+                <WishlistModule />
+              </div>
+            )}
 
             {/* TAB 4: ВШЭ x РУДН x Я-ПРОФИ (КАНБАН + РАДАР ЦФО/ДФО + РАСПИСАНИЕ & БРС + FOCUS ROOM) */}
-            {activeTab === 'study-work' && !isWidgetMode && <StudyWorkModule />}
+            {activeTab === 'study-work' && !isWidgetMode && (
+              <div className="h-full overflow-y-auto pr-1">
+                <StudyWorkModule />
+              </div>
+            )}
 
             {/* Drag Overlay for smooth preview */}
             <DragOverlay>
@@ -296,14 +304,13 @@ export const App: React.FC = () => {
                   <GlassCard
                     task={activeDraggingTask}
                     onToggle={() => {}}
-                    compact
                     isDragging
                   />
                 </div>
               )}
             </DragOverlay>
           </DndContext>
-        </main>
+        </div>
       </div>
 
       {/* Mobile Navigation Dock for screens < md */}

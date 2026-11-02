@@ -38,7 +38,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [bracketColor, setBracketColor] = useState<BracketColor>('active');
-  const [category, setCategory] = useState<TaskCategory>('📦 Для дома!');
+  const [category, setCategory] = useState<TaskCategory>('Дом');
   const [room, setRoom] = useState<RoomArea>('Все');
   const [assignee, setAssignee] = useState<Assignee>('together');
   const [date, setDate] = useState<string>('inbox');
@@ -68,7 +68,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setTitle('');
       setNotes('');
       setBracketColor('active');
-      setCategory('📦 Для дома!');
+      setCategory('Дом');
       setRoom('Все');
       setAssignee('together');
       setDate(initialDate || 'inbox');
@@ -133,15 +133,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   };
 
   const categories: TaskCategory[] = [
-    '📦 Для дома!',
-    '🎓 ВШЭ (Егор)',
-    '🎓 РУДН (Аня)',
-    '🏆 Я-Профессионал',
-    '💼 Работа (Егор)',
-    '🚀 Проекты',
-    '💰 Финансы',
-    '🛒 Покупки',
-    '📋 Общее',
+    'Дом',
+    'ВШЭ',
+    'РУДН',
+    'Я-Профи',
+    'Работа',
+    'Проекты',
+    'Финансы',
+    'Покупки',
+    'Общее',
   ];
 
   const rooms: RoomArea[] = ['Все', 'Ванная', 'Балкон', 'Комната', 'Кухня'];

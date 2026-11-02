@@ -364,19 +364,19 @@ export const useNexusStore = create<NexusState>()(
 
           // Level up titles
           const levelTitles: Record<number, string> = {
-            1: 'Новоселы в Москве 🏠',
-            2: 'Уютный Тандем ☕️',
-            3: 'Синхронные Лидеры 🚀',
-            4: 'Дримтим Архитекторы Уюта ✨',
-            5: 'Мастера Жизненной Системы 👑',
-            6: 'Легендарная Пара NEXUS 🌌',
+            1: 'Новоселы в Москве',
+            2: 'Уютный Тандем',
+            3: 'Синхронные Лидеры',
+            4: 'Дримтим Архитекторы Уюта',
+            5: 'Мастера Жизненной Системы',
+            6: 'Легендарная Пара NEXUS',
           };
 
           if (newXp >= nextLevelXp) {
             newXp -= nextLevelXp;
             level += 1;
             nextLevelXp = Math.round(nextLevelXp * 1.35);
-            levelTitle = levelTitles[level] || `Гуру Жизни Ур. ${level} 🌟`;
+            levelTitle = levelTitles[level] || `Гуру Жизни Ур. ${level}`;
 
             // Unlock cosmetics on specific levels
             if (level >= 2 && !unlockedCosmetics.includes('glasses')) {
@@ -426,7 +426,8 @@ export const useNexusStore = create<NexusState>()(
 
       feedMascot: () => {
         const { gamification } = get();
-        if ((gamification.treats || 0) <= 0) return;
+        const currentTreats = gamification.treats !== undefined ? gamification.treats : 18;
+        if (currentTreats <= 0) return;
 
         soundEffects.playEat();
         get().addXp(20);
@@ -434,7 +435,7 @@ export const useNexusStore = create<NexusState>()(
         set((state) => ({
           gamification: {
             ...state.gamification,
-            treats: Math.max(0, (state.gamification.treats || 0) - 1),
+            treats: Math.max(0, currentTreats - 1),
             hungerLevel: Math.min(100, (state.gamification.hungerLevel || 80) + 15),
           },
         }));
@@ -472,11 +473,11 @@ export const useNexusStore = create<NexusState>()(
       scheduleDateScenario: (scenario, targetDate = '2026-11-04') => {
         const newTask: NexusTask = {
           id: `task-date-${scenario.id}-${Date.now()}`,
-          title: `💕 Свидание: ${scenario.title}`,
-          notes: `${scenario.description}\n\n📍 Локация: ${scenario.location}\n💰 Бюджет: ~${scenario.estimatedCost} ₽ (${scenario.budgetLabel})\n💳 Оплата: ${scenario.recommendedCard} (${scenario.cardBonusText})`,
+          title: `Свидание: ${scenario.title}`,
+          notes: `${scenario.description}\n\nЛокация: ${scenario.location}\nБюджет: ~${scenario.estimatedCost} ₽ (${scenario.budgetLabel})\nОплата: ${scenario.recommendedCard} (${scenario.cardBonusText})`,
           completed: false,
           bracketColor: 'cyber',
-          category: '📋 Общее',
+          category: 'Общее',
           room: scenario.vibe === 'home' ? 'Комната' : 'Все',
           assignee: 'together',
           date: targetDate,
@@ -628,7 +629,7 @@ export const useNexusStore = create<NexusState>()(
         } else if (type === 'utilities') {
           messageText = telegramBotService.formatUtilityReminderMessage(utilityBills);
         } else {
-          messageText = extraText || '🐾 NEXUS Couple OS: Тестовое сообщение успешно отправлено!';
+          messageText = extraText || 'NEXUS Couple OS: Тестовое сообщение успешно отправлено!';
         }
 
         const res = await telegramBotService.sendMessage(
@@ -744,7 +745,7 @@ export const useNexusStore = create<NexusState>()(
           notes: item.notes || `Одобрено в вишлисте. Бюджет: ${item.estimatedPrice} ₽`,
           completed: false,
           bracketColor: 'active',
-          category: '🛒 Покупки',
+          category: 'Покупки',
           room: 'Кухня',
           assignee: 'together',
           date: 'inbox',

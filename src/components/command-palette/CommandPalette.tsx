@@ -70,7 +70,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const parseNaturalInput = (text: string) => {
     let cleanTitle = text;
     let assignee: Assignee = 'together';
-    let category: TaskCategory = '📦 Для дома!';
+    let category: TaskCategory = 'Дом';
     let room: RoomArea = 'Все';
     let date = 'inbox';
     let price: number | undefined = undefined;
@@ -90,31 +90,31 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     // Parse category
     if (text.includes('#финансы') || text.includes('#деньги') || text.includes('#жкх')) {
-      category = '💰 Финансы';
+      category = 'Финансы';
       bracketColor = 'finance';
       cleanTitle = cleanTitle.replace(/#финансы|#деньги|#жкх/gi, '');
     } else if (text.includes('#япрофи') || text.includes('#дфо') || text.includes('#цфо')) {
-      category = '🏆 Я-Профессионал';
+      category = 'Я-Профи';
       bracketColor = 'critical';
       cleanTitle = cleanTitle.replace(/#япрофи|#дфо|#цфо/gi, '');
     } else if (text.includes('#вшэ')) {
-      category = '🎓 ВШЭ (Егор)';
+      category = 'ВШЭ';
       bracketColor = 'cyber';
       cleanTitle = cleanTitle.replace(/#вшэ/gi, '');
     } else if (text.includes('#рудн') || text.includes('#учеба')) {
-      category = '🎓 РУДН (Аня)';
+      category = 'РУДН';
       bracketColor = 'cyber';
       cleanTitle = cleanTitle.replace(/#рудн|#учеба/gi, '');
     } else if (text.includes('#работа') || text.includes('#openmap')) {
-      category = '💼 Работа (Егор)';
+      category = 'Работа';
       bracketColor = 'critical';
       cleanTitle = cleanTitle.replace(/#работа|#openmap/gi, '');
     } else if (text.includes('#покупки') || text.includes('#вишлист')) {
-      category = '🛒 Покупки';
+      category = 'Покупки';
       bracketColor = 'neutral';
       cleanTitle = cleanTitle.replace(/#покупки|#вишлист/gi, '');
     } else if (text.includes('#дом')) {
-      category = '📦 Для дома!';
+      category = 'Дом';
       bracketColor = 'active';
       cleanTitle = cleanTitle.replace(/#дом/gi, '');
     }
@@ -189,13 +189,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const quickNavActions = [
     { label: 'Перейти: Центр управления (Задачи)', tab: 'command-center' as NexusTab, icon: LayoutDashboard },
-    { label: 'Перейти: Интерактивный План квартиры 📐', tab: 'blueprint' as NexusTab, icon: LayoutDashboard },
+    { label: 'Перейти: Интерактивный План квартиры', tab: 'blueprint' as NexusTab, icon: LayoutDashboard },
     { label: 'Перейти: Совместные Финансы & ЖКХ', tab: 'finances' as NexusTab, icon: CreditCard },
     { label: 'Перейти: Вишлист («Берем или нет?»)', tab: 'wishlist' as NexusTab, icon: Gift },
     { label: 'Перейти: ВШЭ x РУДН x Я-Профи', tab: 'study-work' as NexusTab, icon: GraduationCap },
-    { label: 'Перейти: Радар ЦФО ⇄ ДФО 📡', tab: 'yaprofi-radar' as NexusTab, icon: Sparkles },
-    { label: 'Перейти: Расписание .ics & БРС Калькулятор 🎓', tab: 'academic' as NexusTab, icon: GraduationCap },
-    { label: 'Перейти: Свидания: «Что делаем 4 ноября?» 💕', tab: 'date-night' as NexusTab, icon: Gift },
+    { label: 'Перейти: Радар ЦФО ⇄ ДФО', tab: 'yaprofi-radar' as NexusTab, icon: Sparkles },
+    { label: 'Перейти: Расписание .ics & БРС Калькулятор', tab: 'academic' as NexusTab, icon: GraduationCap },
+    { label: 'Перейти: Свидания: «Что делаем 4 ноября?»', tab: 'date-night' as NexusTab, icon: Gift },
   ];
 
   return (

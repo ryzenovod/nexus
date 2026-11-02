@@ -71,37 +71,37 @@ export const StudyWorkModule: React.FC = () => {
   }[] = [
     {
       id: 'yaprofi-dfo',
-      label: '🏆 Я-Профи: Федеральный Лидер ДФО (Аня)',
+      label: 'Я-Профи: Федеральный Лидер ДФО (Аня)',
       shortLabel: 'Я-Профи ДФО',
       user: 'anya',
     },
     {
       id: 'yaprofi-cfo',
-      label: '🏆 Я-Профи: Региональный Лидер ЦФО (Аня)',
+      label: 'Я-Профи: Региональный Лидер ЦФО (Аня)',
       shortLabel: 'Я-Профи ЦФО',
       user: 'anya',
     },
     {
       id: 'rudn-anya',
-      label: '🎓 РУДН Онлайн: Психология (Аня)',
+      label: 'РУДН Онлайн: Психология (Аня)',
       shortLabel: 'РУДН Онлайн',
       user: 'anya',
     },
     {
       id: 'hse-egor',
-      label: '🎓 ВШЭ: Магистратура (Егор)',
+      label: 'ВШЭ: Магистратура (Егор)',
       shortLabel: 'ВШЭ',
       user: 'egor',
     },
     {
       id: 'work-egor',
-      label: '💼 Работа: OpenMap & Core (Егор)',
+      label: 'Работа: OpenMap & Core (Егор)',
       shortLabel: 'Работа',
       user: 'egor',
     },
     {
       id: 'projects-anya',
-      label: '🚀 Проекты & Дизайн (Аня)',
+      label: 'Проекты & Дизайн (Аня)',
       shortLabel: 'Проекты',
       user: 'anya',
     },
@@ -248,10 +248,10 @@ export const StudyWorkModule: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-zinc-400 font-mono">
-              <span>don't stop now ♡</span>
+            <div className="flex items-center gap-3 text-xs text-zinc-500 font-mono">
+              <span>Сессия фокуса</span>
               <span>·</span>
-              <span>you got this! ♡</span>
+              <span>Личный рекорд</span>
             </div>
           </div>
 
@@ -414,15 +414,15 @@ export const StudyWorkModule: React.FC = () => {
             })}
           </div>
 
-          {/* 4 Clean Kanban Columns (No outer box inside outer box!) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* 4 Clean Kanban Columns (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
             {columns.map((column) => {
               const columnTasks = filteredItems.filter((i) => i.status === column.id);
 
               return (
                 <div
                   key={column.id}
-                  className="rounded-xl border border-white/[0.06] bg-[rgba(18,18,21,0.6)] p-3 flex flex-col min-h-[440px]"
+                  className="bg-[#0b0b0e] p-3.5 flex flex-col min-h-[460px]"
                 >
                   {/* Column Header */}
                   <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.05]">
