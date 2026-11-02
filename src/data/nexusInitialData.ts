@@ -1296,7 +1296,7 @@ const generateInitialGcalEvents = (): GCalEvent[] => {
   ];
 };
 
-export const initialGcalEvents: GCalEvent[] = generateInitialGcalEvents();
+export const initialGcalEvents: GCalEvent[] = [];
 
 export const initialUtilityBills: UtilityBill[] = [
   {

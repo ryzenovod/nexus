@@ -1327,10 +1327,8 @@ export const useNexusStore = create<NexusState>()(
         if (!state.cashbackCards || state.cashbackCards.length !== 5 || !state.cashbackCards.some(c => c.id === 'cb-sber')) {
           state.cashbackCards = initialCashbackCards;
         }
-        // Ensure gcalEvents has default if empty
-        if (!state.gcalEvents || state.gcalEvents.length === 0) {
-          state.gcalEvents = initialGcalEvents;
-        }
+        // Purge any legacy fake demo events
+        state.gcalEvents = (state.gcalEvents || []).filter(e => e.id && !e.id.startsWith('gcal-'));
         // Ensure honest zero budget contributions if legacy 40000 was set
         if (state.budget && state.budget.egorContribution === 40000 && state.budget.anyaContribution === 40000 && state.budget.currentBalance === 0) {
           state.budget.egorContribution = 0;

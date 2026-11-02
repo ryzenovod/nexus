@@ -6,6 +6,7 @@ import { ShadcnFinances } from './components/finances/ShadcnFinances';
 import { ShadcnWishlist } from './components/wishlist/ShadcnWishlist';
 import { ShadcnStudyWork } from './components/study-work/ShadcnStudyWork';
 import { ShadcnTaskDialog } from './components/command-center/ShadcnTaskDialog';
+import { CatRoomDialog } from './components/visual/CatRoomDialog';
 import { CommandPalette } from './components/command-palette/CommandPalette';
 import { NexusTask } from './types/nexus';
 
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [activeTaskDialog, setActiveTaskDialog] = useState(false);
+  const [activeCatRoom, setActiveCatRoom] = useState(false);
   const [selectedTaskToEdit, setSelectedTaskToEdit] = useState<NexusTask | null>(null);
   const [initialTaskDate, setInitialTaskDate] = useState<string>('inbox');
   const [activeCommandPalette, setActiveCommandPalette] = useState(false);
@@ -82,6 +84,7 @@ export const App: React.FC = () => {
         onTabChange={setActiveTab}
         onOpenNewTask={() => handleOpenNewTask('inbox')}
         onOpenSearch={() => setActiveCommandPalette(true)}
+        onOpenCatRoom={() => setActiveCatRoom(true)}
       />
 
       {/* ── Main Viewport ── */}
@@ -132,6 +135,12 @@ export const App: React.FC = () => {
           setActiveTaskDialog(false);
           setSelectedTaskToEdit(null);
         }}
+      />
+
+      {/* ── Room of Cyber Cat Mascot Dialog ── */}
+      <CatRoomDialog
+        isOpen={activeCatRoom}
+        onClose={() => setActiveCatRoom(false)}
       />
 
       {/* ── Command Palette (⌘K) ── */}

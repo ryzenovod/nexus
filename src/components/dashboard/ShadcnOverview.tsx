@@ -57,13 +57,20 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
   const [activeHubTask, setActiveHubTask] = useState<NexusTask | null>(null);
   const [hubChecklistState, setHubChecklistState] = useState<Record<string, boolean>>({});
 
+  // Local ISO date formatter without UTC rollover
+  const formatLocalIso = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   // 1. Calculate Metric Card Values
   const activeTasks = useMemo(() => tasks.filter(t => !t.completed), [tasks]);
   const completedTasks = useMemo(() => tasks.filter(t => t.completed), [tasks]);
 
   const todayStr = useMemo(() => {
-    const d = new Date();
-    return d.toISOString().slice(0, 10);
+    return formatLocalIso(new Date());
   }, []);
 
   const todayTasks = useMemo(() => {
@@ -97,7 +104,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const iso = d.toISOString().slice(0, 10);
+      const iso = formatLocalIso(d);
       const isToday = iso === todayStr;
 
       // Filter tasks for this day
@@ -109,9 +116,9 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         return t.date === iso;
       });
 
-      // Filter events from gcal
+      // Filter events from gcal (strictly real events from fetch_data.py)
       const dayEvents = (gcalEvents || []).filter(e => {
-        if (!e.start) return false;
+        if (!e || !e.start || (e.id && e.id.startsWith('gcal-'))) return false;
         const eDate = e.start.date || (e.start.dateTime ? e.start.dateTime.slice(0, 10) : '');
         return eDate === iso;
       });
