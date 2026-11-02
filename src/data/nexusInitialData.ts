@@ -41,7 +41,8 @@ export const initialTasks: NexusTask[] = [
       "показания"
     ],
     "notes": "Логин: olika\\-lelika@ya\\.ru\nПароль: ••••••••",
-    "regularPeriod": "15–26 числа каждого месяца"
+    "regularPeriod": "15–26 числа каждого месяца",
+    "parentId": "6ade5410e9a77a0000000f79"
   },
   {
     "id": "6ae5f0b4a8343da54fbf6f07",
@@ -57,7 +58,8 @@ export const initialTasks: NexusTask[] = [
     "order": 1,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
   },
   {
     "id": "6ade4840e9a77a0000000701",
@@ -92,7 +94,8 @@ export const initialTasks: NexusTask[] = [
     "tags": [
       "финансы"
     ],
-    "notes": "Сайт: lk.formula-start.ru\nИмя пользователя: F-908944-160926\nпароль: ••••••••\n\nоплатила 740"
+    "notes": "Сайт: lk.formula-start.ru\nИмя пользователя: F-908944-160926\nпароль: ••••••••\n\nоплатила 740",
+    "parentId": "6ade5410e9a77a0000000f79"
   },
   {
     "id": "6ade543ae9a77a0000000f9a",
@@ -109,7 +112,8 @@ export const initialTasks: NexusTask[] = [
     "tags": [
       "финансы"
     ],
-    "notes": "Период: сентябрь\n- кап.ремонт: 779,86\n- ТКО: 201,48\nИтого по квитанции за сент: 981,34\n\nможно чеерез mos.ru\nКод плательщика: 4191105056"
+    "notes": "Период: сентябрь\n- кап.ремонт: 779,86\n- ТКО: 201,48\nИтого по квитанции за сент: 981,34\n\nможно чеерез mos.ru\nКод плательщика: 4191105056",
+    "parentId": "6ade5410e9a77a0000000f79"
   },
   {
     "id": "6ade5413e9a77a0000000f7f",
@@ -125,7 +129,8 @@ export const initialTasks: NexusTask[] = [
     "order": 9,
     "tags": [
       "финансы"
-    ]
+    ],
+    "parentId": "6ade5410e9a77a0000000f79"
   },
   {
     "id": "6ade5410e9a77a0000000f79",
@@ -159,7 +164,8 @@ export const initialTasks: NexusTask[] = [
     "order": 13,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ade4860e9a77a0000000716",
@@ -193,7 +199,8 @@ export const initialTasks: NexusTask[] = [
     "order": 17,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
   },
   {
     "id": "6ade4cd2e9a77a0000000dd4",
@@ -209,7 +216,8 @@ export const initialTasks: NexusTask[] = [
     "order": 19,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
   },
   {
     "id": "6ade4cb4e9a77a0000000dca",
@@ -225,7 +233,8 @@ export const initialTasks: NexusTask[] = [
     "order": 21,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ade4853e9a77a000000070e",
@@ -259,7 +268,8 @@ export const initialTasks: NexusTask[] = [
     "order": 25,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac657b83f3092eba2b02ab0",
@@ -275,7 +285,8 @@ export const initialTasks: NexusTask[] = [
     "order": 27,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac657be3f3092eba2b02abe",
@@ -291,7 +302,8 @@ export const initialTasks: NexusTask[] = [
     "order": 29,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac657ec3f3092eba2b02af6",
@@ -307,7 +319,8 @@ export const initialTasks: NexusTask[] = [
     "order": 31,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac6587d3f3092eba2b02b82",
@@ -323,7 +336,8 @@ export const initialTasks: NexusTask[] = [
     "order": 33,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ade4c6be9a77a0000000d9c",
@@ -339,7 +353,8 @@ export const initialTasks: NexusTask[] = [
     "order": 35,
     "tags": [
       "балкон"
-    ]
+    ],
+    "parentId": "6ade4847e9a77a0000000708"
   },
   {
     "id": "6ade4847e9a77a0000000708",
@@ -373,7 +388,8 @@ export const initialTasks: NexusTask[] = [
     "order": 39,
     "tags": [
       "дом"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8ce11bf00032b8b10cba5",
@@ -389,7 +405,8 @@ export const initialTasks: NexusTask[] = [
     "order": 41,
     "tags": [
       "дом"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8cca3bf00032b8b10ca21",
@@ -405,7 +422,8 @@ export const initialTasks: NexusTask[] = [
     "order": 43,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
   },
   {
     "id": "6ad8cb8bbf00032b8b10c8ea",
@@ -421,7 +439,8 @@ export const initialTasks: NexusTask[] = [
     "order": 45,
     "tags": [
       "балкон"
-    ]
+    ],
+    "parentId": "6ade4847e9a77a0000000708"
   },
   {
     "id": "6ad8cacebf00032b8b10c84f",
@@ -437,7 +456,8 @@ export const initialTasks: NexusTask[] = [
     "order": 47,
     "tags": [
       "финансы"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8c379bf00032b8b10c7ce",
@@ -453,7 +473,8 @@ export const initialTasks: NexusTask[] = [
     "order": 49,
     "tags": [
       "финансы"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8c392bf00032b8b10c7dc",
@@ -469,7 +490,8 @@ export const initialTasks: NexusTask[] = [
     "order": 51,
     "tags": [
       "финансы"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8c39ebf00032b8b10c7ea",
@@ -485,7 +507,8 @@ export const initialTasks: NexusTask[] = [
     "order": 53,
     "tags": [
       "финансы"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8cb9bbf00032b8b10c906",
@@ -533,7 +556,8 @@ export const initialTasks: NexusTask[] = [
     "order": 59,
     "tags": [
       "комната"
-    ]
+    ],
+    "parentId": "6ade485ae9a77a0000000712"
   },
   {
     "id": "6ade485ae9a77a0000000712",
@@ -583,7 +607,8 @@ export const initialTasks: NexusTask[] = [
     "order": 65,
     "tags": [
       "комната"
-    ]
+    ],
+    "parentId": "6ade485ae9a77a0000000712"
   },
   {
     "id": "6ad8cc19bf00032b8b10c99e",
@@ -599,7 +624,8 @@ export const initialTasks: NexusTask[] = [
     "order": 67,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cc2dbf00032b8b10c9ac",
@@ -615,7 +641,8 @@ export const initialTasks: NexusTask[] = [
     "order": 69,
     "tags": [
       "комната"
-    ]
+    ],
+    "parentId": "6ade485ae9a77a0000000712"
   },
   {
     "id": "6ad8cc8fbf00032b8b10c9f7",
@@ -631,7 +658,8 @@ export const initialTasks: NexusTask[] = [
     "order": 71,
     "tags": [
       "дом"
-    ]
+    ],
+    "parentId": "6ade4860e9a77a0000000716"
   },
   {
     "id": "6ad8cc93bf00032b8b10ca05",
@@ -663,7 +691,8 @@ export const initialTasks: NexusTask[] = [
     "order": 75,
     "tags": [
       "комната"
-    ]
+    ],
+    "parentId": "6ade485ae9a77a0000000712"
   },
   {
     "id": "6ad8ccb6bf00032b8b10ca2f",
@@ -679,7 +708,8 @@ export const initialTasks: NexusTask[] = [
     "order": 77,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cd29bf00032b8b10cab2",
@@ -695,7 +725,8 @@ export const initialTasks: NexusTask[] = [
     "order": 79,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cd98bf00032b8b10cb19",
@@ -711,7 +742,8 @@ export const initialTasks: NexusTask[] = [
     "order": 81,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cd9dbf00032b8b10cb27",
@@ -727,7 +759,8 @@ export const initialTasks: NexusTask[] = [
     "order": 83,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cda3bf00032b8b10cb35",
@@ -743,7 +776,8 @@ export const initialTasks: NexusTask[] = [
     "order": 85,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cdd9bf00032b8b10cb5f",
@@ -759,7 +793,8 @@ export const initialTasks: NexusTask[] = [
     "order": 87,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cdeabf00032b8b10cb6d",
@@ -775,7 +810,8 @@ export const initialTasks: NexusTask[] = [
     "order": 89,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cdf2bf00032b8b10cb7b",
@@ -791,7 +827,8 @@ export const initialTasks: NexusTask[] = [
     "order": 91,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ad8cdfbbf00032b8b10cb88",
@@ -807,7 +844,8 @@ export const initialTasks: NexusTask[] = [
     "order": 93,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
   },
   {
     "id": "6ad8ce05bf00032b8b10cb97",
@@ -823,7 +861,8 @@ export const initialTasks: NexusTask[] = [
     "order": 95,
     "tags": [
       "комната"
-    ]
+    ],
+    "parentId": "6ade485ae9a77a0000000712"
   },
   {
     "id": "6ad8ce42bf00032b8b10cbc1",
@@ -839,7 +878,8 @@ export const initialTasks: NexusTask[] = [
     "order": 97,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac657e03f3092eba2b02ae8",
@@ -855,7 +895,8 @@ export const initialTasks: NexusTask[] = [
     "order": 99,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac657fd3f3092eba2b02b17",
@@ -871,7 +912,8 @@ export const initialTasks: NexusTask[] = [
     "order": 101,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
   },
   {
     "id": "6ac658823f3092eba2b02b92",
@@ -887,7 +929,8 @@ export const initialTasks: NexusTask[] = [
     "order": 103,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac658f23f3092eba2b02bf9",
@@ -903,7 +946,8 @@ export const initialTasks: NexusTask[] = [
     "order": 105,
     "tags": [
       "балкон"
-    ]
+    ],
+    "parentId": "6ade4847e9a77a0000000708"
   },
   {
     "id": "6ac658fb3f3092eba2b02c07",
@@ -919,7 +963,8 @@ export const initialTasks: NexusTask[] = [
     "order": 107,
     "tags": [
       "кухня"
-    ]
+    ],
+    "parentId": "6ade4853e9a77a000000070e"
   },
   {
     "id": "6ac8fc75fb74857a1031feb9",
@@ -935,7 +980,21 @@ export const initialTasks: NexusTask[] = [
     "order": 109,
     "tags": [
       "ванная"
-    ]
+    ],
+    "parentId": "6ade4840e9a77a0000000701"
+  },
+  {
+    "id": "tt-diaskin-2026",
+    "title": "диаскин",
+    "completed": false,
+    "bracketColor": "active",
+    "category": "Общее",
+    "room": "Все",
+    "assignee": "together",
+    "date": "2026-12-04",
+    "projectName": "📦Для дома!",
+    "createdAt": "2026-11-02T15:00:00.000+0000",
+    "order": 99
   }
 ];
 
