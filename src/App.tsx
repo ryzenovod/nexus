@@ -26,6 +26,7 @@ import { SettingsModal } from './components/settings/SettingsModal';
 import { GlassCard } from './components/visual/GlassCard';
 import { StarryTwilightCanvas } from './components/visual/StarryTwilightCanvas';
 import { LinearCommandCenter } from './components/command-center/LinearCommandCenter';
+import { BentoDashboard } from './components/dashboard/BentoDashboard';
 import { NexusTask } from './types/nexus';
 
 export const App: React.FC = () => {
@@ -184,23 +185,23 @@ export const App: React.FC = () => {
           : 'bg-[#08080a]'
       }`}
     >
-      {/* Multi-layered Ambient Glass Glow */}
+      {/* Soft Apple/Craft ambient glow */}
       {!isWidgetMode && atmosphereMode !== 'transparent' && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          {/* Deep Indigo glow (top-left) */}
+          {/* Soft indigo glow top-center */}
           <div
-            className="absolute -top-[15%] -left-[10%] w-[55vw] h-[55vw] rounded-full blur-[140px] opacity-75"
+            className="absolute -top-[15%] left-[20%] w-[60vw] h-[50vw] rounded-full blur-[140px] opacity-40"
             style={{
               background:
-                'radial-gradient(circle, rgba(79, 70, 229, 0.14) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%)',
+                'radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.08) 40%, transparent 70%)',
             }}
           />
-          {/* Warm twilight amber / purple glow (bottom-right) */}
+          {/* Warm twilight amber glow top-right */}
           <div
-            className="absolute -bottom-[15%] -right-[10%] w-[50vw] h-[50vw] rounded-full blur-[150px] opacity-70"
+            className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full blur-[150px] opacity-35"
             style={{
               background:
-                'radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, rgba(168, 85, 247, 0.07) 45%, transparent 70%)',
+                'radial-gradient(circle, rgba(217, 119, 6, 0.12) 0%, rgba(245, 158, 11, 0.04) 50%, transparent 70%)',
             }}
           />
         </div>
@@ -226,7 +227,7 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* 2. FLOATING INSET CANVAS (The Linear Signature Inset Panel Architecture) */}
+      {/* 2. FLOATING INSET CANVAS (The Linear / Amie Signature Inset Panel Architecture) */}
       <main
         className={`flex-1 flex flex-col min-w-0 overflow-hidden relative z-10 transition-all ${
           isWidgetMode
@@ -234,14 +235,14 @@ export const App: React.FC = () => {
             : 'my-2 mr-2 rounded-[10px] bg-[#0f1014] border border-[#1e2028] shadow-[0_0_0_1px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.04)]'
         }`}
       >
-        {/* TAB 1: COMMAND CENTER (Linear Issue List + Collapsible Week Ribbon + Inspector) */}
+        {/* TAB 1: BENTO DASHBOARD (Top Row 135px + Amie Week Ribbon + 3 Life Spheres) */}
         {(activeTab === 'command-center' || isWidgetMode) && (
-          <LinearCommandCenter
+          <BentoDashboard
             tasks={tasks}
             activeWeekOffset={activeWeekOffset}
             onOffsetChange={setActiveWeekOffset}
             onToggleTask={toggleTaskCompletion}
-            onUpdateTask={(updated) => updateTask(updated.id, updated)}
+            onTaskClick={handleCardClick}
             onDeleteTask={deleteTask}
             onAddTask={(date) => {
               setInitialTaskDate(date || 'inbox');
@@ -250,6 +251,8 @@ export const App: React.FC = () => {
             }}
             selectedAssignee={selectedAssignee}
             onAssigneeChange={setSelectedAssignee}
+            onNavigateTab={setActiveTab}
+            onOpenTamagotchi={() => setActiveTamagotchiModal(true)}
             isWidgetMode={isWidgetMode}
           />
         )}
