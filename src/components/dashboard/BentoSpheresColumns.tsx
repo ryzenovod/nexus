@@ -207,12 +207,6 @@ export const BentoSpheresColumns: React.FC<BentoSpheresColumnsProps> = ({
           >
             {task.title}
           </div>
-
-          {task.notes && (
-            <div className="text-[11.5px] text-zinc-400 line-clamp-1 mt-0.5 font-normal">
-              {task.notes}
-            </div>
-          )}
         </div>
 
         {/* Right Metadata */}
