@@ -74,12 +74,12 @@ export const TamagotchiRoomModal: React.FC<TamagotchiRoomModalProps> = ({
             <div>
               <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
                 <span>Маскот пары: Кот Нексус</span>
-                <span className="font-mono text-xs text-zinc-400">
-                  Lv. {gamification.level}
+                <span className="text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-mono">
+                  Уровень {gamification.level}
                 </span>
               </h3>
               <p className="text-[11px] text-zinc-500">
-                Талисман уюта, прогресс заботы и угощения
+                Талисман уюта, прогресс заботы и совместные угощения
               </p>
             </div>
           </div>

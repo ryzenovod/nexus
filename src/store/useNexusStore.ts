@@ -33,7 +33,8 @@ import {
   initialCashbackCards, 
   initialUtilityBills, 
   initialStudyWorkItems,
-  initialCoupleGamification 
+  initialCoupleGamification,
+  initialGcalEvents
 } from '../data/nexusInitialData';
 import {
   initialBlueprintPins,
@@ -197,7 +198,7 @@ export const useNexusStore = create<NexusState>()(
     (set, get) => ({
       // Initial state
       tasks: initialTasks,
-      gcalEvents: [],
+      gcalEvents: initialGcalEvents,
       searchQuery: '',
       selectedBracket: 'all',
       selectedAssignee: 'all',
@@ -1195,6 +1196,22 @@ export const useNexusStore = create<NexusState>()(
     {
       name: 'nexus-real-sync-v1',
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Ensure 5 exact banks are present
+        if (!state.cashbackCards || state.cashbackCards.length !== 5 || !state.cashbackCards.some(c => c.id === 'cb-sber')) {
+          state.cashbackCards = initialCashbackCards;
+        }
+        // Ensure gcalEvents has default if empty
+        if (!state.gcalEvents || state.gcalEvents.length === 0) {
+          state.gcalEvents = initialGcalEvents;
+        }
+        // Ensure honest zero budget contributions if legacy 40000 was set
+        if (state.budget && state.budget.egorContribution === 40000 && state.budget.anyaContribution === 40000 && state.budget.currentBalance === 0) {
+          state.budget.egorContribution = 0;
+          state.budget.anyaContribution = 0;
+        }
+      }
     }
   )
 );

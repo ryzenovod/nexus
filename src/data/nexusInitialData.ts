@@ -6,7 +6,8 @@ import {
   CashbackCard, 
   UtilityBill, 
   StudyWorkItem,
-  CoupleGamification 
+  CoupleGamification,
+  GCalEvent
 } from '../types/nexus';
 
 export const initialCoupleGamification: CoupleGamification = {
@@ -1087,8 +1088,8 @@ export const initialWishlist: WishlistItem[] = [
 // Clean zero balance: user will enter manual balance when ready
 export const initialBudget: JointBudget = {
   totalTarget: 80000,
-  egorContribution: 40000,
-  anyaContribution: 40000,
+  egorContribution: 0,
+  anyaContribution: 0,
   currentBalance: 0,
   depositDates: '10 и 25 числа каждого месяца',
   lastUpdated: '2026-11-02T15:00:00Z'
@@ -1096,8 +1097,55 @@ export const initialBudget: JointBudget = {
 
 export const initialTransactions: FinanceTransaction[] = [];
 
-// Clean banks: Alfa, T-Bank, VTB, Yandex Pay with 1-click editable categories
+// Exact 5 Banks for Egor and Anya (Apple Pay 2026 specs)
 export const initialCashbackCards: CashbackCard[] = [
+  {
+    id: 'cb-sber',
+    bankName: 'Сбер',
+    bankColor: '#22c55e',
+    user: 'anya',
+    activeMonth: 'Ноябрь 2026',
+    claimed: true,
+    claimDeadline: 'Выбран',
+    specialFeature: 'Бонусы СберСпасибо · Аня',
+    categories: [
+      { category: 'ВкусВилл & Супермаркеты', percent: 5 },
+      { category: 'Аптеки', percent: 4 },
+      { category: 'Транспорт', percent: 3 },
+      { category: '0.5% Спасибо на всё', percent: 0.5 },
+    ]
+  },
+  {
+    id: 'cb-tbank',
+    bankName: 'Т-Банк',
+    bankColor: '#f59e0b',
+    user: 'egor',
+    activeMonth: 'Ноябрь 2026',
+    claimed: true,
+    claimDeadline: 'Выбран',
+    specialFeature: 'Совместный счет пары (Titanium)',
+    categories: [
+      { category: 'Дом и ремонт', percent: 6 },
+      { category: 'Рестораны и доставка', percent: 5 },
+      { category: 'Аптеки', percent: 5 },
+      { category: '1% на все покупки', percent: 1 },
+    ]
+  },
+  {
+    id: 'cb-wb',
+    bankName: 'WB Банк',
+    bankColor: '#d946ef',
+    user: 'egor',
+    activeMonth: 'Ноябрь 2026',
+    claimed: true,
+    claimDeadline: 'Выбран',
+    specialFeature: 'WB Кошелек & Скидки',
+    categories: [
+      { category: 'Wildberries (WB Кошелек)', percent: 5 },
+      { category: 'Одежда и обувь', percent: 3 },
+      { category: 'Супермаркеты', percent: 2 },
+    ]
+  },
   {
     id: 'cb-alfa',
     bankName: 'Альфа-Банк',
@@ -1106,59 +1154,90 @@ export const initialCashbackCards: CashbackCard[] = [
     activeMonth: 'Ноябрь 2026',
     claimed: true,
     claimDeadline: 'Выбран',
+    specialFeature: 'Альфа-Карта · Егор',
     categories: [
       { category: 'Супермаркеты', percent: 5 },
       { category: 'Кафе и рестораны', percent: 5 },
       { category: 'Дом и ремонт', percent: 5 },
-      { category: '1% на все', percent: 1 }
+      { category: '1% на все', percent: 1 },
     ]
   },
   {
-    id: 'cb-tbank',
-    bankName: 'Т-Банк',
-    bankColor: '#eab308',
+    id: 'cb-gpb',
+    bankName: 'Газпромбанк',
+    bankColor: '#3b82f6',
     user: 'egor',
     activeMonth: 'Ноябрь 2026',
     claimed: true,
     claimDeadline: 'Выбран',
-    specialFeature: 'Совместный счет пары',
+    specialFeature: 'Акция месяца · Егор',
+    actionRequired: 'До 25 числа нажать «Забрать» в приложении',
     categories: [
-      { category: 'Дом и ремонт', percent: 6 },
-      { category: 'Рестораны и доставка', percent: 5 },
-      { category: 'Аптеки', percent: 5 },
-      { category: '1% на все покупки', percent: 1 }
+      { category: 'Акция месяца (компенсация)', percent: 25 },
+      { category: 'АЗС & Топливо', percent: 5 },
+      { category: 'Такси & Каршеринг', percent: 5 },
     ]
   },
-  {
-    id: 'cb-vtb',
-    bankName: 'ВТБ',
-    bankColor: '#0284c7',
-    user: 'egor',
-    activeMonth: 'Ноябрь 2026',
-    claimed: true,
-    claimDeadline: 'Выбран',
-    categories: [
-      { category: 'Супермаркеты', percent: 3 },
-      { category: 'Транспорт и такси', percent: 5 },
-      { category: 'Аптеки', percent: 4 }
-    ]
-  },
-  {
-    id: 'cb-yandex',
-    bankName: 'Яндекс Пэй',
-    bankColor: '#fc3f1d',
-    user: 'anya',
-    activeMonth: 'Ноябрь 2026',
-    claimed: true,
-    claimDeadline: 'Выбран',
-    specialFeature: 'Баллы Яндекс Плюс',
-    categories: [
-      { category: 'Яндекс Маркет', percent: 10 },
-      { category: 'Яндекс Лавка', percent: 7 },
-      { category: 'Такси', percent: 5 }
-    ]
-  }
 ];
+
+// Generate realistic weekly GCal events starting around current date
+const generateInitialGcalEvents = (): GCalEvent[] => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const getIsoDate = (offsetDays: number) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + offsetDays);
+    return d.toLocaleDateString('sv-SE');
+  };
+
+  return [
+    {
+      id: 'gcal-1',
+      summary: 'Созвон с амбассадорами «Я-Профи» (ДФО)',
+      start: { dateTime: `${getIsoDate(1)}T17:00:00+03:00`, date: getIsoDate(1) },
+      end: { dateTime: `${getIsoDate(1)}T18:00:00+03:00`, date: getIsoDate(1) },
+      timeStr: '17:00–18:00'
+    },
+    {
+      id: 'gcal-2',
+      summary: 'Свидание пары: ужин & прогулка',
+      start: { dateTime: `${getIsoDate(2)}T19:30:00+03:00`, date: getIsoDate(2) },
+      end: { dateTime: `${getIsoDate(2)}T21:30:00+03:00`, date: getIsoDate(2) },
+      timeStr: '19:30'
+    },
+    {
+      id: 'gcal-3',
+      summary: 'НИУ ВШЭ: Семинар по НИР (Магистратура)',
+      start: { dateTime: `${getIsoDate(3)}T15:00:00+03:00`, date: getIsoDate(3) },
+      end: { dateTime: `${getIsoDate(3)}T16:30:00+03:00`, date: getIsoDate(3) },
+      timeStr: '15:00–16:30'
+    },
+    {
+      id: 'gcal-4',
+      summary: 'Синхронизация по деплою OpenMap',
+      start: { dateTime: `${getIsoDate(4)}T18:00:00+03:00`, date: getIsoDate(4) },
+      end: { dateTime: `${getIsoDate(4)}T18:45:00+03:00`, date: getIsoDate(4) },
+      timeStr: '18:00'
+    },
+    {
+      id: 'gcal-5',
+      summary: 'Леруа Мерлен: закупка для дома (полка, герметик)',
+      start: { dateTime: `${getIsoDate(5)}T13:00:00+03:00`, date: getIsoDate(5) },
+      end: { dateTime: `${getIsoDate(5)}T15:00:00+03:00`, date: getIsoDate(5) },
+      timeStr: '13:00'
+    },
+    {
+      id: 'gcal-6',
+      summary: 'РУДН: Лекции и тестирование онлайн',
+      start: { dateTime: `${getIsoDate(6)}T12:00:00+03:00`, date: getIsoDate(6) },
+      end: { dateTime: `${getIsoDate(6)}T14:00:00+03:00`, date: getIsoDate(6) },
+      timeStr: '12:00–14:00'
+    }
+  ];
+};
+
+export const initialGcalEvents: GCalEvent[] = generateInitialGcalEvents();
 
 export const initialUtilityBills: UtilityBill[] = [
   {

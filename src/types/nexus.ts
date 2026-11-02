@@ -45,6 +45,7 @@ export interface NexusTask {
   regularPeriod?: string; // e.g. "15-26 числа каждого месяца"
   projectName?: string; // e.g. "📦 Для дома!"
   isHub?: boolean; // hub card like "ванная", "балкон", "кухня", "комната", "Коммунальные"
+  parentId?: string;
   subtaskCount?: number;
   subtasks?: { id: string; title: string; completed: boolean }[];
   price?: number;

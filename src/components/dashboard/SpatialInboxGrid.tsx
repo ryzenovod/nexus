@@ -37,6 +37,108 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
   const [selectedProject, setSelectedProject] = useState<string>('all');
   const [isGroupedByProject, setIsGroupedByProject] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
+  const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Subtask finder for hub cards (bathroom, kitchen, utilities, etc.)
+  const getSubtasksForHub = (hub: NexusTask) => {
+    const hubName = hub.title.toLowerCase().trim();
+    return tasks.filter((t) => {
+      if (t.id === hub.id || t.isHub) return false;
+      if (t.parentId === hub.id) return true;
+      const tRoom = (t.room || '').toLowerCase();
+      const tTags = (t.tags || []).map((tag) => tag.toLowerCase());
+      const tTitle = t.title.toLowerCase();
+
+      if (hubName === 'коммунальные') {
+        return (
+          tTitle.includes('коммунальн') ||
+          tTitle.includes('домиленд') ||
+          tTitle.includes('мосэнерго') ||
+          tTitle.includes('епд') ||
+          tTitle.includes('wi-fi') ||
+          tTags.includes('жкх') ||
+          tTags.includes('показания')
+        );
+      }
+      if (['ванная', 'кухня', 'балкон', 'комната'].includes(hubName)) {
+        return tRoom === hubName || tTags.includes(hubName);
+      }
+      if (hubName.includes('доп')) {
+        return tTags.includes('доп') || tTags.includes('дополнительно');
+      }
+      return false;
+    });
+  };
+
+  const renderSafeNotes = (rawNotes: string, taskId: string) => {
+    const lines = rawNotes.split('\n');
+
+    const handleCopy = (text: string, key: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    };
+
+    return (
+      <div className="space-y-1 text-[11px] font-mono-num">
+        {lines.map((line, idx) => {
+          const lower = line.toLowerCase();
+          const isPassword = lower.includes('пароль') || lower.includes('password');
+          const isLogin = lower.includes('логин') || lower.includes('login') || lower.includes('пользователь');
+
+          const parts = line.split(':');
+          const label = parts[0];
+          const val = parts.slice(1).join(':').trim();
+
+          if (isPassword) {
+            const key = `${taskId}-pw-${idx}`;
+            return (
+              <div key={idx} className="flex items-center justify-between gap-2 p-1 rounded bg-black/40 border border-white/[0.06]">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-zinc-500 font-sans text-[10px]">{label}:</span>
+                  <span className="tracking-widest text-amber-300 font-mono">••••••••</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => handleCopy(val || '••••••••', key, e)}
+                  className="text-[9.5px] px-1.5 py-0.5 rounded bg-white/[0.08] hover:bg-white/[0.14] text-zinc-300 transition-colors shrink-0 cursor-pointer"
+                >
+                  {copiedKey === key ? 'Скопировано ✓' : 'Копировать'}
+                </button>
+              </div>
+            );
+          }
+
+          if (isLogin && val) {
+            const key = `${taskId}-log-${idx}`;
+            return (
+              <div key={idx} className="flex items-center justify-between gap-2 p-1 rounded bg-black/40 border border-white/[0.06]">
+                <div className="flex items-center gap-1.5 min-w-0 truncate">
+                  <span className="text-zinc-500 font-sans text-[10px]">{label}:</span>
+                  <span className="text-zinc-200 truncate">{val}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => handleCopy(val, key, e)}
+                  className="text-[9.5px] px-1.5 py-0.5 rounded bg-white/[0.08] hover:bg-white/[0.14] text-zinc-300 transition-colors shrink-0 cursor-pointer"
+                >
+                  {copiedKey === key ? 'Скопировано ✓' : 'Копировать'}
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <div key={idx} className="text-zinc-300">
+              {line}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // Extract distinct projects
   const availableProjects = React.useMemo(() => {
@@ -267,17 +369,30 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
                       )}
 
                       {task.isHub && task.subtaskCount ? (
-                        <span className="text-[9px] font-bold text-zinc-300 bg-white/[0.08] px-1.5 py-0.2 rounded flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedSubtasks((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                          }}
+                          className={`text-[9.5px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border transition-all cursor-pointer ${
+                            expandedSubtasks[task.id]
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-xs'
+                              : 'bg-white/[0.08] hover:bg-white/[0.14] text-zinc-300 border-white/[0.1]'
+                          }`}
+                          title="Показать / скрыть подзадачи"
+                        >
                           <Layers size={9} />
                           <span>{task.subtaskCount} подзадач</span>
-                        </span>
+                          {expandedSubtasks[task.id] ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
+                        </button>
                       ) : null}
 
                       {hasNotes && (
                         <button
                           type="button"
                           onClick={(e) => toggleNote(task.id, e)}
-                          className="text-[9.5px] font-medium text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 px-1.5 py-0.2 rounded flex items-center gap-0.5 border border-sky-500/20 transition-all cursor-pointer"
+                          className="text-[9.5px] font-medium text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-sky-500/20 transition-all cursor-pointer"
                         >
                           <FileText size={9} />
                           <span>Заметка</span>
@@ -288,10 +403,44 @@ export const SpatialInboxGrid: React.FC<SpatialInboxGridProps> = ({
                   </div>
                 </div>
 
-                {/* Expandable authentic notes (passwords redacted, utility numbers preserved) */}
+                {/* Expandable subtasks accordion */}
+                {task.isHub && expandedSubtasks[task.id] && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-2 pt-2 border-t border-white/[0.08] space-y-1.5 max-h-[220px] overflow-y-auto [scrollbar-width:thin] pr-1"
+                  >
+                    {getSubtasksForHub(task).map((sub) => (
+                      <div
+                        key={sub.id}
+                        onClick={() => onToggleTask(sub.id)}
+                        className="flex items-center gap-2 p-1.5 rounded-lg bg-black/30 hover:bg-white/[0.06] border border-white/[0.04] transition-colors cursor-pointer group/sub"
+                      >
+                        <button
+                          type="button"
+                          className="text-zinc-400 group-hover/sub:text-emerald-400 transition-colors shrink-0"
+                        >
+                          {sub.completed ? (
+                            <CheckCircle2 size={13} className="text-emerald-400" />
+                          ) : (
+                            <Circle size={13} />
+                          )}
+                        </button>
+                        <span
+                          className={`text-[11.5px] leading-tight truncate flex-1 ${
+                            sub.completed ? 'line-through text-zinc-500' : 'text-zinc-200 group-hover/sub:text-white'
+                          }`}
+                        >
+                          {sub.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Expandable authentic notes (passwords redacted with 1-click copy) */}
                 {hasNotes && isNoteOpen && (
-                  <div className="mt-1.5 p-2 rounded-lg bg-black/40 border border-white/[0.06] text-[11px] text-zinc-300 whitespace-pre-wrap font-mono-num">
-                    {task.notes}
+                  <div className="mt-2 p-2 rounded-lg bg-black/40 border border-white/[0.08] text-[11px] text-zinc-300">
+                    {renderSafeNotes(task.notes!, task.id)}
                   </div>
                 )}
               </div>
