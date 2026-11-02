@@ -263,10 +263,10 @@ export const useNexusStore = create<NexusState>()(
       pomodoroCompletedSessions: 0,
 
       supabaseConfig: {
-        url: '',
-        anonKey: '',
-        isConnected: false,
-        autoSync: false,
+        url: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || 'https://sdkuyfcjmwtcevsyvbwl.supabase.co',
+        anonKey: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY) || 'sb_publishable_DUr8B1CJtEw-0ZMSACL-2A_mJMG4LD1',
+        isConnected: true,
+        autoSync: true,
         lastSyncAt: null,
       },
       isSyncing: false,
@@ -352,13 +352,21 @@ export const useNexusStore = create<NexusState>()(
             }
           }
 
-          // 6. Real TickTick completion via local dev bridge
+          // 6. Real TickTick completion via local dev bridge or Supabase cloud queue
           const pid = (currentTask as any)?.projectId || '6abeae1535d42cc80be02175';
           fetch('/api/ticktick/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ taskId: id, projectId: pid }),
           }).catch(() => {});
+
+          // Remote queue push for mobile devices (iPhone, Android, Windows)
+          const { supabaseConfig } = get();
+          if (supabaseConfig.url && supabaseConfig.anonKey) {
+            pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
+              pendingTickTickCompletions: [{ projectId: pid, taskId: id, timestamp: Date.now() }],
+            }).catch(() => {});
+          }
         }
 
         set((state) => {

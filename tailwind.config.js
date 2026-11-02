@@ -1,59 +1,73 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: ["class"],
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
         nexus: {
-          bg: '#0b0d11',
-          surface: 'rgba(15, 17, 21, 0.78)',
-          card: 'rgba(21, 24, 30, 0.72)',
+          bg: '#09090b',
+          surface: '#121215',
+          card: '#18181b',
           border: 'rgba(255, 255, 255, 0.08)',
           'border-hover': 'rgba(255, 255, 255, 0.16)',
-          accent: {
-            red: '#ef4444',
-            green: '#22c55e',
-            yellow: '#eab308',
-            amber: '#f59e0b',
-            slate: '#64748b',
-            cyan: '#06b6d4',
-            purple: '#a855f7',
-            blue: '#3b82f6',
-          }
         }
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         sans: [
+          'Plus Jakarta Sans',
           '-apple-system',
           'BlinkMacSystemFont',
-          '"SF Pro Display"',
-          '"SF Pro Text"',
-          '"Segoe UI"',
-          'Roboto',
+          'Inter',
           'sans-serif'
         ],
         mono: [
-          '"SF Mono"',
+          'JetBrains Mono',
           'Menlo',
-          'Monaco',
-          'Consolas',
           'monospace'
         ]
       },
-      boxShadow: {
-        'glass': '0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05) inset',
-        'today-glow': '0 0 24px rgba(245, 158, 11, 0.15), inset 0 0 12px rgba(245, 158, 11, 0.05)',
-        'red-glow': '0 0 16px rgba(239, 68, 68, 0.25)',
-        'green-glow': '0 0 16px rgba(34, 197, 94, 0.25)',
-        'yellow-glow': '0 0 16px rgba(234, 179, 8, 0.25)',
-      },
-      backdropBlur: {
-        '28': '28px',
-      }
     },
   },
   plugins: [],
