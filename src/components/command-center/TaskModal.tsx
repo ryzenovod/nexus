@@ -195,11 +195,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">
                 Цвет индикатора (скобки)
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-5 gap-1.5">
                 <button
                   type="button"
                   onClick={() => setBracketColor('critical')}
-                  className={`flex items-center gap-2 rounded-lg border p-2 text-xs transition-all ${
+                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
                     bracketColor === 'critical'
                       ? 'border-red-500 bg-red-500/20 text-red-200 ring-1 ring-red-500'
                       : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
@@ -212,20 +212,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setBracketColor('active')}
-                  className={`flex items-center gap-2 rounded-lg border p-2 text-xs transition-all ${
+                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
                     bracketColor === 'active'
                       ? 'border-emerald-500 bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-500'
                       : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
                   }`}
                 >
                   <span className="h-3 w-1 rounded-full bg-emerald-500" />
-                  <span>Дом / Уют</span>
+                  <span>Дом/Уют</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setBracketColor('finance')}
-                  className={`flex items-center gap-2 rounded-lg border p-2 text-xs transition-all ${
+                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
                     bracketColor === 'finance'
                       ? 'border-yellow-500 bg-yellow-500/20 text-yellow-200 ring-1 ring-yellow-500'
                       : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
@@ -237,8 +237,21 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
                 <button
                   type="button"
+                  onClick={() => setBracketColor('cyber')}
+                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
+                    bracketColor === 'cyber'
+                      ? 'border-purple-500 bg-purple-500/20 text-purple-200 ring-1 ring-purple-500'
+                      : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span className="h-3 w-1 rounded-full bg-purple-500" />
+                  <span>Учеба</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setBracketColor('neutral')}
-                  className={`flex items-center gap-2 rounded-lg border p-2 text-xs transition-all ${
+                  className={`flex items-center gap-1.5 rounded-lg border p-1.5 text-[11px] transition-all ${
                     bracketColor === 'neutral'
                       ? 'border-slate-500 bg-slate-500/20 text-slate-200 ring-1 ring-slate-500'
                       : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.05]'
@@ -324,8 +337,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <option value="📦 Для дома!">📦 Для дома!</option>
                   <option value="💰 Финансы">💰 Финансы</option>
                   <option value="🛒 Покупки">🛒 Покупки</option>
-                  <option value="🎓 Учеба">🎓 Учеба</option>
-                  <option value="💼 Работа">💼 Работа</option>
+                  <option value="🎓 ВШЭ (Егор)">🎓 ВШЭ (Егор)</option>
+                  <option value="🎓 РУДН (Аня)">🎓 РУДН (Аня)</option>
+                  <option value="🏆 Я-Профессионал">🏆 Я-Профессионал</option>
+                  <option value="💼 Работа (Егор)">💼 Работа (Егор)</option>
                   <option value="🚀 Проекты">🚀 Проекты</option>
                   <option value="📋 Общее">📋 Общее</option>
                 </select>

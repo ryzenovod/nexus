@@ -1,11 +1,13 @@
-export type BracketColor = 'critical' | 'active' | 'finance' | 'neutral';
+export type BracketColor = 'critical' | 'active' | 'finance' | 'cyber' | 'neutral';
 
 export type Assignee = 'all' | 'egor' | 'anya' | 'together';
 
 export type TaskCategory = 
   | '📦 Для дома!'
-  | '🎓 Учеба'
-  | '💼 Работа'
+  | '🎓 ВШЭ (Егор)'
+  | '🎓 РУДН (Аня)'
+  | '🏆 Я-Профессионал'
+  | '💼 Работа (Егор)'
   | '🚀 Проекты'
   | '💰 Финансы'
   | '🛒 Покупки'
@@ -74,6 +76,7 @@ export interface JointBudget {
   egorContribution: number;
   anyaContribution: number;
   currentBalance: number;
+  depositDates: string; // e.g. "10 и 25 числа"
   lastUpdated: string;
 }
 
@@ -93,6 +96,7 @@ export interface CashbackCard {
   claimed: boolean;
   claimDeadline: string;
   actionRequired?: string;
+  specialFeature?: string;
 }
 
 export interface UtilityReading {
@@ -121,12 +125,18 @@ export interface UtilityBill {
   history: UtilityReading[];
 }
 
-export type StudySpace = 'study-anya' | 'study-egor' | 'work-egor' | 'projects-anya';
+export type StudySpace = 
+  | 'hse-egor' 
+  | 'rudn-anya' 
+  | 'yaprofi-dfo' 
+  | 'yaprofi-cfo' 
+  | 'work-egor' 
+  | 'projects-anya';
 
 export interface StudyWorkItem {
   id: string;
   space: StudySpace;
-  user: 'egor' | 'anya';
+  user: 'egor' | 'anya' | 'together';
   title: string;
   description: string;
   courseOrProject: string;
@@ -134,14 +144,19 @@ export interface StudyWorkItem {
   priority: 'low' | 'medium' | 'high';
   deadline: string;
   tags: string[];
+  timezoneNote?: string; // for DFO +7h coordination
 }
 
-export interface PomodoroSettings {
-  workMinutes: number;
-  shortBreakMinutes: number;
-  longBreakMinutes: number;
-  cyclesBeforeLongBreak: number;
+export interface CoupleGamification {
+  level: number;
+  levelTitle: string;
+  xp: number;
+  nextLevelXp: number;
+  equippedCosmetic: 'none' | 'glasses' | 'crown' | 'scarf' | 'wings';
+  unlockedCosmetics: string[];
 }
+
+export type AtmosphereMode = 'twilight' | 'cyber' | 'transparent';
 
 export interface SupabaseConfig {
   url: string;

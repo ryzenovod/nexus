@@ -3,7 +3,6 @@ import { useDroppable } from '@dnd-kit/core';
 import { 
   Inbox, 
   Search, 
-  SlidersHorizontal, 
   FoldVertical, 
   UnfoldVertical,
   Plus
@@ -65,7 +64,6 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
   // Filter tasks belonging to inbox
   const inboxTasks = useMemo(() => {
     return tasks.filter((task) => {
-      // Must be inbox (or unassigned date)
       if (task.date !== 'inbox') return false;
 
       // Text search
@@ -107,7 +105,6 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
       return { groupedHubs: [], flatTasks: inboxTasks };
     }
 
-    // Hub rooms: "Коммунальные", "ванная", "балкон", "комната", "кухня"
     const hubMap: Record<string, { hub: NexusTask; children: NexusTask[] }> = {};
     const remaining: NexusTask[] = [];
 
@@ -142,8 +139,10 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
     '📦 Для дома!',
     '💰 Финансы',
     '🛒 Покупки',
-    '🎓 Учеба',
-    '💼 Работа',
+    '🎓 ВШЭ (Егор)',
+    '🎓 РУДН (Аня)',
+    '🏆 Я-Профессионал',
+    '💼 Работа (Егор)',
     '🚀 Проекты',
     '📋 Общее',
   ];
@@ -152,7 +151,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
 
   const assignees: { id: Assignee; label: string }[] = [
     { id: 'all', label: 'Все' },
-    { id: 'together', label: 'Вместе' },
+    { id: 'together', label: 'Вместе 💕' },
     { id: 'egor', label: 'Егор' },
     { id: 'anya', label: 'Аня' },
   ];
@@ -161,18 +160,18 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
     <div
       ref={setNodeRef}
       style={{
-        border: isOver ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: isOver ? '0 0 24px rgba(56, 189, 248, 0.15)' : '0 4px 20px -2px rgba(0, 0, 0, 0.5)',
+        border: isOver ? '1px solid rgba(168, 85, 247, 0.6)' : '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: isOver ? '0 0 24px rgba(168, 85, 247, 0.2)' : '0 4px 20px -2px rgba(0, 0, 0, 0.5)',
       }}
-      className={`rounded-2xl bg-[#0f1115]/80 backdrop-blur-[28px] p-4 sm:p-5 transition-all ${
-        isOver ? 'ring-1 ring-sky-400/40 bg-sky-950/10' : ''
+      className={`rounded-2xl bg-[#0f1118]/85 backdrop-blur-[28px] p-4 sm:p-5 transition-all ${
+        isOver ? 'ring-1 ring-purple-400/50 bg-purple-950/20' : ''
       }`}
     >
       {/* Inbox Header: Title, Counter & Action Bar */}
       <div className="flex flex-col gap-3 pb-4 border-b border-white/[0.08]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-zinc-300">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/10 text-purple-300 border border-purple-500/20">
               <Inbox className="h-4 w-4" />
             </div>
             <h2 className="text-sm font-bold tracking-tight text-white uppercase">
@@ -211,9 +210,9 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             <button
               type="button"
               onClick={onAddNewTask}
-              className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-white/20 transition-colors"
+              className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-purple-500/20 hover:brightness-110 transition-all"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
               <span>Добавить</span>
             </button>
           </div>
@@ -222,14 +221,14 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
         {/* Filter Controls Row */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {/* Search Bar */}
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <div className="relative flex-1 min-w-[190px] max-w-xs">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Поиск по задачам и тегам..."
-              className="w-full rounded-lg border border-white/10 bg-black/40 pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+              className="w-full rounded-lg border border-white/10 bg-black/40 pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:border-purple-500/50 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
             />
           </div>
 
@@ -242,7 +241,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
                 onClick={() => onAssigneeChange(a.id)}
                 className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                   selectedAssignee === a.id
-                    ? 'bg-white/20 text-white'
+                    ? 'bg-purple-600/40 text-purple-200 border border-purple-500/30'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -262,7 +261,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
                   : 'text-zinc-400 border-transparent hover:text-zinc-200'
               }`}
             >
-              Все цвета
+              Все
             </button>
             <button
               type="button"
@@ -283,10 +282,18 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             <button
               type="button"
               onClick={() => onBracketChange('finance')}
-              className={`h-5 w-5 rounded border border-yellow-500/40 bg-yellow-500/20 transition-all ${
-                selectedBracket === 'finance' ? 'ring-2 ring-yellow-400 scale-110' : 'opacity-70 hover:opacity-100'
+              className={`h-5 w-5 rounded border border-amber-500/40 bg-amber-500/20 transition-all ${
+                selectedBracket === 'finance' ? 'ring-2 ring-amber-400 scale-110' : 'opacity-70 hover:opacity-100'
               }`}
-              title="Финансы / Счета (желтый)"
+              title="Финансы / ЖКХ (янтарный)"
+            />
+            <button
+              type="button"
+              onClick={() => onBracketChange('cyber')}
+              className={`h-5 w-5 rounded border border-purple-500/40 bg-purple-500/20 transition-all ${
+                selectedBracket === 'cyber' ? 'ring-2 ring-purple-400 scale-110' : 'opacity-70 hover:opacity-100'
+              }`}
+              title="ВШЭ / РУДН / Я-Профи (фиолетовый)"
             />
             <button
               type="button"
@@ -302,10 +309,10 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
           <select
             value={selectedRoom}
             onChange={(e) => onRoomChange(e.target.value as RoomArea)}
-            className="rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/50"
+            className="rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-purple-500/50"
           >
             {rooms.map((r) => (
-              <option key={r} value={r} className="bg-[#14171f] text-zinc-200">
+              <option key={r} value={r} className="bg-[#141022] text-zinc-200">
                 {r === 'Все' ? 'Все зоны' : r}
               </option>
             ))}
@@ -315,11 +322,11 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
           <select
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value as 'all' | TaskCategory)}
-            className="rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500/50"
+            className="rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-purple-500/50"
           >
             {categories.map((c) => (
-              <option key={c} value={c} className="bg-[#14171f] text-zinc-200">
-                {c === 'all' ? 'Все сферы' : c}
+              <option key={c} value={c} className="bg-[#141022] text-zinc-200">
+                {c === 'all' ? 'Все направления' : c}
               </option>
             ))}
           </select>
@@ -335,7 +342,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
               {groupedHubs.map(({ hub, children }) => (
                 <div
                   key={hub.id}
-                  className="rounded-xl border border-white/[0.08] bg-black/20 p-3 space-y-2"
+                  className="rounded-xl border border-white/[0.08] bg-black/30 p-3 space-y-2"
                 >
                   {/* Hub Header Card */}
                   <GlassCard

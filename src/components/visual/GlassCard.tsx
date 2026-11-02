@@ -47,36 +47,43 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     setShowActions(false);
   };
 
-  // Bracket styling based on visual-dna.md
+  // Bracket styling based on cozy-cyber visual DNA
   const getBracketStyles = (color: BracketColor) => {
     switch (color) {
       case 'critical':
         return {
           borderLeft: '3.5px solid #ef4444',
-          bgGradient: 'linear-gradient(90deg, rgba(127, 29, 29, 0.32) 0%, rgba(18, 20, 26, 0.82) 100%)',
-          shadow: '0 0 16px rgba(239, 68, 68, 0.16)',
-          hoverBorder: 'rgba(239, 68, 68, 0.4)',
+          bgGradient: 'linear-gradient(90deg, rgba(127, 29, 29, 0.38) 0%, rgba(18, 15, 30, 0.85) 100%)',
+          shadow: '0 0 16px rgba(239, 68, 68, 0.2)',
+          hoverBorder: 'rgba(239, 68, 68, 0.45)',
         };
       case 'active':
         return {
           borderLeft: '3.5px solid #22c55e',
-          bgGradient: 'linear-gradient(90deg, rgba(34, 197, 94, 0.16) 0%, rgba(18, 20, 26, 0.82) 100%)',
-          shadow: '0 0 16px rgba(34, 197, 94, 0.14)',
-          hoverBorder: 'rgba(34, 197, 94, 0.4)',
+          bgGradient: 'linear-gradient(90deg, rgba(34, 197, 94, 0.16) 0%, rgba(18, 15, 30, 0.85) 100%)',
+          shadow: '0 0 16px rgba(34, 197, 94, 0.16)',
+          hoverBorder: 'rgba(34, 197, 94, 0.45)',
         };
       case 'finance':
         return {
-          borderLeft: '3.5px solid #eab308',
-          bgGradient: 'linear-gradient(90deg, rgba(234, 179, 8, 0.16) 0%, rgba(18, 20, 26, 0.82) 100%)',
-          shadow: '0 0 16px rgba(234, 179, 8, 0.14)',
-          hoverBorder: 'rgba(234, 179, 8, 0.4)',
+          borderLeft: '3.5px solid #f59e0b',
+          bgGradient: 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(18, 15, 30, 0.85) 100%)',
+          shadow: '0 0 16px rgba(245, 158, 11, 0.16)',
+          hoverBorder: 'rgba(245, 158, 11, 0.45)',
+        };
+      case 'cyber':
+        return {
+          borderLeft: '3.5px solid #a855f7',
+          bgGradient: 'linear-gradient(90deg, rgba(168, 85, 247, 0.2) 0%, rgba(18, 15, 30, 0.85) 100%)',
+          shadow: '0 0 16px rgba(168, 85, 247, 0.22)',
+          hoverBorder: 'rgba(168, 85, 247, 0.5)',
         };
       case 'neutral':
       default:
         return {
           borderLeft: '3.5px solid #64748b',
-          bgGradient: 'linear-gradient(90deg, rgba(100, 116, 139, 0.12) 0%, rgba(18, 20, 26, 0.82) 100%)',
-          shadow: '0 0 12px rgba(100, 116, 139, 0.08)',
+          bgGradient: 'linear-gradient(90deg, rgba(100, 116, 139, 0.14) 0%, rgba(18, 15, 30, 0.85) 100%)',
+          shadow: '0 0 12px rgba(100, 116, 139, 0.1)',
           hoverBorder: 'rgba(100, 116, 139, 0.4)',
         };
     }
@@ -101,14 +108,14 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       style={{
         borderLeft: bracket.borderLeft,
         background: bracket.bgGradient,
-        boxShadow: isDragging ? '0 12px 28px rgba(0,0,0,0.6)' : bracket.shadow,
+        boxShadow: isDragging ? '0 12px 28px rgba(0,0,0,0.7)' : bracket.shadow,
         borderTopLeftRadius: '10px',
         borderBottomLeftRadius: '10px',
       }}
-      className={`group relative rounded-r-xl border-y border-r border-white/[0.08] backdrop-blur-[24px] select-none transition-all duration-200 ${
-        task.completed ? 'opacity-40 grayscale-[40%]' : 'hover:border-white/[0.18]'
+      className={`group relative rounded-r-xl border-y border-r border-white/[0.08] backdrop-blur-[28px] select-none transition-all duration-200 ${
+        task.completed ? 'opacity-40 grayscale-[40%]' : 'hover:border-white/[0.22]'
       } ${compact ? 'p-2.5 min-h-[46px]' : 'p-3.5 min-h-[58px]'} ${
-        isDragging ? 'scale-105 z-50 ring-2 ring-amber-500/50' : ''
+        isDragging ? 'scale-105 z-50 ring-2 ring-purple-500/50' : ''
       }`}
     >
       {/* Interactive Cursor Spotlight Glow */}
@@ -122,7 +129,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       )}
 
       <div className="relative flex items-start gap-2.5">
-        {/* Checkbox */}
+        {/* Checkbox Button */}
         <button
           type="button"
           onClick={(e) => {
@@ -131,8 +138,8 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           }}
           className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all duration-150 ${
             task.completed
-              ? 'bg-emerald-500 text-black border-transparent shadow-sm shadow-emerald-500/50'
-              : 'border border-white/20 bg-black/30 hover:border-white/50 group-hover:bg-white/5'
+              ? 'bg-emerald-400 text-black border-transparent shadow-sm shadow-emerald-400/50'
+              : 'border border-white/20 bg-black/40 hover:border-purple-400/60 group-hover:bg-white/5'
           }`}
         >
           {task.completed && <Check className="h-3 w-3 stroke-[3]" />}
@@ -208,7 +215,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
             )}
             {task.assignee === 'together' && (
               <span className="inline-flex items-center rounded bg-purple-500/20 px-1.5 py-0.5 font-mono font-semibold text-purple-300 border border-purple-500/30">
-                Вместе
+                Вместе 💕
               </span>
             )}
 
@@ -243,7 +250,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           </div>
         </div>
 
-        {/* Card Quick Actions Menu Button */}
+        {/* Card Quick Actions Menu */}
         {onDelete && (
           <div className="relative">
             <button
@@ -259,7 +266,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
             {showActions && (
               <div 
-                className="absolute right-0 top-6 z-30 min-w-[120px] rounded-lg border border-white/10 bg-[#14171f] p-1 shadow-xl backdrop-blur-md"
+                className="absolute right-0 top-6 z-30 min-w-[120px] rounded-lg border border-white/10 bg-[#141022] p-1 shadow-xl backdrop-blur-md"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
