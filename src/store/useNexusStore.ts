@@ -184,7 +184,7 @@ export const useNexusStore = create<NexusState>()(
       selectedAssignee: 'all',
       selectedRoom: 'Все',
       selectedCategory: 'all',
-      isSmartGrouped: true,
+      isSmartGrouped: false,
       activeWeekOffset: 0,
 
       atmosphereMode: 'twilight',

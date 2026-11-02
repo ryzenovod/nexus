@@ -47,49 +47,23 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     setShowActions(false);
   };
 
-  // Bracket styling based on cozy-cyber visual DNA
-  const getBracketStyles = (color: BracketColor) => {
+  // 3px solid bracket indicator strictly from screenshot DNA (no background gradients)
+  const getBracketBorderColor = (color: BracketColor): string => {
     switch (color) {
       case 'critical':
-        return {
-          borderLeft: '3.5px solid #ef4444',
-          bgGradient: 'linear-gradient(90deg, rgba(127, 29, 29, 0.38) 0%, rgba(18, 15, 30, 0.85) 100%)',
-          shadow: '0 0 16px rgba(239, 68, 68, 0.2)',
-          hoverBorder: 'rgba(239, 68, 68, 0.45)',
-        };
+        return '#ef4444';
       case 'active':
-        return {
-          borderLeft: '3.5px solid #22c55e',
-          bgGradient: 'linear-gradient(90deg, rgba(34, 197, 94, 0.16) 0%, rgba(18, 15, 30, 0.85) 100%)',
-          shadow: '0 0 16px rgba(34, 197, 94, 0.16)',
-          hoverBorder: 'rgba(34, 197, 94, 0.45)',
-        };
+        return '#22c55e';
       case 'finance':
-        return {
-          borderLeft: '3.5px solid #f59e0b',
-          bgGradient: 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(18, 15, 30, 0.85) 100%)',
-          shadow: '0 0 16px rgba(245, 158, 11, 0.16)',
-          hoverBorder: 'rgba(245, 158, 11, 0.45)',
-        };
+        return '#eab308';
       case 'cyber':
-        return {
-          borderLeft: '3.5px solid #a855f7',
-          bgGradient: 'linear-gradient(90deg, rgba(168, 85, 247, 0.2) 0%, rgba(18, 15, 30, 0.85) 100%)',
-          shadow: '0 0 16px rgba(168, 85, 247, 0.22)',
-          hoverBorder: 'rgba(168, 85, 247, 0.5)',
-        };
       case 'neutral':
       default:
-        return {
-          borderLeft: '3.5px solid #64748b',
-          bgGradient: 'linear-gradient(90deg, rgba(100, 116, 139, 0.14) 0%, rgba(18, 15, 30, 0.85) 100%)',
-          shadow: '0 0 12px rgba(100, 116, 139, 0.1)',
-          hoverBorder: 'rgba(100, 116, 139, 0.4)',
-        };
+        return '#71717a';
     }
   };
 
-  const bracket = getBracketStyles(task.bracketColor);
+  const bracketColor = getBracketBorderColor(task.bracketColor);
 
   return (
     <motion.div
@@ -97,52 +71,51 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       layoutId={`task-${task.id}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      initial={{ opacity: 0, y: 6 }}
+      initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96 }}
+      exit={{ opacity: 0, scale: 0.98 }}
       transition={{
         type: 'spring',
-        stiffness: 380,
-        damping: 28,
+        stiffness: 420,
+        damping: 30,
       }}
       style={{
-        borderLeft: bracket.borderLeft,
-        background: bracket.bgGradient,
-        boxShadow: isDragging ? '0 12px 28px rgba(0,0,0,0.7)' : bracket.shadow,
-        borderTopLeftRadius: '10px',
-        borderBottomLeftRadius: '10px',
+        borderLeft: `3px solid ${bracketColor}`,
+        borderTopLeftRadius: '8px',
+        borderBottomLeftRadius: '8px',
       }}
-      className={`group relative rounded-r-xl border-y border-r border-white/[0.08] backdrop-blur-[28px] select-none transition-all duration-200 ${
-        task.completed ? 'opacity-40 grayscale-[40%]' : 'hover:border-white/[0.22]'
-      } ${compact ? 'p-2.5 min-h-[46px]' : 'p-3.5 min-h-[58px]'} ${
-        isDragging ? 'scale-105 z-50 ring-2 ring-purple-500/50' : ''
+      className={`group relative rounded-r-lg border-y border-r border-white/[0.07] bg-zinc-900/80 backdrop-blur-[20px] select-none transition-all duration-150 ${
+        task.completed ? 'opacity-40 grayscale-[50%]' : 'hover:border-white/[0.16] hover:bg-zinc-900/95'
+      } ${compact ? 'py-1.5 px-2.5 min-h-[40px]' : 'py-2 px-3 min-h-[50px]'} ${
+        isDragging ? 'scale-105 z-50 shadow-xl ring-1 ring-zinc-500/50' : ''
       }`}
     >
-      {/* Interactive Cursor Spotlight Glow */}
+      {/* Subtle Monochrome Cursor Light (no colored haze) */}
       {mousePos && (
         <div
-          className="pointer-events-none absolute inset-0 rounded-r-xl transition-opacity duration-300 opacity-100"
+          className="pointer-events-none absolute inset-0 rounded-r-lg transition-opacity duration-200"
           style={{
-            background: `radial-gradient(180px circle at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.08), transparent 80%)`,
+            background: `radial-gradient(140px circle at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.04), transparent 80%)`,
           }}
         />
       )}
 
-      <div className="relative flex items-start gap-2.5">
-        {/* Checkbox Button */}
+      <div className="relative flex items-start gap-2">
+        {/* Minimal Checkbox Button */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onToggle(task.id);
           }}
-          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded transition-all duration-150 ${
+          className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] transition-all duration-100 ${
             task.completed
-              ? 'bg-emerald-400 text-black border-transparent shadow-sm shadow-emerald-400/50'
-              : 'border border-white/20 bg-black/40 hover:border-purple-400/60 group-hover:bg-white/5'
+              ? 'bg-zinc-200 text-zinc-950 border border-zinc-200'
+              : 'border border-zinc-700 bg-zinc-950/70 hover:border-zinc-400 group-hover:bg-zinc-800/80'
           }`}
+          aria-label={task.completed ? 'Отметить невыполненной' : 'Отметить выполненной'}
         >
-          {task.completed && <Check className="h-3 w-3 stroke-[3]" />}
+          {task.completed && <Check className="h-2.5 w-2.5 stroke-[3]" />}
         </button>
 
         {/* Content Body */}
@@ -154,7 +127,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
           <div className="flex flex-wrap items-center gap-1.5 leading-snug">
             {/* OVERDUE Badge */}
             {task.isOverdue && !task.completed && (
-              <span className="inline-flex items-center gap-1 rounded bg-red-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-red-300 border border-red-500/40">
+              <span className="inline-flex items-center gap-0.5 rounded px-1 py-0.2 font-mono text-[9px] font-semibold tracking-wide text-red-400 bg-red-500/10 border border-red-500/20">
                 <AlertCircle className="h-2.5 w-2.5" />
                 ПРОСРОЧЕНО
               </span>
@@ -162,8 +135,8 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
             {/* Hub Badge */}
             {task.isHub && (
-              <span className="inline-flex items-center gap-1 rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-amber-300 border border-amber-500/30">
-                <Layers className="h-2.5 w-2.5" />
+              <span className="inline-flex items-center gap-1 rounded bg-white/[0.05] px-1.5 py-0.2 font-mono text-[9px] text-zinc-300 border border-white/[0.08]">
+                <Layers className="h-2.5 w-2.5 text-zinc-400" />
                 ХАБ {task.subtaskCount ? `(${task.subtaskCount})` : ''}
               </span>
             )}
@@ -180,55 +153,55 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
           {/* Notes Preview (if not compact) */}
           {!compact && task.notes && (
-            <p className="mt-1 text-[11px] leading-relaxed text-zinc-400/90 line-clamp-2">
+            <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-400/85 line-clamp-1">
               {task.notes}
             </p>
           )}
 
           {/* Metadata Footer */}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-zinc-400">
+            {/* Room micro-tag */}
+            {task.room && task.room !== 'Все' && (
+              <span className="rounded bg-white/[0.04] px-1.5 py-0.2 text-[10px] text-zinc-400 border border-white/[0.06]">
+                {task.room}
+              </span>
+            )}
+
             {/* Regular recurrence pill */}
             {task.isRegular && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.04] px-2 py-0.5 text-zinc-300 border border-white/[0.06]">
-                <Clock className="h-2.5 w-2.5 text-amber-400" />
+              <span className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-1.5 py-0.2 text-zinc-300 border border-white/[0.06]">
+                <Clock className="h-2.5 w-2.5 text-amber-400/80" />
                 {task.regularPeriod || 'Регулярно'}
               </span>
             )}
 
             {/* Price tag */}
             {task.price !== undefined && task.price > 0 && (
-              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono font-medium text-emerald-300 border border-emerald-500/20">
+              <span className="inline-flex items-center rounded bg-white/[0.04] px-1.5 py-0.2 font-mono font-medium text-emerald-400/90 border border-emerald-500/20">
                 {task.price.toLocaleString('ru-RU')} ₽
               </span>
             )}
 
-            {/* Assignee Monogram Badge */}
+            {/* Assignee Badge (monochrome & clean) */}
             {task.assignee === 'egor' && (
-              <span className="inline-flex items-center rounded bg-indigo-500/20 px-1.5 py-0.5 font-mono font-semibold text-indigo-300 border border-indigo-500/30">
+              <span className="font-mono text-[10px] text-zinc-400">
                 Егор
               </span>
             )}
             {task.assignee === 'anya' && (
-              <span className="inline-flex items-center rounded bg-rose-500/20 px-1.5 py-0.5 font-mono font-semibold text-rose-300 border border-rose-500/30">
+              <span className="font-mono text-[10px] text-zinc-400">
                 Аня
               </span>
             )}
             {task.assignee === 'together' && (
-              <span className="inline-flex items-center rounded bg-purple-500/20 px-1.5 py-0.5 font-mono font-semibold text-purple-300 border border-purple-500/30">
-                Вместе 💕
-              </span>
-            )}
-
-            {/* Room tag */}
-            {task.room && task.room !== 'Все' && (
-              <span className="rounded bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
-                {task.room}
+              <span className="font-mono text-[10px] text-zinc-400">
+                Вместе
               </span>
             )}
 
             {/* Date if assigned */}
             {task.date && task.date !== 'inbox' && (
-              <span className="inline-flex items-center gap-0.5 text-zinc-400">
+              <span className="inline-flex items-center gap-0.5 text-zinc-500 font-mono text-[10px]">
                 <Calendar className="h-2.5 w-2.5" />
                 {task.date.slice(5)}
               </span>
@@ -241,7 +214,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="ml-auto inline-flex items-center gap-0.5 text-amber-400/80 hover:text-amber-300 transition-colors"
+                className="ml-auto inline-flex items-center gap-0.5 text-zinc-400 hover:text-zinc-200 transition-colors"
                 title="Открыть ссылку"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -259,14 +232,15 @@ export const GlassCard: React.FC<GlassCardProps> = ({
                 e.stopPropagation();
                 setShowActions(!showActions);
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-zinc-500 hover:text-zinc-200 rounded hover:bg-white/10"
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-zinc-500 hover:text-zinc-200 rounded hover:bg-white/10"
+              aria-label="Действия"
             >
               <MoreVertical className="h-3.5 w-3.5" />
             </button>
 
             {showActions && (
               <div 
-                className="absolute right-0 top-6 z-30 min-w-[120px] rounded-lg border border-white/10 bg-[#141022] p-1 shadow-xl backdrop-blur-md"
+                className="absolute right-0 top-5 z-30 min-w-[110px] rounded-md border border-white/10 bg-zinc-900 p-1 shadow-xl backdrop-blur-md"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button

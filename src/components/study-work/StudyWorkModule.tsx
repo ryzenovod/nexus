@@ -6,7 +6,6 @@ import {
   Rocket, 
   Calendar, 
   Plus, 
-  Layers, 
   ChevronRight, 
   Timer,
   Play,
@@ -19,13 +18,18 @@ import {
   CloudRain,
   Flame,
   Sparkles,
-  Globe
+  Globe,
+  Radio,
+  BookOpen
 } from 'lucide-react';
 import { useNexusStore } from '../../store/useNexusStore';
 import { StudySpace, StudyWorkItem } from '../../types/nexus';
 import { DualTimeClock } from '../visual/DualTimeClock';
 import { CyberCatMascot } from '../visual/CyberCatMascot';
-import { cozyAudio } from '../../utils/CozyAudioSynthesizer';
+import { YaProfiMapRadar } from './YaProfiMapRadar';
+import { AcademicTracker } from './AcademicTracker';
+
+export type StudyWorkSubTab = 'kanban' | 'radar' | 'academic' | 'focus';
 
 export const StudyWorkModule: React.FC = () => {
   const {
@@ -39,7 +43,6 @@ export const StudyWorkModule: React.FC = () => {
     pomodoroTimeLeft,
     pomodoroIsRunning,
     pomodoroUser,
-    pomodoroCompletedSessions,
     startPomodoro,
     pausePomodoro,
     resetPomodoro,
@@ -51,6 +54,7 @@ export const StudyWorkModule: React.FC = () => {
     equipCosmetic,
   } = useNexusStore();
 
+  const [activeSubTab, setActiveSubTab] = useState<StudyWorkSubTab>('kanban');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
@@ -66,7 +70,6 @@ export const StudyWorkModule: React.FC = () => {
     shortLabel: string;
     user: 'egor' | 'anya' | 'together'; 
     icon: typeof GraduationCap; 
-    color: string;
     badge?: string;
   }[] = [
     {
@@ -75,8 +78,7 @@ export const StudyWorkModule: React.FC = () => {
       shortLabel: 'Я-Профи ДФО',
       user: 'anya',
       icon: Trophy,
-      color: '#f59e0b',
-      badge: 'ДФО +7ч 🌏',
+      badge: 'ДФО +7ч',
     },
     {
       id: 'yaprofi-cfo',
@@ -84,7 +86,6 @@ export const StudyWorkModule: React.FC = () => {
       shortLabel: 'Я-Профи ЦФО',
       user: 'anya',
       icon: Trophy,
-      color: '#ec4899',
       badge: 'Москва / ЦФО',
     },
     {
@@ -93,7 +94,6 @@ export const StudyWorkModule: React.FC = () => {
       shortLabel: 'РУДН Онлайн',
       user: 'anya',
       icon: GraduationCap,
-      color: '#f43f5e',
     },
     {
       id: 'hse-egor',
@@ -101,7 +101,6 @@ export const StudyWorkModule: React.FC = () => {
       shortLabel: 'ВШЭ Магистратура',
       user: 'egor',
       icon: GraduationCap,
-      color: '#6366f1',
     },
     {
       id: 'work-egor',
@@ -109,7 +108,6 @@ export const StudyWorkModule: React.FC = () => {
       shortLabel: 'Работа OpenMap',
       user: 'egor',
       icon: Briefcase,
-      color: '#38bdf8',
     },
     {
       id: 'projects-anya',
@@ -117,22 +115,23 @@ export const StudyWorkModule: React.FC = () => {
       shortLabel: 'Дизайн / NEXUS',
       user: 'anya',
       icon: Rocket,
-      color: '#a855f7',
     },
   ];
 
   const currentSpaceConfig = spaces.find((s) => s.id === activeStudySpace) || spaces[0];
 
-  const filteredItems = studyWorkItems.filter((item) => item.space === activeStudySpace);
+  const filteredItems = studyWorkItems.filter(
+    (item) => item.space === activeStudySpace
+  );
 
-  const columns: { id: StudyWorkItem['status']; title: string; color: string }[] = [
-    { id: 'backlog', title: 'Бэклог', color: '#64748b' },
-    { id: 'in_progress', title: 'В процессе', color: '#38bdf8' },
-    { id: 'review', title: 'Ревью / Сдача', color: '#eab308' },
-    { id: 'done', title: 'Готово', color: '#22c55e' },
+  const columns: { id: StudyWorkItem['status']; title: string }[] = [
+    { id: 'backlog', title: 'Бэклог' },
+    { id: 'in_progress', title: 'В работе' },
+    { id: 'review', title: 'На проверке' },
+    { id: 'done', title: 'Сдано' },
   ];
 
-  const handleAddItem = (e: React.FormEvent) => {
+  const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
@@ -140,21 +139,22 @@ export const StudyWorkModule: React.FC = () => {
       space: activeStudySpace,
       user: currentSpaceConfig.user,
       title: newTitle.trim(),
-      description: newDescription.trim(),
-      courseOrProject: newCourse.trim() || currentSpaceConfig.shortLabel,
+      description: newDescription.trim() || '',
+      courseOrProject: newCourse.trim() || 'Общее',
       status: 'backlog',
       priority: newPriority,
-      deadline: newDeadline || new Date().toISOString().slice(0, 10),
+      deadline: newDeadline || '2026-11-15',
       timezoneNote: newTzNote.trim() || undefined,
       tags: newTags
         .split(',')
-        .map((t) => t.trim().toLowerCase())
+        .map((t) => t.trim())
         .filter(Boolean),
     });
 
     setNewTitle('');
     setNewDescription('');
     setNewCourse('');
+    setNewDeadline('');
     setNewTags('');
     setNewTzNote('');
     setShowAddModal(false);
@@ -165,447 +165,417 @@ export const StudyWorkModule: React.FC = () => {
   const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   return (
-    <div className="space-y-6">
-      {/* 1. TOP DUAL TIMEZONE & SPACES BANNER */}
-      <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-4 sm:p-5 shadow-glass space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
-          <div>
-            <h2 className="text-sm font-bold text-white uppercase tracking-tight flex items-center gap-2">
-              <span>Хаб «ВШЭ x РУДН x Я-Профессионал»</span>
-              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono text-amber-300 border border-amber-500/30">
-                Москва ⇄ ДФО
-              </span>
-            </h2>
-            <p className="text-xs text-zinc-400">
-              Координация академических модулей, федерального лидерства ДФО/ЦФО и рабочих спринтов
-            </p>
-          </div>
-
-          {/* Dual Clock Widget */}
-          <DualTimeClock />
-        </div>
-
-        {/* Space Selector Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-          {spaces.map((space) => {
-            const Icon = space.icon;
-            const isActive = activeStudySpace === space.id;
-            const count = studyWorkItems.filter((i) => i.space === space.id).length;
-
-            return (
-              <button
-                key={space.id}
-                type="button"
-                onClick={() => setActiveStudySpace(space.id)}
-                style={{
-                  borderColor: isActive ? space.color : 'rgba(255, 255, 255, 0.08)',
-                  boxShadow: isActive ? `0 0 16px ${space.color}30` : 'none',
-                }}
-                className={`flex flex-col text-left p-3 rounded-xl border transition-all ${
-                  isActive ? 'bg-white/[0.09]' : 'bg-black/30 hover:bg-white/[0.04]'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <Icon className="h-4 w-4" style={{ color: space.color }} />
-                  <span className="font-mono text-xs font-semibold text-zinc-400">
-                    {count}
-                  </span>
-                </div>
-
-                <span className="mt-2 text-xs font-bold text-white line-clamp-1">
-                  {space.shortLabel}
-                </span>
-
-                <div className="flex items-center justify-between mt-1 text-[10px] text-zinc-400">
-                  <span>{space.user === 'egor' ? 'Егор' : 'Аня'}</span>
-                  {space.badge && (
-                    <span className="font-mono text-[9px] text-amber-300/90">
-                      {space.badge}
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. COZY FOCUS ROOM (PLAY. FOCUS. WIN. REPEAT. - EXACTLY AS IN REFERENCE PHOTO) */}
-      <div className="relative rounded-2xl border border-purple-500/30 bg-gradient-to-r from-[#170e2b] via-[#100d1e] to-[#0d0f17] p-5 sm:p-6 shadow-glass overflow-hidden">
-        {/* Neon Ambient Wall Glows */}
-        <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-purple-500/20 blur-[80px]" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 h-44 w-44 rounded-full bg-pink-500/15 blur-[80px]" />
-
-        {/* Top Header Row with Neon Signs & Sticky Notes */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-          <div className="flex items-center gap-3">
-            {/* Glowing Neon Gamepad (from reference) */}
-            <div className="relative flex h-10 w-12 items-center justify-center rounded-xl bg-purple-950/40 border border-purple-400/50 shadow-[0_0_18px_rgba(168,85,247,0.5)]">
-              <span className="text-xl">🎮</span>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-extrabold uppercase tracking-widest text-purple-200">
-                  PLAY. FOCUS. WIN. REPEAT.
-                </span>
-                <span className="text-pink-400">💜</span>
-              </div>
-              <p className="font-mono text-[11px] text-purple-300/70">
-                one more level. one step closer.
-              </p>
-            </div>
-          </div>
-
-          {/* Wall Sticky Notes & Signs from Reference Photo */}
-          <div className="flex items-center gap-2.5">
-            {/* Sticky note 1 */}
-            <div className="rotate-[-2deg] rounded bg-[#2a1a45]/90 border border-purple-500/30 px-2.5 py-1 text-[10px] font-mono text-purple-200 shadow-md">
-              don't stop now ♡
-            </div>
-
-            {/* Sticky note 2 */}
-            <div className="rotate-[3deg] rounded bg-[#2a1a45]/90 border border-purple-500/30 px-2.5 py-1 text-[10px] font-mono text-purple-200 shadow-md">
-              you got this! ♡
-            </div>
-
-            {/* LEVEL UP poster */}
-            <div className="rounded bg-black/60 border border-purple-400/40 px-2 py-0.5 text-center font-mono text-[9px] font-bold text-amber-300 tracking-wider shadow-sm">
-              LEVEL UP ↑
-            </div>
-
-            {/* GAME ON neon acrylic stand */}
-            <div className="rounded bg-purple-950/60 border border-pink-400/50 px-2 py-0.5 font-mono text-[9px] font-extrabold text-pink-300 shadow-[0_0_10px_rgba(244,114,182,0.4)]">
-              GAME ON
-            </div>
-          </div>
-        </div>
-
-        {/* Focus Room Body */}
-        <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-          {/* Cyber-Cat on Focus Desk */}
-          <div className="flex flex-col items-center justify-center text-center p-4 rounded-xl bg-black/35 border border-purple-500/20 shadow-inner">
-            <CyberCatMascot
-              gamification={gamification}
-              onEquipCosmetic={equipCosmetic}
-            />
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-purple-300/90 font-bold flex items-center gap-1.5">
-              <span>FOCUS &gt;&gt; WIN</span>
-              <span className="text-pink-400">✦</span>
-            </div>
-          </div>
-
-          {/* Pomodoro Center */}
-          <div className="text-center space-y-3">
-            <div className="flex items-center justify-center gap-2">
-              <Timer className="h-4 w-4 text-amber-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                Cozy Focus Pomodoro
-              </span>
-            </div>
-
-            {/* User switcher */}
-            <div className="inline-flex items-center rounded-lg bg-black/50 p-0.5 text-xs border border-white/10">
-              <button
-                type="button"
-                onClick={() => setPomodoroUser('together')}
-                className={`rounded px-2.5 py-1 font-semibold transition-colors ${
-                  pomodoroUser === 'together' ? 'bg-amber-500 text-black' : 'text-zinc-400'
-                }`}
-              >
-                Вместе 💕
-              </button>
-              <button
-                type="button"
-                onClick={() => setPomodoroUser('egor')}
-                className={`rounded px-2.5 py-1 font-semibold transition-colors ${
-                  pomodoroUser === 'egor' ? 'bg-indigo-500 text-white' : 'text-zinc-400'
-                }`}
-              >
-                Егор
-              </button>
-              <button
-                type="button"
-                onClick={() => setPomodoroUser('anya')}
-                className={`rounded px-2.5 py-1 font-semibold transition-colors ${
-                  pomodoroUser === 'anya' ? 'bg-rose-500 text-white' : 'text-zinc-400'
-                }`}
-              >
-                Аня
-              </button>
-            </div>
-
-            {/* Time display */}
-            <div>
-              <span className="font-mono text-5xl font-extrabold tracking-tight text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.35)]">
-                {formattedTime}
-              </span>
-              <p className="text-xs text-zinc-400 mt-1">
-                {pomodoroMode === 'work' ? 'Сессия непрерывного фокуса (+50 XP)' : 'Уютный отдых ☕️'}
-              </p>
-            </div>
-
-            {/* Timer buttons */}
-            <div className="flex items-center justify-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={pomodoroIsRunning ? pausePomodoro : startPomodoro}
-                className={`flex items-center gap-1.5 rounded-xl px-5 py-2 text-xs font-bold text-black shadow-lg transition-transform active:scale-95 ${
-                  pomodoroIsRunning
-                    ? 'bg-amber-400 hover:bg-amber-300 shadow-amber-400/25'
-                    : 'bg-emerald-400 hover:bg-emerald-300 shadow-emerald-400/25'
-                }`}
-              >
-                {pomodoroIsRunning ? (
-                  <>
-                    <Pause className="h-4 w-4 fill-current" />
-                    <span>Пауза</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 fill-current" />
-                    <span>Фокус</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={resetPomodoro}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 hover:bg-white/10 transition-colors"
-                title="Сбросить таймер"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPomodoroMode(pomodoroMode === 'work' ? 'shortBreak' : 'work')}
-                className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-zinc-300 hover:bg-white/10 transition-colors"
-              >
-                {pomodoroMode === 'work' ? 'Отдых 5м' : 'Работа 25м'}
-              </button>
-            </div>
-          </div>
-
-          {/* Web Audio Synthesizer Controls */}
-          <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Volume2 className="h-4 w-4 text-purple-400" />
-                <span>Web Audio Ambiance</span>
-              </span>
-              <span className="font-mono text-[10px] text-purple-300">
-                0% MP3 / Чистый код
-              </span>
-            </div>
-
-            <p className="text-[11px] text-zinc-400">
-              Процедурный генератор уюта без внешних файлов:
-            </p>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setSoundAmbiance(soundAmbiance === 'rain' ? 'off' : 'rain')}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs transition-colors ${
-                  soundAmbiance === 'rain'
-                    ? 'border-cyan-500 bg-cyan-500/20 text-cyan-200'
-                    : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.06]'
-                }`}
-              >
-                <CloudRain className="h-4 w-4 mb-1" />
-                <span className="text-[10px]">Ночной Дождь</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSoundAmbiance(soundAmbiance === 'fireplace' ? 'off' : 'fireplace')}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs transition-colors ${
-                  soundAmbiance === 'fireplace'
-                    ? 'border-amber-500 bg-amber-500/20 text-amber-200'
-                    : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.06]'
-                }`}
-              >
-                <Flame className="h-4 w-4 mb-1" />
-                <span className="text-[10px]">Теплый Камин</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSoundAmbiance(soundAmbiance === 'chimes' ? 'off' : 'chimes')}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs transition-colors ${
-                  soundAmbiance === 'chimes'
-                    ? 'border-purple-500 bg-purple-500/20 text-purple-200'
-                    : 'border-white/10 bg-white/[0.02] text-zinc-400 hover:bg-white/[0.06]'
-                }`}
-              >
-                <Sparkles className="h-4 w-4 mb-1" />
-                <span className="text-[10px]">Колокольчики</span>
-              </button>
-            </div>
-
-            {soundAmbiance !== 'off' && (
-              <button
-                type="button"
-                onClick={() => setSoundAmbiance('off')}
-                className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] text-red-400 hover:underline"
-              >
-                <VolumeX className="h-3.5 w-3.5" />
-                <span>Выключить звук</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. KANBAN BOARD */}
-      <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-4 sm:p-5 shadow-glass">
-        <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] mb-4">
-          <div className="flex items-center gap-2">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: currentSpaceConfig.color }}
-            />
-            <h3 className="text-sm font-bold text-white uppercase tracking-tight">
-              {currentSpaceConfig.label}
-            </h3>
-          </div>
+    <div className="space-y-4">
+      {/* Sub-Navigation Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('kanban')}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+              activeSubTab === 'kanban'
+                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
+                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+            }`}
+          >
+            <GraduationCap className="h-3.5 w-3.5" />
+            <span>Канбан (ВШЭ / РУДН / Я-Профи)</span>
+          </button>
 
           <button
             type="button"
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20 transition-colors"
+            onClick={() => setActiveSubTab('radar')}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+              activeSubTab === 'radar'
+                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
+                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+            }`}
           >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Добавить задачу</span>
+            <Radio className="h-3.5 w-3.5 text-amber-400" />
+            <span>Радар ЦФО ⇄ ДФО 📡</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('academic')}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+              activeSubTab === 'academic'
+                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
+                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+            }`}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Расписание & БРС 🎓</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('focus')}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+              activeSubTab === 'focus'
+                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
+                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+            }`}
+          >
+            <Timer className="h-3.5 w-3.5" />
+            <span>Focus Room ⏱</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {columns.map((column) => {
-            const columnTasks = filteredItems.filter((i) => i.status === column.id);
+        {activeSubTab === 'kanban' && (
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1 rounded bg-zinc-100 hover:bg-white px-2.5 py-1 text-xs font-medium text-zinc-950 transition-colors"
+          >
+            <Plus className="h-3 w-3 stroke-[2.5]" />
+            <span>Задача</span>
+          </button>
+        )}
+      </div>
 
-            return (
-              <div
-                key={column.id}
-                className="rounded-xl border border-white/[0.08] bg-black/30 p-3.5 flex flex-col min-h-[420px]"
-              >
-                {/* Column Header */}
-                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.06]">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: column.color }}
-                    />
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">
-                      {column.title}
+      {/* Render Selected Sub-View */}
+      {activeSubTab === 'radar' && <YaProfiMapRadar />}
+      {activeSubTab === 'academic' && <AcademicTracker />}
+
+      {activeSubTab === 'focus' && (
+        <div className="rounded-lg border border-white/[0.07] bg-zinc-900/70 backdrop-blur-[20px] p-4 sm:p-6 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-semibold uppercase tracking-wider text-zinc-200">
+                  PLAY. FOCUS. WIN. REPEAT.
+                </span>
+              </div>
+              <p className="font-mono text-[11px] text-zinc-500">
+                one more level. one step closer.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] text-zinc-400 border border-white/[0.08] rounded px-2 py-0.5 bg-zinc-950/60">
+                don't stop now ♡
+              </span>
+              <span className="font-mono text-[10px] text-zinc-400 border border-white/[0.08] rounded px-2 py-0.5 bg-zinc-950/60">
+                you got this! ♡
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+            {/* Mascot */}
+            <div className="flex flex-col items-center justify-center text-center p-3 rounded border border-white/[0.06] bg-zinc-950/50">
+              <CyberCatMascot
+                gamification={gamification}
+                onEquipCosmetic={equipCosmetic}
+              />
+              <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
+                FOCUS &gt;&gt; WIN
+              </div>
+            </div>
+
+            {/* Pomodoro Center */}
+            <div className="text-center space-y-3">
+              <div className="inline-flex items-center rounded border border-white/[0.08] bg-zinc-950/60 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPomodoroUser('together')}
+                  className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                    pomodoroUser === 'together' ? 'bg-white/[0.12] text-zinc-100' : 'text-zinc-400'
+                  }`}
+                >
+                  Вместе
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPomodoroUser('egor')}
+                  className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                    pomodoroUser === 'egor' ? 'bg-white/[0.12] text-zinc-100' : 'text-zinc-400'
+                  }`}
+                >
+                  Егор
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPomodoroUser('anya')}
+                  className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                    pomodoroUser === 'anya' ? 'bg-white/[0.12] text-zinc-100' : 'text-zinc-400'
+                  }`}
+                >
+                  Аня
+                </button>
+              </div>
+
+              <div>
+                <span className="font-mono text-5xl font-semibold tracking-tight text-zinc-100">
+                  {formattedTime}
+                </span>
+                <p className="text-xs text-zinc-500 mt-1">
+                  {pomodoroMode === 'work' ? 'Сессия непрерывного фокуса (+50 XP)' : 'Перерыв ☕️'}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={pomodoroIsRunning ? pausePomodoro : startPomodoro}
+                  className="flex items-center gap-1 rounded bg-zinc-100 hover:bg-white px-4 py-1 text-xs font-medium text-zinc-950 transition-colors"
+                >
+                  {pomodoroIsRunning ? (
+                    <>
+                      <Pause className="h-3 w-3 fill-current" />
+                      <span>Пауза</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3 w-3 fill-current" />
+                      <span>Фокус</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={resetPomodoro}
+                  className="flex h-7 w-7 items-center justify-center rounded border border-white/[0.08] bg-zinc-950/60 text-zinc-400 hover:text-zinc-200"
+                  title="Сбросить таймер"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPomodoroMode(pomodoroMode === 'work' ? 'shortBreak' : 'work')}
+                  className="rounded border border-white/[0.08] bg-zinc-950/60 px-2.5 py-1 text-xs text-zinc-300 hover:text-zinc-100"
+                >
+                  {pomodoroMode === 'work' ? 'Отдых 5м' : 'Работа 25м'}
+                </button>
+              </div>
+            </div>
+
+            {/* Synthesizer Controls */}
+            <div className="rounded border border-white/[0.07] bg-zinc-950/60 p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+                  <Volume2 className="h-3.5 w-3.5 text-zinc-400" />
+                  <span>Звуки уюта (Web Audio)</span>
+                </span>
+                <span className="font-mono text-[10px] text-zinc-500">
+                  Синтезатор
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSoundAmbiance(soundAmbiance === 'rain' ? 'off' : 'rain')}
+                  className={`flex flex-col items-center justify-center p-2 rounded border text-xs transition-colors ${
+                    soundAmbiance === 'rain'
+                      ? 'border-white/[0.2] bg-white/[0.1] text-zinc-100'
+                      : 'border-white/[0.06] bg-zinc-900/40 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <CloudRain className="h-3.5 w-3.5 mb-1" />
+                  <span className="text-[10px]">Дождь</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSoundAmbiance(soundAmbiance === 'fireplace' ? 'off' : 'fireplace')}
+                  className={`flex flex-col items-center justify-center p-2 rounded border text-xs transition-colors ${
+                    soundAmbiance === 'fireplace'
+                      ? 'border-white/[0.2] bg-white/[0.1] text-zinc-100'
+                      : 'border-white/[0.06] bg-zinc-900/40 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Flame className="h-3.5 w-3.5 mb-1 text-amber-400/80" />
+                  <span className="text-[10px]">Камин</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSoundAmbiance(soundAmbiance === 'chimes' ? 'off' : 'chimes')}
+                  className={`flex flex-col items-center justify-center p-2 rounded border text-xs transition-colors ${
+                    soundAmbiance === 'chimes'
+                      ? 'border-white/[0.2] bg-white/[0.1] text-zinc-100'
+                      : 'border-white/[0.06] bg-zinc-900/40 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5 mb-1 text-zinc-300" />
+                  <span className="text-[10px]">Звон</span>
+                </button>
+              </div>
+
+              {soundAmbiance !== 'off' && (
+                <button
+                  type="button"
+                  onClick={() => setSoundAmbiance('off')}
+                  className="w-full flex items-center justify-center gap-1 pt-1 text-[11px] text-zinc-500 hover:text-zinc-300"
+                >
+                  <VolumeX className="h-3 w-3" />
+                  <span>Выключить звук</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeSubTab === 'kanban' && (
+        <div className="space-y-3">
+          {/* Dual Timezone Top Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/[0.07] bg-zinc-900/70 backdrop-blur-[20px] p-3">
+            <DualTimeClock />
+
+            {/* Spaces Selector Pills */}
+            <div className="flex flex-wrap items-center gap-1">
+              {spaces.map((space) => {
+                const count = studyWorkItems.filter((i) => i.space === space.id).length;
+                const isActive = activeStudySpace === space.id;
+
+                return (
+                  <button
+                    key={space.id}
+                    type="button"
+                    onClick={() => setActiveStudySpace(space.id)}
+                    className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-all ${
+                      isActive
+                        ? 'bg-white/[0.12] text-zinc-100 border border-white/[0.15]'
+                        : 'bg-zinc-950/60 text-zinc-400 border border-white/[0.06] hover:text-zinc-200'
+                    }`}
+                  >
+                    <span>{space.shortLabel}</span>
+                    <span className="font-mono text-[10px] text-zinc-500">
+                      {count}
                     </span>
-                  </div>
-                  <span className="rounded-full bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] font-semibold text-zinc-400">
-                    {columnTasks.length}
-                  </span>
-                </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* Cards List */}
-                <div className="flex-1 space-y-2.5 overflow-y-auto pr-0.5">
-                  {columnTasks.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      className="rounded-xl border border-white/10 bg-[#121020]/90 backdrop-blur-xl p-3 space-y-2 group hover:border-white/20 transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-zinc-400 line-clamp-1">
-                          {item.courseOrProject}
-                        </span>
+          {/* Kanban Board Columns */}
+          <div className="rounded-lg border border-white/[0.07] bg-zinc-900/70 backdrop-blur-[20px] p-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {columns.map((column) => {
+                const columnTasks = filteredItems.filter((i) => i.status === column.id);
 
-                        {item.priority === 'high' && (
-                          <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[9px] font-bold text-red-300 border border-red-500/30">
-                            HIGH
-                          </span>
-                        )}
-                      </div>
+                return (
+                  <div
+                    key={column.id}
+                    className="rounded border border-white/[0.06] bg-zinc-950/50 p-2.5 flex flex-col min-h-[380px]"
+                  >
+                    {/* Column Header */}
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06]">
+                      <span className="text-xs font-semibold text-zinc-300">
+                        {column.title}
+                      </span>
+                      <span className="font-mono text-[10px] text-zinc-500">
+                        {columnTasks.length}
+                      </span>
+                    </div>
 
-                      <h4 className="text-xs font-semibold text-zinc-100 leading-snug">
-                        {item.title}
-                      </h4>
+                    {/* Cards List */}
+                    <div className="flex-1 space-y-1.5 overflow-y-auto pr-0.5">
+                      {columnTasks.map((item) => (
+                        <motion.div
+                          key={item.id}
+                          layout
+                          className="rounded border border-white/[0.07] bg-zinc-900/80 p-2 space-y-1.5 group hover:border-white/[0.16] transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-1.5">
+                            <span className="rounded bg-white/[0.04] px-1 py-0.2 font-mono text-[9px] text-zinc-400 line-clamp-1 border border-white/[0.06]">
+                              {item.courseOrProject}
+                            </span>
 
-                      {item.description && (
-                        <p className="text-[11px] text-zinc-400 line-clamp-2">
-                          {item.description}
-                        </p>
-                      )}
+                            {item.priority === 'high' && (
+                              <span className="rounded bg-red-500/10 px-1 py-0.2 text-[9px] font-mono font-semibold text-red-400 border border-red-500/20">
+                                HIGH
+                              </span>
+                            )}
+                          </div>
 
-                      {/* Timezone Note (essential for DFO +7h) */}
-                      {item.timezoneNote && (
-                        <div className="rounded bg-purple-500/10 border border-purple-500/20 px-2 py-1 text-[10px] font-mono text-purple-300 flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          <span>{item.timezoneNote}</span>
-                        </div>
-                      )}
+                          <h4 className="text-xs font-medium text-zinc-100 leading-snug">
+                            {item.title}
+                          </h4>
 
-                      <div className="flex flex-wrap items-center justify-between gap-1 pt-1 text-[10px] text-zinc-400 border-t border-white/[0.04]">
-                        <span className="flex items-center gap-1 text-amber-400/90 font-mono">
-                          <Calendar className="h-2.5 w-2.5" />
-                          {item.deadline}
-                        </span>
-
-                        <div className="flex items-center gap-1">
-                          {column.id !== 'done' && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const nextStatus =
-                                  column.id === 'backlog'
-                                    ? 'in_progress'
-                                    : column.id === 'in_progress'
-                                    ? 'review'
-                                    : 'done';
-                                updateStudyWorkStatus(item.id, nextStatus);
-                              }}
-                              className="flex items-center gap-0.5 rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-zinc-300 hover:bg-white/20"
-                              title="Переместить в следующую колонку"
-                            >
-                              <span>Далее</span>
-                              <ChevronRight className="h-2.5 w-2.5" />
-                            </button>
+                          {item.description && (
+                            <p className="text-[11px] text-zinc-400/80 line-clamp-2">
+                              {item.description}
+                            </p>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => deleteStudyWorkItem(item.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-zinc-500 hover:text-red-400 transition-opacity"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                          {item.timezoneNote && (
+                            <div className="rounded bg-white/[0.04] border border-white/[0.06] px-1.5 py-0.5 text-[10px] font-mono text-zinc-400 flex items-center gap-1">
+                              <Globe className="h-2.5 w-2.5" />
+                              <span>{item.timezoneNote}</span>
+                            </div>
+                          )}
 
-                  {columnTasks.length === 0 && (
-                    <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/[0.06] text-center text-xs text-zinc-600">
-                      Пусто
+                          <div className="flex flex-wrap items-center justify-between gap-1 pt-1 text-[10px] text-zinc-500 border-t border-white/[0.04]">
+                            <span className="flex items-center gap-1 font-mono">
+                              <Calendar className="h-2.5 w-2.5" />
+                              {item.deadline}
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              {column.id !== 'done' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nextStatus =
+                                      column.id === 'backlog'
+                                        ? 'in_progress'
+                                        : column.id === 'in_progress'
+                                        ? 'review'
+                                        : 'done';
+                                    updateStudyWorkStatus(item.id, nextStatus);
+                                  }}
+                                  className="flex items-center gap-0.5 rounded bg-white/[0.06] px-1.5 py-0.2 text-[10px] text-zinc-300 hover:bg-white/[0.1]"
+                                  title="Переместить в следующую колонку"
+                                >
+                                  <span>Далее</span>
+                                  <ChevronRight className="h-2.5 w-2.5" />
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => deleteStudyWorkItem(item.id)}
+                                className="opacity-0 group-hover:opacity-100 p-0.5 text-zinc-500 hover:text-red-400 transition-opacity"
+                              >
+                                <Trash2 className="h-2.5 w-2.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+
+                      {columnTasks.length === 0 && (
+                        <div className="flex h-24 items-center justify-center text-center text-xs text-zinc-600">
+                          Пусто
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* MODAL: ADD TASK */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12141a] p-5 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-3">
-              Новая задача: {currentSpaceConfig.shortLabel}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-lg border border-white/[0.08] bg-zinc-900 p-4 shadow-2xl">
+            <h3 className="text-xs font-semibold text-zinc-100 pb-2 mb-3 border-b border-white/[0.06]">
+              Новая академическая или рабочая задача
             </h3>
-            <form onSubmit={handleAddItem} className="space-y-3">
+
+            <form onSubmit={handleCreateTask} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                <label className="block text-xs text-zinc-400 mb-1">
                   Название
                 </label>
                 <input
@@ -613,105 +583,75 @@ export const StudyWorkModule: React.FC = () => {
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Созвон с ДФО, вебинар РУДН, лаба ВШЭ..."
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                  placeholder="Например: Анализ данных ВШЭ / Эссе РУДН"
+                  className="w-full rounded border border-white/[0.08] bg-zinc-950 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-400"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Курс / Вуз / Проект
-                </label>
-                <input
-                  type="text"
-                  value={newCourse}
-                  onChange={(e) => setNewCourse(e.target.value)}
-                  placeholder="Я-Профи ДФО, ВШЭ, РУДН..."
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Описание
-                </label>
-                <textarea
-                  rows={2}
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Детали, ссылка на зум, требования..."
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1">
+                  <label className="block text-xs text-zinc-400 mb-1">
+                    Курс / Проект
+                  </label>
+                  <input
+                    type="text"
+                    value={newCourse}
+                    onChange={(e) => setNewCourse(e.target.value)}
+                    placeholder="ML / Психология..."
+                    className="w-full rounded border border-white/[0.08] bg-zinc-950 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-400 mb-1">
                     Дедлайн
                   </label>
                   <input
                     type="date"
                     value={newDeadline}
                     onChange={(e) => setNewDeadline(e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                    className="w-full rounded border border-white/[0.08] bg-zinc-950 px-2 py-1 text-xs text-white focus:outline-none focus:border-zinc-400"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1">
-                    Приоритет
-                  </label>
-                  <select
-                    value={newPriority}
-                    onChange={(e) => setNewPriority(e.target.value as 'low' | 'medium' | 'high')}
-                    className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
-                  >
-                    <option value="low">Низкий (Low)</option>
-                    <option value="medium">Средний (Medium)</option>
-                    <option value="high">Высокий (High)</option>
-                  </select>
                 </div>
               </div>
 
-              {activeStudySpace.includes('dfo') && (
-                <div>
-                  <label className="block text-xs font-medium text-purple-300 mb-1">
-                    Пояснение по часовому поясу ДФО (+7ч)
-                  </label>
-                  <input
-                    type="text"
-                    value={newTzNote}
-                    onChange={(e) => setNewTzNote(e.target.value)}
-                    placeholder="Например: 10:00 МСК = 17:00 Владивосток"
-                    className="w-full rounded-lg border border-purple-500/30 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500/50 font-mono"
-                  />
-                </div>
-              )}
-
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                  Теги
+                <label className="block text-xs text-zinc-400 mb-1">
+                  Часовой пояс / Заметка (для ДФО +7ч)
                 </label>
                 <input
                   type="text"
-                  value={newTags}
-                  onChange={(e) => setNewTags(e.target.value)}
-                  placeholder="дфо, созвон, вшэ, рудн"
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500/50"
+                  value={newTzNote}
+                  onChange={(e) => setNewTzNote(e.target.value)}
+                  placeholder="Например: 12:00 МСК = 19:00 Влад."
+                  className="w-full rounded border border-white/[0.08] bg-zinc-950 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-400"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-white/[0.08]">
+              <div>
+                <label className="block text-xs text-zinc-400 mb-1">
+                  Описание / Детали
+                </label>
+                <textarea
+                  rows={2}
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  placeholder="Требования, ссылки, критерии..."
+                  className="w-full rounded border border-white/[0.08] bg-zinc-950 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-400"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.06]">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-white/10"
+                  className="rounded px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-semibold text-black hover:bg-amber-400"
+                  className="rounded bg-zinc-100 hover:bg-white px-3 py-1 text-xs font-medium text-zinc-950"
                 >
                   Создать
                 </button>
