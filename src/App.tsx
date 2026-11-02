@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { Plus } from 'lucide-react';
 import { useNexusStore } from './store/useNexusStore';
-import { Sidebar } from './components/navigation/Sidebar';
+import { DynamicIslandHeader } from './components/navigation/DynamicIslandHeader';
 import { NexusTab } from './components/navigation/TabNav';
 import { MobileBottomBar } from './components/navigation/MobileBottomBar';
 import { WeekPlanner } from './components/command-center/WeekPlanner';
@@ -56,7 +56,13 @@ export const App: React.FC = () => {
     pomodoroIsRunning,
     atmosphereMode,
     setAtmosphereMode,
+    syncWithLivePipeline,
   } = useNexusStore();
+
+  // Automatic background live data sync on mount
+  useEffect(() => {
+    syncWithLivePipeline();
+  }, [syncWithLivePipeline]);
 
   const [activeTab, setActiveTab] = useState<NexusTab>('command-center');
   const [activeTaskModal, setActiveTaskModal] = useState(false);
@@ -179,29 +185,37 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`h-screen w-screen overflow-hidden flex select-none antialiased font-sans text-[#ededef] relative ${
+      className={`h-screen w-screen overflow-hidden flex flex-col select-none antialiased font-sans text-[#ededef] relative ${
         atmosphereMode === 'transparent' || isWidgetMode
           ? 'bg-transparent'
-          : 'bg-[#08080a]'
+          : 'bg-[#050507]'
       }`}
     >
-      {/* Soft Apple/Craft ambient glow */}
+      {/* Aurora Spatial Mesh with subtle organic depth */}
       {!isWidgetMode && atmosphereMode !== 'transparent' && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          {/* Soft indigo glow top-center */}
+          {/* Top indigo/purple aurora sphere */}
           <div
-            className="absolute -top-[15%] left-[20%] w-[60vw] h-[50vw] rounded-full blur-[140px] opacity-40"
+            className="absolute -top-[15%] left-[18%] w-[65vw] h-[50vw] rounded-full blur-[140px] opacity-25"
             style={{
               background:
-                'radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.08) 40%, transparent 70%)',
+                'radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.08) 45%, transparent 70%)',
             }}
           />
-          {/* Warm twilight amber glow top-right */}
+          {/* Top-right warm amber sphere */}
           <div
-            className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full blur-[150px] opacity-35"
+            className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full blur-[150px] opacity-20"
             style={{
               background:
-                'radial-gradient(circle, rgba(217, 119, 6, 0.12) 0%, rgba(245, 158, 11, 0.04) 50%, transparent 70%)',
+                'radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 70%)',
+            }}
+          />
+          {/* Bottom emerald/cyan sphere */}
+          <div
+            className="absolute -bottom-[20%] left-[25%] w-[60vw] h-[50vw] rounded-full blur-[160px] opacity-15"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.04) 50%, transparent 70%)',
             }}
           />
         </div>
@@ -210,32 +224,31 @@ export const App: React.FC = () => {
       {/* Procedural Animated Canvas: Starry Twilight with subtle depth */}
       <StarryTwilightCanvas mode={atmosphereMode} />
 
-      {/* 1. DESKTOP APP SHELL - LEFT SIDEBAR (No border-r, native Linear look) */}
+      {/* Floating Dynamic Island Header (Linear / Apple VisionOS style) */}
       {!isWidgetMode && (
-        <div className="hidden md:flex relative z-10">
-          <Sidebar
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onOpenCommandPalette={() => setActiveCommandPalette(true)}
-            onOpenTelegram={() => setActiveTelegramModal(true)}
-            onOpenTamagotchi={() => setActiveTamagotchiModal(true)}
-            onOpenSettings={() => setActiveSettingsModal(true)}
-            isWidgetMode={isWidgetMode}
-            onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
-            wishlistPendingCount={pendingWishlistCount}
-          />
-        </div>
+        <DynamicIslandHeader
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onOpenCommandPalette={() => setActiveCommandPalette(true)}
+          onOpenNewTask={() => {
+            setInitialTaskDate('inbox');
+            setSelectedTaskToEdit(null);
+            setActiveTaskModal(true);
+          }}
+          onOpenTamagotchi={() => setActiveTamagotchiModal(true)}
+          wishlistPendingCount={pendingWishlistCount}
+        />
       )}
 
-      {/* 2. FLOATING INSET CANVAS (The Linear / Amie Signature Inset Panel Architecture) */}
+      {/* Full-width Main Content Viewport */}
       <main
-        className={`flex-1 flex flex-col min-w-0 overflow-hidden relative z-10 transition-all ${
+        className={`flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative z-10 transition-all ${
           isWidgetMode
             ? 'h-screen p-2 bg-transparent'
-            : 'my-2 mr-2 rounded-[10px] bg-[#0f1014] border border-[#1e2028] shadow-[0_0_0_1px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.04)]'
+            : 'px-2 sm:px-4 pb-2 pt-1'
         }`}
       >
-        {/* TAB 1: BENTO DASHBOARD (Top Row 135px + Amie Week Ribbon + 3 Life Spheres) */}
+        {/* TAB 1: COMMAND CENTER / DASHBOARD */}
         {(activeTab === 'command-center' || isWidgetMode) && (
           <BentoDashboard
             tasks={tasks}
@@ -259,15 +272,8 @@ export const App: React.FC = () => {
 
         {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK */}
         {activeTab === 'finances' && !isWidgetMode && (
-          <div className="h-full flex flex-col min-h-0 overflow-hidden">
-            <div className="h-[44px] px-4 border-b border-[#1c1d24] flex items-center justify-between shrink-0 bg-[#0f1014]">
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#ededef]">
-                <span className="text-[#8a8f98]">NEXUS</span>
-                <span className="text-[#5e636e]">›</span>
-                <span>Финансы & ЖКХ Москвы</span>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+          <div className="h-full flex flex-col min-h-0 overflow-hidden rounded-[14px] bg-[#12161f]/60 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 [scrollbar-width:thin]">
               <FinancesModule />
             </div>
           </div>
@@ -275,15 +281,8 @@ export const App: React.FC = () => {
 
         {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ?») + РЕМОНТ КВАРТИРЫ + СВИДАНИЯ */}
         {activeTab === 'wishlist' && !isWidgetMode && (
-          <div className="h-full flex flex-col min-h-0 overflow-hidden">
-            <div className="h-[44px] px-4 border-b border-[#1c1d24] flex items-center justify-between shrink-0 bg-[#0f1014]">
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#ededef]">
-                <span className="text-[#8a8f98]">NEXUS</span>
-                <span className="text-[#5e636e]">›</span>
-                <span>Вишлист & Интерактивный План</span>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+          <div className="h-full flex flex-col min-h-0 overflow-hidden rounded-[14px] bg-[#12161f]/60 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 [scrollbar-width:thin]">
               <WishlistModule />
             </div>
           </div>
@@ -291,15 +290,8 @@ export const App: React.FC = () => {
 
         {/* TAB 4: ВШЭ x РУДН x Я-ПРОФИ (КАНБАН + РАДАР ЦФО/ДФО + РАСПИСАНИЕ & БРС) */}
         {activeTab === 'study-work' && !isWidgetMode && (
-          <div className="h-full flex flex-col min-h-0 overflow-hidden">
-            <div className="h-[44px] px-4 border-b border-[#1c1d24] flex items-center justify-between shrink-0 bg-[#0f1014]">
-              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#ededef]">
-                <span className="text-[#8a8f98]">NEXUS</span>
-                <span className="text-[#5e636e]">›</span>
-                <span>Учеба & Я-Профессионал</span>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+          <div className="h-full flex flex-col min-h-0 overflow-hidden rounded-[14px] bg-[#12161f]/60 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 [scrollbar-width:thin]">
               <StudyWorkModule />
             </div>
           </div>

@@ -8,9 +8,17 @@ import {
 import { useNexusStore } from '../../store/useNexusStore';
 
 export const CashbackAdvisor: React.FC = () => {
-  const { cashbackCards, toggleCashbackClaimed, tasks } = useNexusStore();
+  const { 
+    cashbackCards, 
+    toggleCashbackClaimed, 
+    addCashbackCategory, 
+    removeCashbackCategory 
+  } = useNexusStore();
   const [purchaseQuery, setPurchaseQuery] = useState('');
   const [purchaseAmount, setPurchaseAmount] = useState('2000');
+  const [addingCardId, setAddingCardId] = useState<string | null>(null);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatPercent, setNewCatPercent] = useState('5');
 
   // Interactive AI cashback search logic
   const getRecommendation = (query: string, amount: number) => {
@@ -223,17 +231,79 @@ export const CashbackAdvisor: React.FC = () => {
                 {card.categories.map((cat, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between py-2 text-[13px]"
+                    className="flex items-center justify-between py-2 text-[13px] group"
                   >
                     <span className="text-zinc-300 truncate pr-2" title={cat.category}>
                       {cat.category}
                     </span>
-                    <span className="font-mono text-zinc-100 font-semibold shrink-0">
-                      {cat.percent}%
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="font-mono text-zinc-100 font-semibold">
+                        {cat.percent}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeCashbackCategory(card.id, idx)}
+                        className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-rose-400 text-xs transition-opacity px-1"
+                        title="Удалить категорию"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {/* Add category inline */}
+              {addingCardId === card.id ? (
+                <div className="mt-2 pt-2 border-t border-white/[0.06] flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    placeholder="Категория"
+                    className="flex-1 min-w-0 px-2 py-1 rounded bg-zinc-950 border border-white/[0.1] text-xs text-white"
+                  />
+                  <input
+                    type="number"
+                    value={newCatPercent}
+                    onChange={(e) => setNewCatPercent(e.target.value)}
+                    placeholder="%"
+                    className="w-12 px-1.5 py-1 rounded bg-zinc-950 border border-white/[0.1] text-xs text-white font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newCatName.trim()) {
+                        addCashbackCategory(card.id, newCatName.trim(), parseFloat(newCatPercent) || 5);
+                        setNewCatName('');
+                        setAddingCardId(null);
+                      }
+                    }}
+                    className="px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold"
+                  >
+                    +
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddingCardId(null)}
+                    className="text-zinc-500 text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddingCardId(card.id);
+                    setNewCatName('');
+                    setNewCatPercent('5');
+                  }}
+                  className="mt-2 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1"
+                >
+                  <span>+ Добавить категорию</span>
+                </button>
+              )}
             </div>
 
             {/* Action required alert (clean minimal text) */}

@@ -23,7 +23,11 @@ export const FinancesModule: React.FC = () => {
     addTransaction,
     updateMeterReadings,
     payUtilityBill,
+    updateBudgetBalance,
   } = useNexusStore();
+
+  const [isEditingBalance, setIsEditingBalance] = useState(false);
+  const [balanceInput, setBalanceInput] = useState(String(budget.currentBalance));
 
   const [showAddTxModal, setShowAddTxModal] = useState(false);
   const [newTxTitle, setNewTxTitle] = useState('');
@@ -89,9 +93,54 @@ export const FinancesModule: React.FC = () => {
             </div>
 
             <div className="mt-2.5 flex items-baseline gap-2">
-              <span className="font-mono text-2xl font-bold text-zinc-100 tracking-tight">
-                {budget.currentBalance.toLocaleString('ru-RU')} ₽
-              </span>
+              {isEditingBalance ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const val = parseFloat(balanceInput) || 0;
+                    updateBudgetBalance(val);
+                    setIsEditingBalance(false);
+                  }}
+                  className="flex items-center gap-1.5"
+                >
+                  <input
+                    type="number"
+                    value={balanceInput}
+                    onChange={(e) => setBalanceInput(e.target.value)}
+                    autoFocus
+                    className="w-32 px-2 py-1 rounded bg-zinc-900 border border-amber-500/50 text-white font-mono text-xl font-bold focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold"
+                  >
+                    OK
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingBalance(false)}
+                    className="px-1.5 py-1 text-zinc-500 text-xs"
+                  >
+                    ✕
+                  </button>
+                </form>
+              ) : (
+                <div
+                  onClick={() => {
+                    setBalanceInput(String(budget.currentBalance));
+                    setIsEditingBalance(true);
+                  }}
+                  className="cursor-pointer group flex items-baseline gap-2"
+                  title="Кликните, чтобы изменить баланс"
+                >
+                  <span className="font-mono text-2xl font-bold text-zinc-100 tracking-tight group-hover:text-amber-300 transition-colors">
+                    {budget.currentBalance.toLocaleString('ru-RU')} ₽
+                  </span>
+                  <span className="text-[11px] text-zinc-400 opacity-60 group-hover:opacity-100">
+                    ✎
+                  </span>
+                </div>
+              )}
               <span className="text-xs text-zinc-500">
                 / {budget.totalTarget.toLocaleString('ru-RU')} ₽
               </span>

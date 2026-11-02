@@ -65,7 +65,7 @@ export interface WishlistItem {
   egorVote: VoteStatus;
   anyaVote: VoteStatus;
   status: 'pending' | 'approved' | 'rejected';
-  addedBy: 'egor' | 'anya';
+  addedBy: 'egor' | 'anya' | 'together';
   createdAt: string;
 }
 
@@ -240,4 +240,18 @@ export interface RUDNSubjectBRS {
   currentControl: number; // 0 to 60
   milestoneControl: number; // 0 to 20
   finalExam: number; // 0 to 20
+}
+
+export interface GCalEvent {
+  id: string;
+  summary: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+  };
+  end?: {
+    dateTime?: string;
+    date?: string;
+  };
+  timeStr?: string;
 }

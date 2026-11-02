@@ -22,7 +22,8 @@ import {
   BlueprintPin,
   DateScenario,
   HSECourseCalculator,
-  RUDNSubjectBRS
+  RUDNSubjectBRS,
+  GCalEvent
 } from '../types/nexus';
 import { 
   initialTasks, 
@@ -48,6 +49,7 @@ import { telegramBotService } from '../services/telegramBotService';
 export interface NexusState {
   // Tasks
   tasks: NexusTask[];
+  gcalEvents: GCalEvent[];
   searchQuery: string;
   selectedBracket: 'all' | BracketColor;
   selectedAssignee: Assignee;
@@ -55,6 +57,8 @@ export interface NexusState {
   selectedCategory: 'all' | TaskCategory;
   isSmartGrouped: boolean;
   activeWeekOffset: number;
+  isSyncingLive: boolean;
+  lastSyncTime: string | null;
 
   // Atmosphere & Sound
   atmosphereMode: AtmosphereMode;
@@ -153,9 +157,16 @@ export interface NexusState {
   addTransaction: (tx: Omit<FinanceTransaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
   updateBudgetContributions: (egor: number, anya: number, target: number) => void;
+  updateBudgetBalance: (balance: number) => void;
   toggleCashbackClaimed: (id: string) => void;
+  addCashbackCategory: (cardId: string, category: string, percent: number) => void;
+  removeCashbackCategory: (cardId: string, categoryIndex: number) => void;
   updateMeterReadings: (billId: string, readings: { hotWater?: number; coldWater?: number; electricity?: number }) => void;
   payUtilityBill: (id: string) => void;
+
+  // Live Data Pipeline Sync
+  setGcalEvents: (events: GCalEvent[]) => void;
+  syncWithLivePipeline: () => Promise<{ success: boolean; count?: number; error?: string }>;
 
   addStudyWorkItem: (item: Omit<StudyWorkItem, 'id'>) => void;
   updateStudyWorkStatus: (id: string, status: StudyWorkItem['status']) => void;
@@ -179,6 +190,7 @@ export const useNexusStore = create<NexusState>()(
     (set, get) => ({
       // Initial state
       tasks: initialTasks,
+      gcalEvents: [],
       searchQuery: '',
       selectedBracket: 'all',
       selectedAssignee: 'all',
@@ -186,6 +198,8 @@ export const useNexusStore = create<NexusState>()(
       selectedCategory: 'all',
       isSmartGrouped: false,
       activeWeekOffset: 0,
+      isSyncingLive: false,
+      lastSyncTime: null,
 
       atmosphereMode: 'twilight',
       soundAmbiance: 'off',
@@ -811,10 +825,46 @@ export const useNexusStore = create<NexusState>()(
         }));
       },
 
+      updateBudgetBalance: (balance) => {
+        set((state) => ({
+          budget: {
+            ...state.budget,
+            currentBalance: balance,
+            lastUpdated: new Date().toISOString(),
+          },
+        }));
+      },
+
       toggleCashbackClaimed: (id) => {
         set((state) => ({
           cashbackCards: state.cashbackCards.map((card) =>
             card.id === id ? { ...card, claimed: !card.claimed } : card
+          ),
+        }));
+      },
+
+      addCashbackCategory: (cardId, category, percent) => {
+        set((state) => ({
+          cashbackCards: state.cashbackCards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  categories: [...card.categories, { category, percent }],
+                }
+              : card
+          ),
+        }));
+      },
+
+      removeCashbackCategory: (cardId, categoryIndex) => {
+        set((state) => ({
+          cashbackCards: state.cashbackCards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  categories: card.categories.filter((_, idx) => idx !== categoryIndex),
+                }
+              : card
           ),
         }));
       },
@@ -958,6 +1008,67 @@ export const useNexusStore = create<NexusState>()(
         }
       },
 
+      setGcalEvents: (events) => {
+        set({ gcalEvents: events });
+      },
+
+      syncWithLivePipeline: async () => {
+        set({ isSyncingLive: true });
+        try {
+          let rawData: any = null;
+
+          // 1. Dev endpoint
+          try {
+            const resp = await fetch('/api/sync', { signal: AbortSignal.timeout(6000) });
+            if (resp.ok) {
+              rawData = await resp.json();
+            }
+          } catch {
+            // Dev server middleware not reachable or timed out
+          }
+
+          // 2. Fallback to public live-data.json
+          if (!rawData) {
+            const resp = await fetch('./live-data.json', { cache: 'no-cache' });
+            if (resp.ok) {
+              rawData = await resp.json();
+            }
+          }
+
+          if (!rawData) {
+            throw new Error('Данные недоступны');
+          }
+
+          // Parse GCal
+          const gcalItems: GCalEvent[] = (rawData.gcal?.items || []).map((ev: any, idx: number) => {
+            let timeStr = 'весь день';
+            if (ev.start?.dateTime) {
+              const d = new Date(ev.start.dateTime);
+              timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            }
+            return {
+              id: ev.id || `gcal-${idx}`,
+              summary: ev.summary || '(Без названия)',
+              start: ev.start,
+              end: ev.end,
+              timeStr,
+            };
+          });
+
+          set({
+            gcalEvents: gcalItems,
+            lastSyncTime: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+          });
+
+          return { success: true, count: (rawData.ticktick?.results?.length || 0) + (rawData.ticktick?.inbox?.length || 0) };
+        } catch (err: any) {
+          console.warn('Sync failed:', err);
+          return { success: false, error: err.message };
+        } finally {
+          set({ isSyncingLive: false });
+        }
+      },
+
       resetToDefaultData: () => {
         set({
           tasks: initialTasks,
@@ -976,7 +1087,7 @@ export const useNexusStore = create<NexusState>()(
       },
     }),
     {
-      name: 'nexus-couple-os-v2',
+      name: 'nexus-real-sync-v1',
       storage: createJSONStorage(() => localStorage),
     }
   )

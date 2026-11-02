@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, LayoutGrid, Sparkles } from 'lucide-react';
+import { Plus, LayoutGrid, Sparkles, Calendar, Layers } from 'lucide-react';
 import { NexusTask, Assignee } from '../../types/nexus';
 import { BentoTopRow } from './BentoTopRow';
-import { AmieWeekCalendar } from './AmieWeekCalendar';
+import { SpatialWeekTimeline } from './SpatialWeekTimeline';
+import { SpatialInboxGrid } from './SpatialInboxGrid';
 import { BentoSpheresColumns } from './BentoSpheresColumns';
-import { InboxGrid } from '../command-center/InboxGrid';
+import { useNexusStore } from '../../store/useNexusStore';
 
 interface BentoDashboardProps {
   tasks: NexusTask[];
@@ -35,13 +36,14 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
   onOpenTamagotchi,
   isWidgetMode = false,
 }) => {
-  const [viewMode, setViewMode] = useState<'bento' | 'flat-grid'>(
-    isWidgetMode ? 'flat-grid' : 'bento'
+  const { gcalEvents } = useNexusStore();
+  const [viewMode, setViewMode] = useState<'spatial' | 'bento'>(
+    isWidgetMode ? 'spatial' : 'spatial'
   );
 
   // Filter tasks by assignee
   const filteredTasks = tasks.filter((t) => {
-    if (selectedAssignee !== 'all' && t.assignee !== selectedAssignee) {
+    if (selectedAssignee !== 'all' && t.assignee !== selectedAssignee && t.assignee !== 'together') {
       return false;
     }
     return true;
@@ -49,7 +51,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden select-none">
-      {/* Top Bar with Breadcrumbs & Action Button */}
+      {/* Top Bar with Breadcrumbs & View Switcher */}
       <div className="h-[46px] px-6 border-b border-white/[0.06] flex items-center justify-between shrink-0 bg-[#0c0d11]/80 backdrop-blur-xl">
         {/* Left: Breadcrumbs + Assignee Filter */}
         <div className="flex items-center gap-3">
@@ -72,7 +74,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
                   key={a}
                   type="button"
                   onClick={() => onAssigneeChange(a)}
-                  className={`h-[24px] px-2.5 rounded-lg text-[11.5px] transition-all ${
+                  className={`h-[24px] px-2.5 rounded-lg text-[11.5px] transition-all cursor-pointer ${
                     isActive
                       ? 'bg-white/[0.1] text-white font-medium border border-white/[0.12]'
                       : 'bg-white/[0.02] hover:bg-white/[0.06] text-zinc-400 border border-white/[0.04]'
@@ -87,34 +89,34 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
 
         {/* Right: View Switcher & + New Task Button */}
         <div className="flex items-center gap-2.5">
-          {/* Switcher: Bento Dashboard vs 4-Column Flat Grid */}
+          {/* Switcher: Spatial Timeline vs Bento Modules */}
           <div className="flex items-center bg-white/[0.03] p-0.5 rounded-lg border border-white/[0.06]">
             <button
               type="button"
-              onClick={() => setViewMode('bento')}
-              className={`h-[24px] px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1.5 transition-all ${
-                viewMode === 'bento'
-                  ? 'bg-white/[0.1] text-white shadow-xs'
+              onClick={() => setViewMode('spatial')}
+              className={`h-[24px] px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === 'spatial'
+                  ? 'bg-white/[0.1] text-white shadow-xs font-semibold'
                   : 'text-zinc-400 hover:text-white'
               }`}
-              title="Модульный Bento-дашборд Amie"
+              title="Spatial Glass Дашборд (Timeline + Inbox)"
             >
-              <Sparkles size={11} className="text-amber-400" />
-              <span>Bento</span>
+              <Calendar size={11} className="text-amber-400" />
+              <span>Таймлайн</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setViewMode('flat-grid')}
-              className={`h-[24px] px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1.5 transition-all ${
-                viewMode === 'flat-grid'
-                  ? 'bg-white/[0.1] text-white shadow-xs'
+              onClick={() => setViewMode('bento')}
+              className={`h-[24px] px-2.5 rounded-md text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                viewMode === 'bento'
+                  ? 'bg-white/[0.1] text-white shadow-xs font-semibold'
                   : 'text-zinc-400 hover:text-white'
               }`}
-              title="Плоская сетка виджета"
+              title="Модульный Bento-дашборд Amie"
             >
-              <LayoutGrid size={11} />
-              <span>Сетка</span>
+              <Sparkles size={11} className="text-purple-400" />
+              <span>Bento</span>
             </button>
           </div>
 
@@ -131,10 +133,35 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
       </div>
 
       {/* Main Content Viewport */}
-      {viewMode === 'bento' ? (
+      {viewMode === 'spatial' ? (
+        <div className="flex-1 overflow-y-auto [scrollbar-width:thin] p-4 sm:p-6 space-y-6">
+          <div className="max-w-[1600px] mx-auto space-y-6">
+            {/* 1. Spatial 7-Day Timeline (GCal + TickTick) */}
+            <SpatialWeekTimeline
+              tasks={filteredTasks}
+              gcalEvents={gcalEvents}
+              activeWeekOffset={activeWeekOffset}
+              onOffsetChange={onOffsetChange}
+              onToggleTask={onToggleTask}
+              onTaskClick={onTaskClick}
+              onAddTaskForDay={(dateStr) => onAddTask(dateStr)}
+            />
+
+            {/* 2. Spatial Inbox & Undated Grid (TickTick Tasks with Room Filter) */}
+            <SpatialInboxGrid
+              tasks={filteredTasks}
+              onToggleTask={onToggleTask}
+              onTaskClick={onTaskClick}
+              onAddNewTask={() => onAddTask()}
+              selectedAssignee={selectedAssignee}
+              onAssigneeChange={onAssigneeChange}
+            />
+          </div>
+        </div>
+      ) : (
         <div className="flex-1 overflow-y-auto [scrollbar-width:thin] p-6 space-y-6">
           <div className="max-w-[1560px] mx-auto space-y-6">
-            {/* 1. TOP BENTO ROW (135px height, 3 interactive cards) */}
+            {/* Top Bento Row */}
             <BentoTopRow
               tasks={filteredTasks}
               onOpenDateNight={() => onNavigateTab('wishlist')}
@@ -142,16 +169,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
               onOpenTamagotchi={onOpenTamagotchi}
             />
 
-            {/* 2. MIDDLE BLOCK: AMIE.SO WEEK CALENDAR */}
-            <AmieWeekCalendar
-              tasks={filteredTasks}
-              activeWeekOffset={activeWeekOffset}
-              onOffsetChange={onOffsetChange}
-              onTaskClick={onTaskClick}
-              onAddTaskForDay={(dateStr) => onAddTask(dateStr)}
-            />
-
-            {/* 3. LOWER BLOCK: 3 SMART LIFE SPHERE COLUMNS */}
+            {/* Life Spheres Columns */}
             <BentoSpheresColumns
               tasks={filteredTasks}
               onToggleTask={onToggleTask}
@@ -159,28 +177,6 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
               onAddTaskForSphere={(category, room) => onAddTask(undefined, category, room)}
             />
           </div>
-        </div>
-      ) : (
-        <div className="flex-1 p-5 overflow-y-auto">
-          <InboxGrid
-            tasks={filteredTasks}
-            searchQuery=""
-            onSearchChange={() => {}}
-            selectedBracket="all"
-            onBracketChange={() => {}}
-            selectedAssignee={selectedAssignee}
-            onAssigneeChange={onAssigneeChange}
-            selectedRoom="Все"
-            onRoomChange={() => {}}
-            selectedCategory="all"
-            onCategoryChange={() => {}}
-            isSmartGrouped={false}
-            onToggleSmartGrouping={() => {}}
-            onToggleTask={onToggleTask}
-            onTaskClick={onTaskClick}
-            onDeleteTask={onDeleteTask}
-            onAddNewTask={() => onAddTask()}
-          />
         </div>
       )}
     </div>
