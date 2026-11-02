@@ -230,8 +230,8 @@ export const WishlistModule: React.FC = () => {
             </button>
           </div>
 
-          {/* Wishlist Cards Grid (SEAMLESS 1PX HAIRLINE BENTO MATRIX) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
+          {/* Wishlist Cards Grid (SEAMLESS LINEAR BENTO MATRIX) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#1c1d24] border border-[#1e2028] rounded-[8px] overflow-hidden shadow-xs">
             <AnimatePresence>
               {filteredItems.map((item) => {
                 const isApproved = item.status === 'approved';
@@ -244,7 +244,7 @@ export const WishlistModule: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className={`flex flex-col justify-between bg-[#0b0b0e] hover:bg-[#121217] p-4 transition-colors ${
+                    className={`flex flex-col justify-between bg-[#131419] hover:bg-[#181920] p-4 transition-colors ${
                       isApproved
                         ? 'border-l-2 border-l-emerald-500'
                         : isRejected

@@ -74,10 +74,10 @@ export const FinancesModule: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* 1. TOP SECTION: JOINT BUDGET DASHBOARD (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
+      {/* 1. TOP SECTION: JOINT BUDGET DASHBOARD (SEAMLESS LINEAR BENTO GRID) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[1px] bg-[#1c1d24] border border-[#1e2028] rounded-[8px] overflow-hidden shadow-xs">
         {/* Total Joint Balance Card */}
-        <div className="bg-[#0b0b0e] p-5 flex flex-col justify-between">
+        <div className="bg-[#131419] p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
@@ -127,7 +127,7 @@ export const FinancesModule: React.FC = () => {
         </div>
 
         {/* Egor Contribution Card */}
-        <div className="bg-[#0b0b0e] p-5 flex flex-col justify-between">
+        <div className="bg-[#131419] p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -155,7 +155,7 @@ export const FinancesModule: React.FC = () => {
         </div>
 
         {/* Anya Contribution Card */}
-        <div className="bg-[#0b0b0e] p-5 flex flex-col justify-between">
+        <div className="bg-[#131419] p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -187,30 +187,30 @@ export const FinancesModule: React.FC = () => {
       <CashbackAdvisor />
 
       {/* 3. ЖКХ-ТЕРМИНАЛ МОСКВЫ (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
-      <div className="rounded-xl border border-white/[0.07] bg-[#0b0b0e] p-5 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+      <div className="rounded-[8px] border border-[#1e2028] bg-[#131419] p-5 shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1c1d24]">
           <div className="flex items-center gap-2.5">
-            <Building2 className="h-4 w-4 text-zinc-400" />
+            <Building2 className="h-4 w-4 text-[#8a8f98]" />
             <div>
-              <h2 className="text-xs font-semibold text-zinc-100 uppercase tracking-tight">
+              <h2 className="text-xs font-semibold text-[#ededef] uppercase tracking-tight">
                 ЖКХ-Терминал Москвы & Счета
               </h2>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-[#5e636e]">
                 Домиленд, Мосэнергосбыт, ЕПД mos.ru, Wi-Fi с динамикой начислений
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-500">Окно передачи показаний:</span>
-            <span className="font-mono text-zinc-300">
+            <span className="text-[#5e636e]">Окно передачи показаний:</span>
+            <span className="font-mono text-[#8a8f98]">
               15–26 число
             </span>
           </div>
         </div>
 
-        {/* 1px Hairline Grid of Utility Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
+        {/* Linear Hairline Grid of Utility Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#1c1d24] border border-[#1e2028] rounded-[8px] overflow-hidden shadow-xs">
           {utilityBills.map((bill) => {
             const isDomiland = bill.id === 'util-domiland';
             const isMosenergo = bill.id === 'util-mosenergo';
@@ -223,9 +223,9 @@ export const FinancesModule: React.FC = () => {
               <div
                 key={bill.id}
                 style={{
-                  borderLeft: bill.status === 'overdue' ? '3px solid #ef4444' : '3px solid #eab308',
+                  borderLeft: bill.status === 'overdue' ? '3px solid #eb5757' : '3px solid #f59e0b',
                 }}
-                className="relative bg-[#0b0b0e] hover:bg-[#121217] p-4 space-y-2.5 transition-colors flex flex-col justify-between"
+                className="relative bg-[#131419] hover:bg-[#181920] p-4 space-y-2.5 transition-colors flex flex-col justify-between"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
@@ -376,9 +376,9 @@ export const FinancesModule: React.FC = () => {
       </div>
 
       {/* 4. ИСТОРИЯ ОПЕРАЦИЙ */}
-      <div className="rounded-xl border border-white/[0.07] bg-[#0b0b0e] p-5 shadow-sm space-y-3">
-        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
-          <h2 className="text-xs font-semibold text-zinc-100 uppercase tracking-tight">
+      <div className="rounded-[8px] border border-[#1e2028] bg-[#131419] p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-[#1c1d24]">
+          <h2 className="text-xs font-semibold text-[#ededef] uppercase tracking-tight">
             История операций & Сплит расходов
           </h2>
           <button
@@ -387,7 +387,7 @@ export const FinancesModule: React.FC = () => {
               setNewTxType('expense');
               setShowAddTxModal(true);
             }}
-            className="flex items-center gap-1.5 rounded-md bg-white text-zinc-950 hover:bg-zinc-200 px-3 py-1.5 text-xs font-medium transition-colors shadow-sm"
+            className="flex items-center gap-1.5 rounded-[5px] bg-[#5e6ad2] hover:bg-[#6872d9] text-white px-2.5 py-1 text-xs font-medium transition-colors shadow-xs"
           >
             <Plus size={13} strokeWidth={2.2} />
             <span>Добавить расход</span>

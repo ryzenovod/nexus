@@ -39,7 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleWidgetMode,
   wishlistPendingCount,
 }) => {
-  const { gamification, soundAmbiance, setSoundAmbiance } = useNexusStore();
+  const { gamification, soundMuted, setSoundMuted } = useNexusStore();
 
   const navItems = [
     {
@@ -68,46 +68,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const levelProgress = Math.min(100, (gamification.xp / (gamification.nextLevelXp || 1000)) * 100);
 
   return (
-    <aside className="w-[220px] shrink-0 border-r border-white/[0.06] bg-[#08080a]/80 backdrop-blur-2xl flex flex-col justify-between p-3 select-none z-20">
-      {/* TOP SECTION: Brand & Navigation */}
-      <div className="space-y-3.5">
-        {/* Brand Block without loud colors */}
-        <div className="px-1.5 pt-1">
-          <div className="flex items-baseline justify-between">
-            <span className="font-mono text-xs font-semibold tracking-wider text-zinc-200">
-              NEXUS
-            </span>
-            <span className="font-mono text-[11px] text-zinc-500">
-              Уровень {gamification.level} · {gamification.xp} XP
+    <aside className="w-[224px] shrink-0 bg-[#08080a] px-3 py-3 flex flex-col justify-between select-none z-20">
+      {/* TOP SECTION: Linear Workspace Switcher & Navigation */}
+      <div className="space-y-3">
+        {/* Linear Workspace Header */}
+        <div className="px-1.5 py-1">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-[18px] h-[18px] rounded-[4px] bg-[#5e6ad2] text-white flex items-center justify-center text-[10px] font-bold shadow-xs">
+                N
+              </div>
+              <span className="font-sans text-[13px] font-semibold text-[#ededef] tracking-tight">
+                NEXUS
+              </span>
+            </div>
+            <span className="font-mono text-[10px] text-[#5e636e] bg-[#14151b] px-1.5 py-0.5 rounded">
+              Lv.{gamification.level}
             </span>
           </div>
 
-          {/* Minimal 1px Hairline progress */}
-          <div className="mt-2 h-[1.5px] w-full bg-white/[0.06] rounded-full overflow-hidden">
+          {/* Level Progress Line */}
+          <div className="mt-2 h-[1.5px] w-full bg-[#1c1d24] rounded-full overflow-hidden">
             <div 
-              className="h-full bg-zinc-400 transition-all duration-300"
+              className="h-full bg-[#5e6ad2] transition-all duration-300"
               style={{ width: `${levelProgress}%` }}
             />
           </div>
         </div>
 
-        {/* Quick Search Trigger (⌘K) */}
+        {/* Quick Search Trigger (⌘K) in Linear style */}
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="w-full text-left px-2.5 py-1.5 rounded-md bg-white/[0.02] hover:bg-white/[0.05] text-zinc-400 hover:text-zinc-200 text-xs flex items-center justify-between transition-colors group border border-white/[0.04]"
+          className="w-full text-left px-2.5 h-[28px] rounded-[5px] bg-[#131419] hover:bg-[#181922] text-[#8a8f98] hover:text-[#ededef] text-[12px] flex items-center justify-between transition-colors border border-[#1e2028]"
         >
           <div className="flex items-center gap-2">
-            <Search size={14} className="text-zinc-500 group-hover:text-zinc-300 transition-colors" />
-            <span className="text-zinc-400 group-hover:text-zinc-200 text-[12px]">Поиск...</span>
+            <Search size={13} className="text-[#5e636e]" />
+            <span className="text-[12px]">Поиск...</span>
           </div>
-          <kbd className="font-mono text-[10px] text-zinc-500 bg-white/[0.04] px-1 py-0.5 rounded">
+          <kbd className="font-mono text-[10px] text-[#5e636e] bg-[#1a1b22] px-1 py-0.5 rounded">
             ⌘K
           </kbd>
         </button>
 
-        {/* Navigation Items (Clean 13px typography without borders) */}
-        <nav className="space-y-0.5">
+        {/* Navigation Items (Linear style items) */}
+        <nav className="space-y-0.5 pt-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -117,19 +122,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[13px] transition-colors ${
+                className={`w-full flex items-center justify-between px-2 h-[28px] rounded-[5px] text-[13px] transition-colors ${
                   isActive
-                    ? 'bg-white/[0.07] text-zinc-100 font-medium'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.02] font-normal'
+                    ? 'bg-[#1a1b23] text-[#ededef] font-medium'
+                    : 'text-[#8a8f98] hover:text-[#ededef] hover:bg-[#131419] font-normal'
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  <Icon size={15} strokeWidth={1.75} className={`shrink-0 ${isActive ? 'text-zinc-100' : 'text-zinc-500'}`} />
-                  <span className="truncate">{item.label}</span>
+                  <Icon
+                    size={14}
+                    strokeWidth={1.8}
+                    className={`shrink-0 ${isActive ? 'text-[#5e6ad2]' : 'text-[#8a8f98]'}`}
+                  />
+                  <span className="truncate text-[12.5px]">{item.label}</span>
                 </div>
 
-                {item.badge !== undefined && (
-                  <span className="font-mono text-[10px] text-zinc-400 bg-white/[0.06] px-1.5 py-0.2 rounded shrink-0">
+                {item.badge && (
+                  <span className="h-4 min-w-[16px] px-1 rounded-full bg-[#5e6ad2] text-white text-[10px] font-mono flex items-center justify-center">
                     {item.badge}
                   </span>
                 )}
@@ -139,65 +148,62 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* BOTTOM SECTION: Quiet Dual Timezone & Minimal Utility Row */}
-      <div className="space-y-3 pt-3 border-t border-white/[0.05]">
-        <div className="px-1.5">
-          <DualTimeClock />
+      {/* BOTTOM SECTION: Dual Clock & Utility Controls */}
+      <div className="space-y-2.5 pt-3 border-t border-[#1c1d24]">
+        {/* Dual Moscow - DFO Clock */}
+        <div className="px-1 text-[11px] text-[#8a8f98]">
+          <DualTimeClock compact />
         </div>
 
-        {/* Quick Utility Icons in a single row */}
-        <div className="flex items-center justify-between px-1 text-zinc-500">
+        {/* Utility Icon Row */}
+        <div className="flex items-center justify-between px-1 text-[#8a8f98]">
           <button
             type="button"
             onClick={onOpenTelegram}
-            className="p-1.5 rounded hover:bg-white/[0.06] hover:text-zinc-200 transition-colors"
-            title="Telegram Бот"
+            className="p-1 rounded-[4px] hover:text-[#ededef] hover:bg-[#131419] transition-colors"
+            title="Telegram Бот & Оповещения"
           >
-            <Send size={14} strokeWidth={1.75} />
+            <Send size={13} />
           </button>
 
           <button
             type="button"
             onClick={onOpenTamagotchi}
-            className="p-1.5 rounded hover:bg-white/[0.06] hover:text-zinc-200 transition-colors"
-            title="Талисман Кот"
+            className="p-1 rounded-[4px] hover:text-[#ededef] hover:bg-[#131419] transition-colors"
+            title="Котик Нексус (Тамагочи)"
           >
-            <Sparkles size={14} strokeWidth={1.75} />
+            <Sparkles size={13} />
           </button>
 
           <button
             type="button"
-            onClick={() => setSoundAmbiance(soundAmbiance === 'rain' ? 'off' : 'rain')}
-            className={`p-1.5 rounded transition-colors ${
-              soundAmbiance !== 'off' 
-                ? 'text-zinc-200 bg-white/[0.08]' 
-                : 'hover:bg-white/[0.06] hover:text-zinc-200'
-            }`}
-            title="Фоновый звук"
+            onClick={() => setSoundMuted(!soundMuted)}
+            className="p-1 rounded-[4px] hover:text-[#ededef] hover:bg-[#131419] transition-colors"
+            title={soundMuted ? 'Включить звук' : 'Выключить звук'}
           >
-            {soundAmbiance !== 'off' ? <Volume2 size={14} strokeWidth={1.75} /> : <VolumeX size={14} strokeWidth={1.75} />}
+            {soundMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
           </button>
 
           <button
             type="button"
             onClick={onToggleWidgetMode}
-            className={`p-1.5 rounded transition-colors ${
-              isWidgetMode 
-                ? 'text-zinc-100 bg-white/[0.1]' 
-                : 'hover:bg-white/[0.06] hover:text-zinc-200'
+            className={`p-1 rounded-[4px] transition-colors ${
+              isWidgetMode
+                ? 'text-[#5e6ad2] bg-[#1a1b23]'
+                : 'hover:text-[#ededef] hover:bg-[#131419]'
             }`}
-            title="Виджет рабочего стола"
+            title="Режим виджета рабочего стола"
           >
-            <Monitor size={14} strokeWidth={1.75} />
+            <Monitor size={13} />
           </button>
 
           <button
             type="button"
             onClick={onOpenSettings}
-            className="p-1.5 rounded hover:bg-white/[0.06] hover:text-zinc-200 transition-colors"
-            title="Настройки"
+            className="p-1 rounded-[4px] hover:text-[#ededef] hover:bg-[#131419] transition-colors"
+            title="Настройки & Supabase"
           >
-            <Settings size={14} strokeWidth={1.75} />
+            <Settings size={13} />
           </button>
         </div>
       </div>
