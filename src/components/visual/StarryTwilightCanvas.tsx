@@ -83,33 +83,9 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
     };
     window.addEventListener('nexus-task-completed', onTaskCompletedEvent);
 
-    // Draw subtle minimal crescent moon using transparent destination-out
-    const drawCrescentMoon = () => {
-      ctx.save();
-      const moonX = width * 0.85;
-      const moonY = height * 0.10;
-      const radius = 13;
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      ctx.beginPath();
-      ctx.arc(moonX, moonY, radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cutout with transparent destination-out
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath();
-      ctx.arc(moonX + 5, moonY - 3, radius * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-    };
-
     // Main render loop: transparent clear so ambient gradient shines through
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-
-      // Draw subtle crescent moon
-      drawCrescentMoon();
 
       // Draw delicate silver stars
       ctx.save();

@@ -191,31 +191,31 @@ export const App: React.FC = () => {
           : 'bg-[#050507]'
       }`}
     >
-      {/* Aurora Spatial Mesh with subtle organic depth */}
+      {/* Aurora Spatial Mesh with rich atmospheric lighting */}
       {!isWidgetMode && atmosphereMode !== 'transparent' && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           {/* Top indigo/purple aurora sphere */}
           <div
-            className="absolute -top-[15%] left-[18%] w-[65vw] h-[50vw] rounded-full blur-[140px] opacity-25"
+            className="absolute -top-[12%] left-[15%] w-[68vw] h-[52vw] rounded-full blur-[130px] opacity-45"
             style={{
               background:
-                'radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(139, 92, 246, 0.08) 45%, transparent 70%)',
+                'radial-gradient(circle, rgba(99, 102, 241, 0.42) 0%, rgba(139, 92, 246, 0.20) 45%, transparent 75%)',
             }}
           />
           {/* Top-right warm amber sphere */}
           <div
-            className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full blur-[150px] opacity-20"
+            className="absolute -top-[8%] -right-[5%] w-[48vw] h-[48vw] rounded-full blur-[140px] opacity-40"
             style={{
               background:
-                'radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(217, 119, 6, 0.04) 50%, transparent 70%)',
+                'radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(217, 119, 6, 0.14) 50%, transparent 75%)',
             }}
           />
           {/* Bottom emerald/cyan sphere */}
           <div
-            className="absolute -bottom-[20%] left-[25%] w-[60vw] h-[50vw] rounded-full blur-[160px] opacity-15"
+            className="absolute -bottom-[15%] left-[22%] w-[62vw] h-[52vw] rounded-full blur-[150px] opacity-35"
             style={{
               background:
-                'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.04) 50%, transparent 70%)',
+                'radial-gradient(circle, rgba(16, 185, 129, 0.30) 0%, rgba(6, 182, 212, 0.12) 50%, transparent 75%)',
             }}
           />
         </div>

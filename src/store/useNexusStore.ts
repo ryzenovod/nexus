@@ -97,6 +97,9 @@ export interface NexusState {
   transactions: FinanceTransaction[];
   cashbackCards: CashbackCard[];
   utilityBills: UtilityBill[];
+  completedTaskIds: string[];
+  deletedTaskIds: string[];
+  gpbCashbackClaimed: boolean;
 
   // Study & Work
   studyWorkItems: StudyWorkItem[];
@@ -163,6 +166,7 @@ export interface NexusState {
   addTransaction: (tx: Omit<FinanceTransaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
   updateBudgetContributions: (egor: number, anya: number, target: number) => void;
+  claimGpbCashback: (amount: number) => void;
   updateBudgetBalance: (balance: number) => void;
   toggleCashbackClaimed: (id: string) => void;
   addCashbackCategory: (cardId: string, category: string, percent: number) => void;
@@ -245,6 +249,9 @@ export const useNexusStore = create<NexusState>()(
       transactions: initialTransactions,
       cashbackCards: initialCashbackCards,
       utilityBills: initialUtilityBills,
+      completedTaskIds: [],
+      deletedTaskIds: [],
+      gpbCashbackClaimed: false,
 
       studyWorkItems: initialStudyWorkItems,
       activeStudySpace: 'yaprofi-dfo',
@@ -287,6 +294,8 @@ export const useNexusStore = create<NexusState>()(
 
       deleteTask: (id) => {
         set((state) => ({
+          deletedTaskIds: Array.from(new Set([...state.deletedTaskIds, id])),
+          completedTaskIds: state.completedTaskIds.filter((tid) => tid !== id),
           tasks: state.tasks.filter((task) => task.id !== id),
         }));
       },
@@ -342,13 +351,28 @@ export const useNexusStore = create<NexusState>()(
               telegramBotService.sendMessage(telegramConfig.botToken, partnerChatId, msg).catch(() => {});
             }
           }
+
+          // 6. Real TickTick completion via local dev bridge
+          const pid = (currentTask as any)?.projectId || '6abeae1535d42cc80be02175';
+          fetch('/api/ticktick/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: id, projectId: pid }),
+          }).catch(() => {});
         }
 
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id ? { ...task, completed: willBeCompleted } : task
-          ),
-        }));
+        set((state) => {
+          const updatedCompleted = willBeCompleted
+            ? Array.from(new Set([...state.completedTaskIds, id]))
+            : state.completedTaskIds.filter((tid) => tid !== id);
+
+          return {
+            completedTaskIds: updatedCompleted,
+            tasks: state.tasks.map((task) =>
+              task.id === id ? { ...task, completed: willBeCompleted } : task
+            ),
+          };
+        });
       },
 
       moveTaskToDate: (taskId, targetDate) => {
@@ -846,6 +870,55 @@ export const useNexusStore = create<NexusState>()(
         }));
       },
 
+      claimGpbCashback: (amount) => {
+        const gpbTaskId = '6ad8cacebf00032b8b10c84f';
+        const newBalance = get().budget.currentBalance + amount;
+        
+        const newTx: FinanceTransaction = {
+          id: `tx-gpb-${Date.now()}`,
+          title: 'Кэшбэк Газпромбанк (акция месяца)',
+          amount,
+          date: new Date().toISOString().slice(0, 10),
+          type: 'transfer',
+          category: 'Кэшбэк',
+          paidBy: 'egor',
+          splitRatio: '50/50',
+          notes: 'Зачислено по акции месяца (компенсация 25%) на общий счет',
+        };
+
+        set((state) => ({
+          gpbCashbackClaimed: true,
+          completedTaskIds: Array.from(new Set([...state.completedTaskIds, gpbTaskId])),
+          budget: {
+            ...state.budget,
+            currentBalance: newBalance,
+          },
+          transactions: [newTx, ...state.transactions],
+          tasks: state.tasks.map((t) =>
+            t.id === gpbTaskId || t.title.toLowerCase().includes('газпром')
+              ? { ...t, completed: true }
+              : t
+          ),
+        }));
+
+        // Real TickTick complete API via local bridge
+        fetch('/api/ticktick/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: gpbTaskId, projectId: '6abeae1535d42cc80be02175' }),
+        }).catch(() => {});
+
+        try {
+          soundEffects.playSuccess();
+          confetti({
+            particleCount: 70,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#fff'],
+          });
+        } catch {}
+      },
+
       toggleCashbackClaimed: (id) => {
         set((state) => ({
           cashbackCards: state.cashbackCards.map((card) =>
@@ -1123,7 +1196,7 @@ export const useNexusStore = create<NexusState>()(
             }
           }
 
-          // Also update task deadlines and parentId from TickTick live items
+          // Also update task deadlines and parentId from TickTick live items, RESPECTING user completed/deleted state!
           const timedItems: any[] = rawData.ticktick?.results || [];
           if (timedItems.length > 0 || inboxItems.length > 0) {
             const liveTasksMap = new Map<string, any>();
@@ -1131,20 +1204,32 @@ export const useNexusStore = create<NexusState>()(
               if (t.id) liveTasksMap.set(t.id, t);
             });
 
-            set((state) => ({
-              tasks: state.tasks.map((existingTask) => {
-                const live = liveTasksMap.get(existingTask.id);
-                if (live) {
-                  return {
-                    ...existingTask,
-                    parentId: live.parentId || existingTask.parentId,
-                    date: live.dueDateLocal || (live.dueDate ? live.dueDate.slice(0, 10) : existingTask.date),
-                    isOverdue: Boolean(live.isOverdue),
-                  };
-                }
-                return existingTask;
-              }),
-            }));
+            set((state) => {
+              const completedSet = new Set(state.completedTaskIds || []);
+              const deletedSet = new Set(state.deletedTaskIds || []);
+
+              return {
+                tasks: state.tasks
+                  .filter((t) => !deletedSet.has(t.id))
+                  .map((existingTask) => {
+                    const isCompleted = completedSet.has(existingTask.id) || existingTask.completed;
+                    const live = liveTasksMap.get(existingTask.id);
+                    if (live) {
+                      return {
+                        ...existingTask,
+                        completed: isCompleted,
+                        parentId: live.parentId || existingTask.parentId,
+                        date: live.dueDateLocal || (live.dueDate ? live.dueDate.slice(0, 10) : existingTask.date),
+                        isOverdue: Boolean(live.isOverdue),
+                      };
+                    }
+                    return {
+                      ...existingTask,
+                      completed: isCompleted,
+                    };
+                  }),
+              };
+            });
           }
 
           set((state) => ({
@@ -1222,6 +1307,14 @@ export const useNexusStore = create<NexusState>()(
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
+        // Ensure completedTaskIds and deletedTaskIds exist
+        if (!state.completedTaskIds) state.completedTaskIds = [];
+        if (!state.deletedTaskIds) state.deletedTaskIds = [];
+
+        // Apply completed and deleted filters to persisted tasks
+        const completedSet = new Set(state.completedTaskIds);
+        const deletedSet = new Set(state.deletedTaskIds);
+
         // Ensure 5 exact banks are present
         if (!state.cashbackCards || state.cashbackCards.length !== 5 || !state.cashbackCards.some(c => c.id === 'cb-sber')) {
           state.cashbackCards = initialCashbackCards;
@@ -1235,24 +1328,40 @@ export const useNexusStore = create<NexusState>()(
           state.budget.egorContribution = 0;
           state.budget.anyaContribution = 0;
         }
-        // Ensure parentId and isHub are preserved on tasks in rehydrated state
+        // Ensure parentId and isHub are preserved on tasks in rehydrated state, and user completed status is kept!
         if (state.tasks && state.tasks.length > 0) {
           const initialMap = new Map(initialTasks.map((t) => [t.id, t]));
-          state.tasks = state.tasks.map((task) => {
-            const init = initialMap.get(task.id);
-            if (init) {
+          state.tasks = state.tasks
+            .filter((t) => !deletedSet.has(t.id))
+            .map((task) => {
+              const init = initialMap.get(task.id);
+              const isDone = completedSet.has(task.id) || task.completed;
+              if (init) {
+                return {
+                  ...task,
+                  completed: isDone,
+                  parentId: task.parentId || init.parentId,
+                  isHub: init.isHub !== undefined ? init.isHub : task.isHub,
+                  subtaskCount: init.subtaskCount !== undefined ? init.subtaskCount : task.subtaskCount,
+                };
+              }
               return {
                 ...task,
-                parentId: task.parentId || init.parentId,
-                isHub: init.isHub !== undefined ? init.isHub : task.isHub,
-                subtaskCount: init.subtaskCount !== undefined ? init.subtaskCount : task.subtaskCount,
+                completed: isDone,
               };
-            }
-            return task;
-          });
+            });
+
+          // If GPB cashback was claimed, ensure task is marked completed
+          if (state.gpbCashbackClaimed) {
+            state.tasks = state.tasks.map((t) =>
+              t.id === '6ad8cacebf00032b8b10c84f' || t.title.toLowerCase().includes('газпром')
+                ? { ...t, completed: true }
+                : t
+            );
+          }
 
           // Ensure 'диаскин' is present if missing
-          if (!state.tasks.some((t) => t.title.toLowerCase().includes('диаскин'))) {
+          if (!state.tasks.some((t) => t.title.toLowerCase().includes('диаскин')) && !deletedSet.has('6ae3301b18a69177e38ba64a')) {
             const diaskin = initialTasks.find((t) => t.title.toLowerCase().includes('диаскин'));
             if (diaskin) state.tasks.push(diaskin);
           }

@@ -65,7 +65,7 @@ const CARD_METALLIC_THEMES: Record<string, {
 }> = {
   'cb-sber': {
     name: 'СБЕР',
-    holder: 'ANYA BELOUSOVA',
+    holder: 'ANNA KOSYUK',
     number: '•••• 7714',
     exp: '10/28',
     tag: 'Аня · СберСпасибо',
@@ -77,10 +77,10 @@ const CARD_METALLIC_THEMES: Record<string, {
   },
   'cb-tbank': {
     name: 'T-BANK BLACK',
-    holder: 'EGOR & ANYA (JOINT)',
+    holder: 'EGOR',
     number: '•••• 5529',
     exp: '04/30',
-    tag: 'Егор · Общий счет (Titanium)',
+    tag: 'Егор · Общий счет',
     gradient: 'from-[#27272a] via-[#18181b] to-[#09090b]',
     glowColor: 'rgba(245, 158, 11, 0.25)',
     borderClass: 'border-amber-400/35 hover:border-amber-300/60',
@@ -89,10 +89,10 @@ const CARD_METALLIC_THEMES: Record<string, {
   },
   'cb-wb': {
     name: 'WB БАНК',
-    holder: 'EGOR BELOUSOV',
+    holder: 'EGOR',
     number: '•••• 8831',
     exp: '08/29',
-    tag: 'Егор · WB Кошелек & Скидки',
+    tag: 'Егор · WB Кошелек',
     gradient: 'from-[#581c87] via-[#3b0764] to-[#701a75]',
     glowColor: 'rgba(217, 70, 239, 0.3)',
     borderClass: 'border-fuchsia-500/35 hover:border-fuchsia-400/60',
@@ -101,7 +101,7 @@ const CARD_METALLIC_THEMES: Record<string, {
   },
   'cb-alfa': {
     name: 'АЛЬФА-БАНК',
-    holder: 'EGOR BELOUSOV',
+    holder: 'EGOR',
     number: '•••• 1409',
     exp: '02/29',
     tag: 'Егор · Альфа-Карта',
@@ -113,10 +113,10 @@ const CARD_METALLIC_THEMES: Record<string, {
   },
   'cb-gpb': {
     name: 'ГАЗПРОМБАНК',
-    holder: 'EGOR BELOUSOV',
+    holder: 'EGOR',
     number: '•••• 9276',
     exp: '12/28',
-    tag: 'Егор · Сапфир & Акция месяца',
+    tag: 'Егор · Сапфир & Акция',
     gradient: 'from-[#1e3a8a] via-[#0f172a] to-[#1d4ed8]',
     glowColor: 'rgba(59, 130, 246, 0.35)',
     borderClass: 'border-blue-500/35 hover:border-blue-400/60',
@@ -147,6 +147,9 @@ export const FinancesModule: React.FC = () => {
     utilityBills,
     cashbackCards,
     tasks,
+    completedTaskIds,
+    gpbCashbackClaimed,
+    claimGpbCashback,
     addTransaction,
     updateBudgetBalance,
     addCashbackCategory,
@@ -160,6 +163,8 @@ export const FinancesModule: React.FC = () => {
   const [isEditingBalance, setIsEditingBalance] = useState(false);
   const [balanceInput, setBalanceInput] = useState(String(budget.currentBalance));
   const [showAddTxModal, setShowAddTxModal] = useState(false);
+  const [showGpbModal, setShowGpbModal] = useState(false);
+  const [gpbClaimAmount, setGpbClaimAmount] = useState('1500');
   const [copiedPayerCode, setCopiedPayerCode] = useState(false);
   const [copiedWifiPw, setCopiedWifiPw] = useState(false);
 
@@ -691,98 +696,100 @@ export const FinancesModule: React.FC = () => {
         </div>
 
         {/* 5 Cards Row (Apple Wallet 2026 aesthetic) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-start">
           {cashbackCards.map((card) => {
             const theme = CARD_METALLIC_THEMES[card.id] || CARD_METALLIC_THEMES['cb-sber'];
             const isSelected = activeCardId === card.id;
             const isGpb = card.id === 'cb-gpb';
+            const isGpbClaimed = gpbCashbackClaimed || (gpbTask ? gpbTask.completed : false);
 
             return (
-              <div
-                key={card.id}
-                onClick={() => setActiveCardId(card.id)}
-                style={{
-                  boxShadow: isSelected ? `0 12px 32px ${theme.glowColor}, inset 0 1px 0 rgba(255,255,255,0.25)` : '0 4px 16px rgba(0,0,0,0.3)',
-                }}
-                className={`relative aspect-[1.586/1] rounded-[14px] p-3.5 flex flex-col justify-between cursor-pointer transition-all duration-200 overflow-hidden border bg-gradient-to-br ${theme.gradient} ${theme.borderClass} ${
-                  isSelected ? 'scale-[1.03] ring-2 ring-white/30 z-10' : 'opacity-85 hover:opacity-100 hover:scale-[1.01]'
-                }`}
-              >
-                {/* Specular Radial Glare */}
-                <div 
-                  className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay"
+              <div key={card.id} className="flex flex-col gap-2">
+                <div
+                  onClick={() => setActiveCardId(card.id)}
                   style={{
-                    background: 'radial-gradient(circle at 25% 15%, rgba(255,255,255,0.8), transparent 60%)'
+                    boxShadow: isSelected ? `0 12px 32px ${theme.glowColor}, inset 0 1px 0 rgba(255,255,255,0.25)` : '0 4px 16px rgba(0,0,0,0.3)',
                   }}
-                />
+                  className={`relative aspect-[1.586/1] rounded-[14px] p-3.5 flex flex-col justify-between cursor-pointer transition-all duration-200 overflow-hidden border bg-gradient-to-br ${theme.gradient} ${theme.borderClass} ${
+                    isSelected ? 'scale-[1.02] ring-2 ring-white/30 z-10' : 'opacity-90 hover:opacity-100 hover:scale-[1.01]'
+                  }`}
+                >
+                  {/* Specular Radial Glare */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay"
+                    style={{
+                      background: 'radial-gradient(circle at 25% 15%, rgba(255,255,255,0.8), transparent 60%)'
+                    }}
+                  />
 
-                {/* Card Top: Bank Name, Chip & Contactless */}
-                <div className="relative z-10 flex items-start justify-between">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[12px] tracking-wider text-white drop-shadow-sm font-sans">
-                      {theme.name}
-                    </span>
-                    <span className="text-[9px] text-white/70 font-mono tracking-tight">
-                      {theme.tag}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <ContactlessIcon />
-                    <MirBadge />
-                  </div>
-                </div>
-
-                {/* Card Center: EMV Chip */}
-                <div className="relative z-10 flex items-center justify-between my-auto">
-                  <EMVChipIcon variant={theme.chipVariant} />
-                  
-                  {/* Active Month Status Badge */}
-                  <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/[0.1] text-[9.5px] font-mono-num text-zinc-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>{card.categories.length} категорий</span>
-                  </div>
-                </div>
-
-                {/* Card Bottom: Number, Holder & Expiry */}
-                <div className="relative z-10 flex items-end justify-between text-white drop-shadow-sm">
-                  <div>
-                    <div className="font-mono text-[11px] tracking-wider text-white/90">
-                      {theme.number}
-                    </div>
-                    <div className="text-[8.5px] uppercase tracking-wider text-white/75 font-medium truncate max-w-[120px]">
-                      {theme.holder}
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-[7.5px] uppercase tracking-widest text-white/60">VALID</div>
-                    <div className="font-mono text-[9.5px] text-white/90">{theme.exp}</div>
-                  </div>
-                </div>
-
-                {/* TickTick task pulsing alert badge on Gazprombank card */}
-                {isGpb && gpbTask && (
-                  <div className="absolute top-2 left-2 right-2 z-20">
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleTaskCompletion(gpbTask.id);
-                      }}
-                      className={`px-2 py-1 rounded-md text-[9.5px] font-semibold flex items-center justify-between gap-1 shadow-lg backdrop-blur-md transition-all cursor-pointer ${
-                        gpbTask.completed
-                          ? 'bg-emerald-500/90 text-white'
-                          : 'bg-amber-400 text-zinc-950 animate-pulse hover:bg-amber-300'
-                      }`}
-                      title="Кликните, чтобы отметить выполнение задачи в TickTick"
-                    >
-                      <span className="truncate">
-                        {gpbTask.completed ? '✓ Кэшбэк ГПБ получен' : '⚡ TickTick: Забрать кэшбэк ГПБ'}
+                  {/* Card Top: Bank Name, Chip & Contactless */}
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[12.5px] tracking-wider text-white drop-shadow-sm font-sans">
+                        {theme.name}
                       </span>
-                      <span className="text-[8px] uppercase underline shrink-0">
-                        {gpbTask.completed ? 'Готово' : 'До 25-го'}
+                      <span className="text-[9.5px] text-white/70 font-mono tracking-tight">
+                        {theme.tag}
                       </span>
                     </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <ContactlessIcon />
+                      <MirBadge />
+                    </div>
+                  </div>
+
+                  {/* Card Center: EMV Chip */}
+                  <div className="relative z-10 flex items-center justify-between my-auto">
+                    <EMVChipIcon variant={theme.chipVariant} />
+                    
+                    {/* Active Month Status Badge */}
+                    <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/[0.1] text-[9.5px] font-mono-num text-zinc-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>{card.categories.length} категорий</span>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Number, Holder & Expiry */}
+                  <div className="relative z-10 flex items-end justify-between text-white drop-shadow-sm">
+                    <div>
+                      <div className="font-mono text-[11px] tracking-wider text-white/90">
+                        {theme.number}
+                      </div>
+                      <div className="text-[9px] uppercase tracking-wider text-white/85 font-medium truncate max-w-[120px]">
+                        {theme.holder}
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-[7.5px] uppercase tracking-widest text-white/60">VALID</div>
+                      <div className="font-mono text-[9.5px] text-white/90">{theme.exp}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dedicated Action Button UNDER Gazprombank card (Zero overlap with bank title or MIR!) */}
+                {isGpb && (
+                  <div className="w-full">
+                    {isGpbClaimed ? (
+                      <div className="w-full py-1.5 px-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold flex items-center justify-center gap-1.5 shadow-xs">
+                        <CheckCircle2 size={13} className="text-emerald-400" />
+                        <span>Кэшбэк ГПБ получен ✓</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowGpbModal(true);
+                        }}
+                        className="w-full py-1.5 px-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-[11.5px] flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer animate-pulse"
+                        title="Нажмите, чтобы забрать кэшбэк и зачислить на общий счет"
+                      >
+                        <span>⚡ Забрать кэшбэк ГПБ</span>
+                        <span className="text-[9.5px] font-normal opacity-90">(до 25-го)</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1704,6 +1711,111 @@ export const FinancesModule: React.FC = () => {
                   className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-semibold text-black hover:bg-amber-400"
                 >
                   Добавить
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL: CLAIM GPB CASHBACK */}
+      {showGpbModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={() => setShowGpbModal(false)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-2xl border border-blue-500/30 bg-[#121622] p-5 shadow-2xl relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/35 flex items-center justify-center text-blue-400">
+                  <CreditCard size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">
+                    Забрать кэшбэк Газпромбанк
+                  </h3>
+                  <span className="text-[10px] text-blue-300 font-mono">
+                    Акция месяца · Компенсация 25%
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGpbModal(false)}
+                className="w-7 h-7 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const amt = parseFloat(gpbClaimAmount) || 0;
+                if (amt > 0) {
+                  claimGpbCashback(amt);
+                  setShowGpbModal(false);
+                }
+              }}
+              className="mt-4 space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                  Сумма полученного кэшбэка (₽)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="10"
+                    required
+                    autoFocus
+                    value={gpbClaimAmount}
+                    onChange={(e) => setGpbClaimAmount(e.target.value)}
+                    placeholder="1500"
+                    className="w-full h-10 px-3 pr-8 rounded-xl bg-black/50 border border-blue-500/30 text-lg font-mono font-bold text-white focus:outline-none focus:border-blue-400"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-zinc-400 text-sm">
+                    ₽
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                  Эта сумма будет реально прибавлена к балансу совместного бюджета пары, записана в историю операций и зафиксирует выполнение задачи в TickTick.
+                </p>
+              </div>
+
+              {/* Quick amount presets */}
+              <div className="flex gap-2">
+                {['1000', '1500', '2000', '3000'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setGpbClaimAmount(preset)}
+                    className={`flex-1 py-1 rounded-lg text-xs font-mono transition-all ${
+                      gpbClaimAmount === preset
+                        ? 'bg-blue-500/25 text-blue-300 border border-blue-500/40 font-bold'
+                        : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border border-white/[0.06]'
+                    }`}
+                  >
+                    {preset} ₽
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowGpbModal(false)}
+                  className="flex-1 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-medium text-zinc-300 transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                >
+                  Зачислить на баланс
                 </button>
               </div>
             </form>

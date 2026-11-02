@@ -1182,7 +1182,7 @@ export const initialCashbackCards: CashbackCard[] = [
     activeMonth: 'Ноябрь 2026',
     claimed: true,
     claimDeadline: 'Выбран',
-    specialFeature: 'Совместный счет пары (Titanium)',
+    specialFeature: 'Совместный счет пары',
     categories: [
       { category: 'Дом и ремонт', percent: 6 },
       { category: 'Рестораны и доставка', percent: 5 },
