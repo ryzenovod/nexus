@@ -152,7 +152,9 @@ export interface CoupleGamification {
   levelTitle: string;
   xp: number;
   nextLevelXp: number;
-  equippedCosmetic: 'none' | 'glasses' | 'crown' | 'scarf' | 'wings';
+  treats: number; // treats earned from finishing chores/tasks
+  hungerLevel: number; // 0-100%
+  equippedCosmetic: 'none' | 'glasses' | 'crown' | 'scarf' | 'wings' | 'cat_headphones';
   unlockedCosmetics: string[];
 }
 
@@ -164,4 +166,68 @@ export interface SupabaseConfig {
   isConnected: boolean;
   autoSync: boolean;
   lastSyncAt: string | null;
+}
+
+export interface TelegramConfig {
+  botToken: string;
+  chatIdEgor: string;
+  chatIdAnya: string;
+  chatIdJoint: string;
+  isConnected: boolean;
+  autoNotifyWishlist: boolean;
+  autoNotifyTasks: boolean;
+  autoNotifyUtilities: boolean;
+  lastUpdateId?: number;
+  lastSyncAt?: string;
+}
+
+export interface BlueprintPin {
+  id: string;
+  title: string;
+  room: RoomArea;
+  x: number; // percentage 0-100 on blueprint
+  y: number; // percentage 0-100 on blueprint
+  status: 'problem' | 'in_progress' | 'solved';
+  category: 'water' | 'electricity' | 'repair' | 'cleaning' | 'furniture';
+  notes?: string;
+  estimatedCost?: number;
+}
+
+export interface DateScenario {
+  id: string;
+  title: string;
+  emoji: string;
+  vibe: 'home' | 'gastro' | 'art' | 'gaming' | 'walk';
+  vibeLabel: string;
+  budget: 'free' | 'low' | 'medium' | 'festive';
+  budgetLabel: string;
+  estimatedCost: number;
+  duration: string;
+  description: string;
+  location: string;
+  recommendedCard: string;
+  cardBonusText: string;
+  tags: string[];
+}
+
+export interface HSEGradeComponent {
+  id: string;
+  name: string;
+  weight: number; // e.g. 0.3 for 30%
+  score: number; // 0 to 10
+}
+
+export interface HSECourseCalculator {
+  id: string;
+  courseName: string;
+  components: HSEGradeComponent[];
+  targetScore: number;
+}
+
+export interface RUDNSubjectBRS {
+  id: string;
+  subjectName: string;
+  currentControl: number; // 0 to 60
+  milestoneControl: number; // 0 to 20
+  finalExam: number; // 0 to 20
 }

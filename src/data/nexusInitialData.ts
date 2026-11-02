@@ -14,8 +14,10 @@ export const initialCoupleGamification: CoupleGamification = {
   levelTitle: 'Дримтим Архитекторы Уюта ✨',
   xp: 740,
   nextLevelXp: 1000,
+  treats: 18,
+  hungerLevel: 85,
   equippedCosmetic: 'crown',
-  unlockedCosmetics: ['none', 'crown', 'glasses', 'scarf'],
+  unlockedCosmetics: ['none', 'crown', 'glasses', 'scarf', 'cat_headphones', 'wings'],
 };
 
 export const initialTasks: NexusTask[] = [
