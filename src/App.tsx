@@ -25,6 +25,7 @@ import { CommandPalette } from './components/command-palette/CommandPalette';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { GlassCard } from './components/visual/GlassCard';
 import { StarryTwilightCanvas } from './components/visual/StarryTwilightCanvas';
+import { LinearCommandCenter } from './components/command-center/LinearCommandCenter';
 import { NexusTask } from './types/nexus';
 
 export const App: React.FC = () => {
@@ -177,13 +178,13 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`h-screen overflow-hidden flex text-zinc-100 relative ${
+      className={`h-screen w-screen overflow-hidden flex select-none antialiased font-sans text-[#ededef] relative ${
         atmosphereMode === 'transparent' || isWidgetMode
           ? 'bg-transparent'
-          : 'bg-[#09090b]'
+          : 'bg-[#08080a]'
       }`}
     >
-      {/* Multi-layered Ambient Glass Glow (macOS / Raycast style: deep indigo top-left, warm amber/purple bottom-right) */}
+      {/* Multi-layered Ambient Glass Glow */}
       {!isWidgetMode && atmosphereMode !== 'transparent' && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           {/* Deep Indigo glow (top-left) */}
@@ -202,21 +203,13 @@ export const App: React.FC = () => {
                 'radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, rgba(168, 85, 247, 0.07) 45%, transparent 70%)',
             }}
           />
-          {/* Central subtle twilight depth */}
-          <div
-            className="absolute top-[35%] left-[30%] w-[40vw] h-[40vw] rounded-full blur-[160px] opacity-50"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 70%)',
-            }}
-          />
         </div>
       )}
 
       {/* Procedural Animated Canvas: Starry Twilight with subtle depth */}
       <StarryTwilightCanvas mode={atmosphereMode} />
 
-      {/* RULE 1: DESKTOP APP SHELL - LEFT SIDEBAR */}
+      {/* 1. DESKTOP APP SHELL - LEFT SIDEBAR (No border-r, native Linear look) */}
       {!isWidgetMode && (
         <div className="hidden md:flex relative z-10">
           <Sidebar
@@ -233,115 +226,82 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* RULE 1 & 4: RIGHT MAIN CANVAS (NO GLOBAL SCROLL, PERFECT 100VH VIEWPORT) */}
-      <div className="flex-1 h-screen overflow-hidden flex flex-col min-w-0 bg-[#09090b]/35 backdrop-blur-2xl relative z-10">
-        {/* Top Slim Header Bar */}
-        {!isWidgetMode && (
-          <header className="px-6 py-3 flex items-center justify-between border-b border-white/[0.06] bg-[#09090b]/70 backdrop-blur-2xl shrink-0">
-            <h1 className="text-sm font-semibold tracking-tight text-zinc-100">
-              {tabTitles[activeTab]}
-            </h1>
-
-            {/* Clean White Action Button (One Plus icon, text 'Новая задача', NO '+ +') */}
-            <button
-              type="button"
-              onClick={() => {
-                setInitialTaskDate('inbox');
-                setSelectedTaskToEdit(null);
-                setActiveTaskModal(true);
-              }}
-              className="flex items-center gap-1.5 rounded-md bg-white text-zinc-950 hover:bg-zinc-200 px-3 py-1.5 text-xs font-medium transition-colors shadow-sm cursor-pointer"
-            >
-              <Plus size={14} strokeWidth={2.2} />
-              <span>Новая задача</span>
-            </button>
-          </header>
+      {/* 2. FLOATING INSET CANVAS (The Linear Signature Inset Panel Architecture) */}
+      <main
+        className={`flex-1 flex flex-col min-w-0 overflow-hidden relative z-10 transition-all ${
+          isWidgetMode
+            ? 'h-screen p-2 bg-transparent'
+            : 'my-2 mr-2 rounded-[10px] bg-[#0f1014] border border-[#1e2028] shadow-[0_0_0_1px_rgba(0,0,0,0.4),inset_0_1px_0_0_rgba(255,255,255,0.04)]'
+        }`}
+      >
+        {/* TAB 1: COMMAND CENTER (Linear Issue List + Collapsible Week Ribbon + Inspector) */}
+        {(activeTab === 'command-center' || isWidgetMode) && (
+          <LinearCommandCenter
+            tasks={tasks}
+            activeWeekOffset={activeWeekOffset}
+            onOffsetChange={setActiveWeekOffset}
+            onToggleTask={toggleTaskCompletion}
+            onUpdateTask={(updated) => updateTask(updated.id, updated)}
+            onDeleteTask={deleteTask}
+            onAddTask={(date) => {
+              setInitialTaskDate(date || 'inbox');
+              setSelectedTaskToEdit(null);
+              setActiveTaskModal(true);
+            }}
+            selectedAssignee={selectedAssignee}
+            onAssigneeChange={setSelectedAssignee}
+            isWidgetMode={isWidgetMode}
+          />
         )}
 
-        {/* Main Content Viewport */}
-        <div className={`flex-1 overflow-hidden min-h-0 ${isWidgetMode ? 'p-2' : 'px-6 py-4'}`}>
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            {/* TAB 1: COMMAND CENTER (Week 35% + Inbox 65% in 100vh without page scroll!) */}
-            {(activeTab === 'command-center' || isWidgetMode) && (
-              <div className="h-full flex flex-col min-h-0 space-y-3">
-                {/* Upper Section: 7 Day Columns Matrix */}
-                <WeekPlanner
-                  tasks={tasks}
-                  activeWeekOffset={activeWeekOffset}
-                  onOffsetChange={setActiveWeekOffset}
-                  onToggleTask={toggleTaskCompletion}
-                  onTaskClick={handleCardClick}
-                  onDeleteTask={deleteTask}
-                  onAddTaskForDay={handleOpenNewTaskForDate}
-                />
-
-                {/* Lower Section: 4-Column Hairline Cockpit Matrix with its own internal scroll */}
-                <InboxGrid
-                  tasks={tasks}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  selectedBracket={selectedBracket}
-                  onBracketChange={setSelectedBracket}
-                  selectedAssignee={selectedAssignee}
-                  onAssigneeChange={setSelectedAssignee}
-                  selectedRoom={selectedRoom}
-                  onRoomChange={setSelectedRoom}
-                  selectedCategory={selectedCategory}
-                  onCategoryChange={setSelectedCategory}
-                  isSmartGrouped={isSmartGrouped}
-                  onToggleSmartGrouping={setIsSmartGrouped}
-                  onToggleTask={toggleTaskCompletion}
-                  onTaskClick={handleCardClick}
-                  onDeleteTask={deleteTask}
-                  onAddNewTask={() => {
-                    setInitialTaskDate('inbox');
-                    setSelectedTaskToEdit(null);
-                    setActiveTaskModal(true);
-                  }}
-                />
+        {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK */}
+        {activeTab === 'finances' && !isWidgetMode && (
+          <div className="h-full flex flex-col min-h-0 overflow-hidden">
+            <div className="h-[44px] px-4 border-b border-[#1c1d24] flex items-center justify-between shrink-0 bg-[#0f1014]">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#ededef]">
+                <span className="text-[#8a8f98]">NEXUS</span>
+                <span className="text-[#5e636e]">›</span>
+                <span>Финансы & ЖКХ Москвы</span>
               </div>
-            )}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+              <FinancesModule />
+            </div>
+          </div>
+        )}
 
-            {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK */}
-            {activeTab === 'finances' && !isWidgetMode && (
-              <div className="h-full overflow-y-auto pr-1">
-                <FinancesModule />
+        {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ?») + РЕМОНТ КВАРТИРЫ + СВИДАНИЯ */}
+        {activeTab === 'wishlist' && !isWidgetMode && (
+          <div className="h-full flex flex-col min-h-0 overflow-hidden">
+            <div className="h-[44px] px-4 border-b border-[#1c1d24] flex items-center justify-between shrink-0 bg-[#0f1014]">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#ededef]">
+                <span className="text-[#8a8f98]">NEXUS</span>
+                <span className="text-[#5e636e]">›</span>
+                <span>Вишлист & Интерактивный План</span>
               </div>
-            )}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+              <WishlistModule />
+            </div>
+          </div>
+        )}
 
-            {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ?») + РЕМОНТ КВАРТИРЫ + СВИДАНИЯ */}
-            {activeTab === 'wishlist' && !isWidgetMode && (
-              <div className="h-full overflow-y-auto pr-1">
-                <WishlistModule />
+        {/* TAB 4: ВШЭ x РУДН x Я-ПРОФИ (КАНБАН + РАДАР ЦФО/ДФО + РАСПИСАНИЕ & БРС) */}
+        {activeTab === 'study-work' && !isWidgetMode && (
+          <div className="h-full flex flex-col min-h-0 overflow-hidden">
+            <div className="h-[44px] px-4 border-b border-[#1c1d24] flex items-center justify-between shrink-0 bg-[#0f1014]">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#ededef]">
+                <span className="text-[#8a8f98]">NEXUS</span>
+                <span className="text-[#5e636e]">›</span>
+                <span>Учеба & Я-Профессионал</span>
               </div>
-            )}
-
-            {/* TAB 4: ВШЭ x РУДН x Я-ПРОФИ (КАНБАН + РАДАР ЦФО/ДФО + РАСПИСАНИЕ & БРС + FOCUS ROOM) */}
-            {activeTab === 'study-work' && !isWidgetMode && (
-              <div className="h-full overflow-y-auto pr-1">
-                <StudyWorkModule />
-              </div>
-            )}
-
-            {/* Drag Overlay for smooth preview */}
-            <DragOverlay>
-              {activeDraggingTask && (
-                <div className="w-64 opacity-95 shadow-2xl">
-                  <GlassCard
-                    task={activeDraggingTask}
-                    onToggle={() => {}}
-                    isDragging
-                  />
-                </div>
-              )}
-            </DragOverlay>
-          </DndContext>
-        </div>
-      </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:thin]">
+              <StudyWorkModule />
+            </div>
+          </div>
+        )}
+      </main>
 
       {/* Mobile Navigation Dock for screens < md */}
       {!isWidgetMode && (

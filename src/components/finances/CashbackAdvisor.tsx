@@ -179,12 +179,12 @@ export const CashbackAdvisor: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. BANK CARDS MATRIX (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
+      {/* 2. BANK CARDS MATRIX (SEAMLESS LINEAR BENTO GRID) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-[1px] bg-[#1c1d24] border border-[#1e2028] rounded-[8px] overflow-hidden shadow-xs">
         {cashbackCards.map((card) => (
           <div
             key={card.id}
-            className="bg-[#0b0b0e] hover:bg-[#121217] p-4 flex flex-col justify-between transition-colors relative"
+            className="bg-[#131419] hover:bg-[#181920] p-4 flex flex-col justify-between transition-colors relative"
           >
             {/* Top Info */}
             <div>

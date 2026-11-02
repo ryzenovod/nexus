@@ -414,15 +414,15 @@ export const StudyWorkModule: React.FC = () => {
             })}
           </div>
 
-          {/* 4 Clean Kanban Columns (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
+          {/* 4 Clean Kanban Columns (SEAMLESS LINEAR BENTO GRID) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-[#1c1d24] border border-[#1e2028] rounded-[8px] overflow-hidden shadow-xs">
             {columns.map((column) => {
               const columnTasks = filteredItems.filter((i) => i.status === column.id);
 
               return (
                 <div
                   key={column.id}
-                  className="bg-[#0b0b0e] p-3.5 flex flex-col min-h-[460px]"
+                  className="bg-[#131419] p-3.5 flex flex-col min-h-[460px]"
                 >
                   {/* Column Header */}
                   <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.05]">
