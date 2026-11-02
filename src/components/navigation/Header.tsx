@@ -12,7 +12,9 @@ import {
   Palette,
   Zap,
   Volume2,
-  VolumeX
+  VolumeX,
+  Bot,
+  Heart
 } from 'lucide-react';
 import { useNexusStore } from '../../store/useNexusStore';
 import { DualTimeClock } from '../visual/DualTimeClock';
@@ -23,6 +25,8 @@ interface HeaderProps {
   onOpenSettings: () => void;
   onOpenCommandPalette: () => void;
   onOpenNewTask: () => void;
+  onOpenTelegramBridge: () => void;
+  onOpenTamagotchiRoom: () => void;
   isWidgetMode: boolean;
   onToggleWidgetMode: () => void;
 }
@@ -31,6 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettings,
   onOpenCommandPalette,
   onOpenNewTask,
+  onOpenTelegramBridge,
+  onOpenTamagotchiRoom,
   isWidgetMode,
   onToggleWidgetMode,
 }) => {
@@ -38,13 +44,16 @@ export const Header: React.FC<HeaderProps> = ({
     tasks, 
     budget, 
     supabaseConfig, 
+    telegramConfig,
     isSyncing,
     atmosphereMode,
     setAtmosphereMode,
     gamification,
     equipCosmetic,
     soundAmbiance,
-    setSoundAmbiance
+    setSoundAmbiance,
+    soundMuted,
+    setSoundMuted
   } = useNexusStore();
 
   const totalTasks = tasks.length;
@@ -56,8 +65,12 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-3">
         {/* Brand & Mascot Profile */}
         <div className="flex items-center gap-3">
-          {/* Cyber Cat Mascot */}
-          <div className="flex items-center">
+          {/* Cyber Cat Mascot - Clickable to open Tamagotchi Room */}
+          <div 
+            onClick={onOpenTamagotchiRoom}
+            className="flex items-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            title="Открыть Тамагочи-Комнату Котика Нексуса (гардероб, угощения)"
+          >
             <CyberCatMascot
               gamification={gamification}
               onEquipCosmetic={equipCosmetic}
@@ -75,11 +88,31 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
 
               {/* Couple XP Level Pill */}
-              <div className="hidden sm:flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300 border border-purple-500/30">
+              <button 
+                type="button"
+                onClick={onOpenTamagotchiRoom}
+                className="hidden sm:flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-300 border border-purple-500/30 hover:border-purple-400 transition-all cursor-pointer"
+                title="Уровень пары и комната котика"
+              >
                 <Zap className="h-2.5 w-2.5 fill-current" />
                 <span>Ур. {gamification.level}</span>
                 <span className="text-zinc-400 font-normal">({gamification.xp} XP)</span>
-              </div>
+              </button>
+
+              {/* Telegram Bridge Pill */}
+              <button
+                type="button"
+                onClick={onOpenTelegramBridge}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-mono transition-colors border ${
+                  telegramConfig.isConnected
+                    ? 'bg-sky-500/10 border-sky-500/30 text-sky-300 hover:bg-sky-500/20'
+                    : 'bg-white/[0.04] border-white/10 text-zinc-400 hover:bg-white/10'
+                }`}
+                title="Telegram-Бот Пары (отправка покупок, ЖКХ и синхронизация)"
+              >
+                <Bot className="h-2.5 w-2.5 text-sky-400" />
+                <span className="hidden md:inline">TG Бот</span>
+              </button>
 
               {/* Sync Status Badge */}
               <button 
@@ -192,7 +225,25 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
 
-          {/* Sound Ambiance Toggle */}
+          {/* Procedural UI Sound FX Toggle */}
+          <button
+            type="button"
+            onClick={() => setSoundMuted(!soundMuted)}
+            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-mono border transition-colors ${
+              !soundMuted
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                : 'bg-white/[0.04] text-zinc-500 border-white/10 hover:bg-white/10'
+            }`}
+            title={soundMuted ? 'Включить клики и фанфары' : 'Звуковые эффекты активны'}
+          >
+            {!soundMuted ? (
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+            ) : (
+              <span className="text-[10px]">🔇</span>
+            )}
+          </button>
+
+          {/* Sound Ambiance Toggle (Rain) */}
           <button
             type="button"
             onClick={() => setSoundAmbiance(soundAmbiance === 'off' ? 'rain' : 'off')}

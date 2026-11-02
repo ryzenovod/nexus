@@ -17,7 +17,12 @@ import {
   StudySpace,
   SupabaseConfig,
   CoupleGamification,
-  AtmosphereMode
+  AtmosphereMode,
+  TelegramConfig,
+  BlueprintPin,
+  DateScenario,
+  HSECourseCalculator,
+  RUDNSubjectBRS
 } from '../types/nexus';
 import { 
   initialTasks, 
@@ -29,8 +34,16 @@ import {
   initialStudyWorkItems,
   initialCoupleGamification 
 } from '../data/nexusInitialData';
+import {
+  initialBlueprintPins,
+  initialDateScenarios,
+  initialHSECalculators,
+  initialRUDNSubjects
+} from '../data/blueprintAndDatesData';
 import { getSupabaseClient } from '../services/supabaseClient';
 import { cozyAudio } from '../utils/CozyAudioSynthesizer';
+import { soundEffects } from '../utils/soundEffects';
+import { telegramBotService } from '../services/telegramBotService';
 
 export interface NexusState {
   // Tasks
@@ -46,9 +59,25 @@ export interface NexusState {
   // Atmosphere & Sound
   atmosphereMode: AtmosphereMode;
   soundAmbiance: 'off' | 'rain' | 'fireplace' | 'chimes';
+  soundMuted: boolean;
 
   // Gamification & Mascot
   gamification: CoupleGamification;
+
+  // Blueprint & Home Repair
+  blueprintPins: BlueprintPin[];
+  selectedBlueprintRoom: RoomArea;
+
+  // Date Night Roulette
+  dateScenarios: DateScenario[];
+
+  // Academic Calculators
+  hseCalculators: HSECourseCalculator[];
+  rudnSubjects: RUDNSubjectBRS[];
+
+  // Telegram Bridge
+  telegramConfig: TelegramConfig;
+  isTelegramSyncing: boolean;
 
   // Wishlist
   wishlist: WishlistItem[];
@@ -92,9 +121,29 @@ export interface NexusState {
 
   setAtmosphereMode: (mode: AtmosphereMode) => void;
   setSoundAmbiance: (mode: 'off' | 'rain' | 'fireplace' | 'chimes') => void;
+  setSoundMuted: (muted: boolean) => void;
 
   addXp: (amount: number) => void;
   equipCosmetic: (cosmetic: CoupleGamification['equippedCosmetic']) => void;
+  feedMascot: () => void;
+
+  // Blueprint Actions
+  setSelectedBlueprintRoom: (room: RoomArea) => void;
+  updatePinStatus: (id: string, status: BlueprintPin['status']) => void;
+  addBlueprintPin: (pin: Omit<BlueprintPin, 'id'>) => void;
+
+  // Date Actions
+  scheduleDateScenario: (scenario: DateScenario, targetDate?: string) => void;
+
+  // Academic Actions
+  updateHSEComponentScore: (calcId: string, compId: string, score: number) => void;
+  updateRUDNSubjectScore: (subjId: string, field: 'currentControl' | 'milestoneControl' | 'finalExam', value: number) => void;
+  importCalendarTasks: (newTasks: NexusTask[]) => void;
+
+  // Telegram Actions
+  setTelegramConfig: (config: Partial<TelegramConfig>) => void;
+  syncTelegramMessages: () => Promise<{ addedCount: number }>;
+  sendTelegramPush: (type: 'shopping' | 'utilities' | 'test', extraText?: string) => Promise<{ success: boolean; error?: string }>;
 
   addWishlistItem: (item: Omit<WishlistItem, 'id' | 'createdAt' | 'egorVote' | 'anyaVote' | 'status'>) => void;
   voteWishlist: (id: string, user: 'egor' | 'anya', vote: VoteStatus) => void;
@@ -140,8 +189,33 @@ export const useNexusStore = create<NexusState>()(
 
       atmosphereMode: 'twilight',
       soundAmbiance: 'off',
+      soundMuted: false,
 
       gamification: initialCoupleGamification,
+
+      // Blueprint & Repair
+      blueprintPins: initialBlueprintPins,
+      selectedBlueprintRoom: 'Ванная',
+
+      // Date Scenarios
+      dateScenarios: initialDateScenarios,
+
+      // Academic Calculators
+      hseCalculators: initialHSECalculators,
+      rudnSubjects: initialRUDNSubjects,
+
+      // Telegram Bridge
+      telegramConfig: {
+        botToken: '',
+        chatIdEgor: '',
+        chatIdAnya: '',
+        chatIdJoint: '',
+        isConnected: false,
+        autoNotifyWishlist: true,
+        autoNotifyTasks: true,
+        autoNotifyUtilities: true,
+      },
+      isTelegramSyncing: false,
 
       wishlist: initialWishlist,
 
@@ -217,15 +291,35 @@ export const useNexusStore = create<NexusState>()(
             window.dispatchEvent(new CustomEvent('nexus-task-completed'));
           }
 
-          // 3. Play cozy celebration audio chime
+          // 3. Play cozy celebration audio chime & procedural sound effect
           try {
+            soundEffects.playSuccess();
             cozyAudio.playCelebrationChime();
           } catch {
             // audio context fallback
           }
 
-          // 4. Grant XP to couple gamification (+25 XP)
+          // 4. Grant XP to couple gamification (+25 XP) + 1 treat for Cyber-Cat
           get().addXp(25);
+          set((state) => ({
+            gamification: {
+              ...state.gamification,
+              treats: (state.gamification.treats || 0) + 1,
+            },
+          }));
+
+          // 5. Telegram push notification to partner if enabled
+          const { telegramConfig } = get();
+          if (telegramConfig.isConnected && telegramConfig.autoNotifyTasks && telegramConfig.botToken && currentTask) {
+            const partnerChatId = currentTask.assignee === 'egor'
+              ? (telegramConfig.chatIdAnya || telegramConfig.chatIdJoint)
+              : (telegramConfig.chatIdEgor || telegramConfig.chatIdJoint);
+
+            if (partnerChatId) {
+              const msg = telegramBotService.formatTaskCompletedMessage(currentTask.title, currentTask.assignee, 25);
+              telegramBotService.sendMessage(telegramConfig.botToken, partnerChatId, msg).catch(() => {});
+            }
+          }
         }
 
         set((state) => ({
@@ -302,6 +396,7 @@ export const useNexusStore = create<NexusState>()(
                 origin: { y: 0.5 },
                 colors: ['#facc15', '#a855f7', '#ec4899'],
               });
+              soundEffects.playLevelUp();
             } catch {
               // ignore
             }
@@ -327,6 +422,226 @@ export const useNexusStore = create<NexusState>()(
             equippedCosmetic: cosmetic,
           },
         }));
+      },
+
+      feedMascot: () => {
+        const { gamification } = get();
+        if ((gamification.treats || 0) <= 0) return;
+
+        soundEffects.playEat();
+        get().addXp(20);
+
+        set((state) => ({
+          gamification: {
+            ...state.gamification,
+            treats: Math.max(0, (state.gamification.treats || 0) - 1),
+            hungerLevel: Math.min(100, (state.gamification.hungerLevel || 80) + 15),
+          },
+        }));
+      },
+
+      setSoundMuted: (muted) => {
+        soundEffects.setMuted(muted);
+        set({ soundMuted: muted });
+      },
+
+      // --- Blueprint & Repair Actions ---
+      setSelectedBlueprintRoom: (room) => set({ selectedBlueprintRoom: room }),
+      updatePinStatus: (id, status) => {
+        set((state) => ({
+          blueprintPins: state.blueprintPins.map((pin) =>
+            pin.id === id ? { ...pin, status } : pin
+          ),
+        }));
+        if (status === 'solved') {
+          soundEffects.playSuccess();
+          get().addXp(30);
+        }
+      },
+      addBlueprintPin: (pinData) => {
+        const newPin: BlueprintPin = {
+          ...pinData,
+          id: `pin-${Date.now()}`,
+        };
+        set((state) => ({
+          blueprintPins: [...state.blueprintPins, newPin],
+        }));
+      },
+
+      // --- Date Roulette Actions ---
+      scheduleDateScenario: (scenario, targetDate = '2026-11-04') => {
+        const newTask: NexusTask = {
+          id: `task-date-${scenario.id}-${Date.now()}`,
+          title: `💕 Свидание: ${scenario.title}`,
+          notes: `${scenario.description}\n\n📍 Локация: ${scenario.location}\n💰 Бюджет: ~${scenario.estimatedCost} ₽ (${scenario.budgetLabel})\n💳 Оплата: ${scenario.recommendedCard} (${scenario.cardBonusText})`,
+          completed: false,
+          bracketColor: 'cyber',
+          category: '📋 Общее',
+          room: scenario.vibe === 'home' ? 'Комната' : 'Все',
+          assignee: 'together',
+          date: targetDate,
+          price: scenario.estimatedCost,
+          createdAt: new Date().toISOString(),
+          order: 0,
+          tags: ['свидание', '4-ноября', ...scenario.tags],
+        };
+
+        set((state) => ({
+          tasks: [newTask, ...state.tasks],
+        }));
+
+        soundEffects.playLevelUp();
+        try {
+          confetti({
+            particleCount: 70,
+            spread: 75,
+            origin: { y: 0.6 },
+            colors: ['#ec4899', '#a855f7', '#f43f5e'],
+          });
+        } catch {
+          // ignore
+        }
+      },
+
+      // --- Academic Actions ---
+      updateHSEComponentScore: (calcId, compId, score) => {
+        set((state) => ({
+          hseCalculators: state.hseCalculators.map((calc) =>
+            calc.id === calcId
+              ? {
+                  ...calc,
+                  components: calc.components.map((comp) =>
+                    comp.id === compId ? { ...comp, score } : comp
+                  ),
+                }
+              : calc
+          ),
+        }));
+      },
+
+      updateRUDNSubjectScore: (subjId, field, value) => {
+        set((state) => ({
+          rudnSubjects: state.rudnSubjects.map((subj) =>
+            subj.id === subjId ? { ...subj, [field]: value } : subj
+          ),
+        }));
+      },
+
+      importCalendarTasks: (newTasks) => {
+        set((state) => ({
+          tasks: [...newTasks, ...state.tasks],
+        }));
+        soundEffects.playSuccess();
+      },
+
+      // --- Telegram Bridge Actions ---
+      setTelegramConfig: (config) => {
+        set((state) => ({
+          telegramConfig: { ...state.telegramConfig, ...config },
+        }));
+      },
+
+      syncTelegramMessages: async () => {
+        const { telegramConfig } = get();
+        if (!telegramConfig.botToken) {
+          return { addedCount: 0 };
+        }
+
+        set({ isTelegramSyncing: true });
+        try {
+          const res = await telegramBotService.getUpdates(
+            telegramConfig.botToken,
+            (telegramConfig.lastUpdateId || 0) + 1
+          );
+
+          if (!res.success || !res.updates || res.updates.length === 0) {
+            return { addedCount: 0 };
+          }
+
+          let added = 0;
+          let maxUpdateId = telegramConfig.lastUpdateId || 0;
+
+          for (const u of res.updates) {
+            if (u.update_id > maxUpdateId) {
+              maxUpdateId = u.update_id;
+            }
+
+            if (u.message && u.message.text) {
+              const text = u.message.text;
+              // Ignore bot commands like /start
+              if (text.startsWith('/start')) continue;
+
+              const parsed = telegramBotService.parseTelegramMessageToTask(text);
+              get().addTask({
+                title: parsed.title,
+                notes: `Импортировано из Telegram от @${u.message.from.username || u.message.from.first_name}`,
+                completed: false,
+                bracketColor: parsed.bracketColor,
+                category: parsed.category,
+                room: parsed.room,
+                assignee: parsed.assignee,
+                date: parsed.date,
+                price: parsed.price,
+                tags: ['telegram', 'бот'],
+              });
+              added++;
+            }
+          }
+
+          if (added > 0) {
+            soundEffects.playAlert();
+          }
+
+          set((state) => ({
+            telegramConfig: {
+              ...state.telegramConfig,
+              lastUpdateId: maxUpdateId,
+              lastSyncAt: new Date().toISOString(),
+              isConnected: true,
+            },
+          }));
+
+          return { addedCount: added };
+        } catch {
+          return { addedCount: 0 };
+        } finally {
+          set({ isTelegramSyncing: false });
+        }
+      },
+
+      sendTelegramPush: async (type, extraText) => {
+        const { telegramConfig, wishlist, utilityBills } = get();
+        if (!telegramConfig.botToken) {
+          return { success: false, error: 'Токен бота не настроен' };
+        }
+
+        const targetChatId =
+          telegramConfig.chatIdJoint || telegramConfig.chatIdEgor || telegramConfig.chatIdAnya;
+
+        if (!targetChatId) {
+          return { success: false, error: 'Chat ID не указан в настройках' };
+        }
+
+        let messageText = '';
+        if (type === 'shopping') {
+          messageText = telegramBotService.formatShoppingListMessage(wishlist);
+        } else if (type === 'utilities') {
+          messageText = telegramBotService.formatUtilityReminderMessage(utilityBills);
+        } else {
+          messageText = extraText || '🐾 NEXUS Couple OS: Тестовое сообщение успешно отправлено!';
+        }
+
+        const res = await telegramBotService.sendMessage(
+          telegramConfig.botToken,
+          targetChatId,
+          messageText
+        );
+
+        if (res.success) {
+          soundEffects.playSuccess();
+        }
+
+        return res;
       },
 
       // --- Filters ---
@@ -378,9 +693,20 @@ export const useNexusStore = create<NexusState>()(
               origin: { y: 0.6 },
               colors: ['#f59e0b', '#22c55e', '#ec4899', '#8b5cf6'],
             });
+            soundEffects.playLevelUp();
             cozyAudio.playCelebrationChime();
           } catch {
             // ignore
+          }
+
+          // Telegram push notification on mutual wishlist approval
+          const { telegramConfig } = get();
+          if (telegramConfig.isConnected && telegramConfig.autoNotifyWishlist && telegramConfig.botToken) {
+            const targetChat = telegramConfig.chatIdJoint || telegramConfig.chatIdEgor || telegramConfig.chatIdAnya;
+            if (targetChat) {
+              const msg = telegramBotService.formatWishlistMatchMessage(item.title, item.estimatedPrice);
+              telegramBotService.sendMessage(telegramConfig.botToken, targetChat, msg).catch(() => {});
+            }
           }
         } else if (updatedEgorVote === 'no' && updatedAnyaVote === 'no') {
           status = 'rejected';
@@ -652,6 +978,10 @@ export const useNexusStore = create<NexusState>()(
           utilityBills: initialUtilityBills,
           studyWorkItems: initialStudyWorkItems,
           gamification: initialCoupleGamification,
+          blueprintPins: initialBlueprintPins,
+          dateScenarios: initialDateScenarios,
+          hseCalculators: initialHSECalculators,
+          rudnSubjects: initialRUDNSubjects,
         });
       },
     }),

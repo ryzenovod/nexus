@@ -5,10 +5,23 @@ import {
   Gift, 
   GraduationCap, 
   Timer,
-  Trophy
+  Trophy,
+  Layers,
+  Radio,
+  BookOpen,
+  Heart
 } from 'lucide-react';
 
-export type NexusTab = 'command-center' | 'finances' | 'wishlist' | 'study-work' | 'pomodoro';
+export type NexusTab = 
+  | 'command-center' 
+  | 'blueprint'
+  | 'finances' 
+  | 'wishlist' 
+  | 'study-work' 
+  | 'yaprofi-radar'
+  | 'academic'
+  | 'date-night'
+  | 'pomodoro';
 
 interface TabNavProps {
   activeTab: NexusTab;
@@ -24,13 +37,19 @@ export const TabNav: React.FC<TabNavProps> = ({
   const tabs = [
     {
       id: 'command-center' as NexusTab,
-      label: 'Центр управления (Задачи)',
+      label: 'Центр управления',
       shortLabel: 'Задачи',
       icon: LayoutDashboard,
     },
     {
+      id: 'blueprint' as NexusTab,
+      label: 'План квартиры 📐',
+      shortLabel: 'План',
+      icon: Layers,
+    },
+    {
       id: 'finances' as NexusTab,
-      label: 'Финансы & ЖКХ Москвы',
+      label: 'Финансы & ЖКХ',
       shortLabel: 'Финансы',
       icon: CreditCard,
     },
@@ -44,13 +63,31 @@ export const TabNav: React.FC<TabNavProps> = ({
     {
       id: 'study-work' as NexusTab,
       label: 'ВШЭ x РУДН x Я-Профи',
-      shortLabel: 'Учеба/Я-Профи',
+      shortLabel: 'Проекты',
       icon: Trophy,
+    },
+    {
+      id: 'yaprofi-radar' as NexusTab,
+      label: 'Радар ЦФО ⇄ ДФО 📡',
+      shortLabel: 'Радар ДФО',
+      icon: Radio,
+    },
+    {
+      id: 'academic' as NexusTab,
+      label: 'Расписание & БРС 🎓',
+      shortLabel: 'Учеба/БРС',
+      icon: BookOpen,
+    },
+    {
+      id: 'date-night' as NexusTab,
+      label: 'Свидания 4 ноября 💕',
+      shortLabel: 'Свидания',
+      icon: Heart,
     },
     {
       id: 'pomodoro' as NexusTab,
       label: 'Cozy Focus Room',
-      shortLabel: 'Focus Room',
+      shortLabel: 'Focus',
       icon: Timer,
     },
   ];

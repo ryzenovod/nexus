@@ -18,6 +18,12 @@ import { TaskModal } from './components/command-center/TaskModal';
 import { FinancesModule } from './components/finances/FinancesModule';
 import { WishlistModule } from './components/wishlist/WishlistModule';
 import { StudyWorkModule } from './components/study-work/StudyWorkModule';
+import { ApartmentBlueprint } from './components/apartment/ApartmentBlueprint';
+import { YaProfiMapRadar } from './components/study-work/YaProfiMapRadar';
+import { AcademicTracker } from './components/study-work/AcademicTracker';
+import { DateNightPlanner } from './components/date-night/DateNightPlanner';
+import { TelegramBridgeModal } from './components/telegram/TelegramBridgeModal';
+import { TamagotchiRoomModal } from './components/visual/TamagotchiRoomModal';
 import { CommandPalette } from './components/command-palette/CommandPalette';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { GlassCard } from './components/visual/GlassCard';
@@ -59,6 +65,8 @@ export const App: React.FC = () => {
   const [initialTaskDate, setInitialTaskDate] = useState<string>('inbox');
   const [activeCommandPalette, setActiveCommandPalette] = useState(false);
   const [activeSettingsModal, setActiveSettingsModal] = useState(false);
+  const [activeTelegramModal, setActiveTelegramModal] = useState(false);
+  const [activeTamagotchiModal, setActiveTamagotchiModal] = useState(false);
   const [activeDraggingTask, setActiveDraggingTask] = useState<NexusTask | null>(null);
 
   // Widget Mode: checked via URL query ?mode=widget or toggle
@@ -88,7 +96,7 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [pomodoroIsRunning, tickPomodoro]);
 
-  // Keyboard shortcut listener for numbers 1-5 for tab switching
+  // Keyboard shortcut listener for numbers 1-9 for tab switching
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
@@ -96,10 +104,14 @@ export const App: React.FC = () => {
       }
 
       if (e.key === '1') setActiveTab('command-center');
-      if (e.key === '2') setActiveTab('finances');
-      if (e.key === '3') setActiveTab('wishlist');
-      if (e.key === '4') setActiveTab('study-work');
-      if (e.key === '5') setActiveTab('pomodoro');
+      if (e.key === '2') setActiveTab('blueprint');
+      if (e.key === '3') setActiveTab('finances');
+      if (e.key === '4') setActiveTab('wishlist');
+      if (e.key === '5') setActiveTab('study-work');
+      if (e.key === '6') setActiveTab('yaprofi-radar');
+      if (e.key === '7') setActiveTab('academic');
+      if (e.key === '8') setActiveTab('date-night');
+      if (e.key === '9') setActiveTab('pomodoro');
       if (e.key.toLowerCase() === 'n') {
         e.preventDefault();
         setInitialTaskDate('inbox');
@@ -180,6 +192,8 @@ export const App: React.FC = () => {
               setSelectedTaskToEdit(null);
               setActiveTaskModal(true);
             }}
+            onOpenTelegramBridge={() => setActiveTelegramModal(true)}
+            onOpenTamagotchiRoom={() => setActiveTamagotchiModal(true)}
             isWidgetMode={isWidgetMode}
             onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
           />
@@ -244,16 +258,28 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK ADVISOR */}
+          {/* TAB 2: INTERACTIVE APARTMENT BLUEPRINT (Ремонт, зоны & пины дефектов) */}
+          {activeTab === 'blueprint' && !isWidgetMode && <ApartmentBlueprint />}
+
+          {/* TAB 3: FINANCES & ЖКХ МОСКВЫ & CASHBACK ADVISOR */}
           {activeTab === 'finances' && !isWidgetMode && <FinancesModule />}
 
-          {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ? 🐾») */}
+          {/* TAB 4: WISHLIST («БЕРЕМ ИЛИ НЕТ? 🐾») */}
           {activeTab === 'wishlist' && !isWidgetMode && <WishlistModule />}
 
-          {/* TAB 4 & 5: ВШЭ x РУДН x Я-ПРОФИ & COZY FOCUS ROOM */}
+          {/* TAB 5 & 9: ВШЭ x РУДН x Я-ПРОФИ & COZY FOCUS ROOM */}
           {(activeTab === 'study-work' || activeTab === 'pomodoro') && !isWidgetMode && (
             <StudyWorkModule />
           )}
+
+          {/* TAB 6: РАДАР КОМАНДОВАНИЯ ЦФО ⇄ ДФО */}
+          {activeTab === 'yaprofi-radar' && !isWidgetMode && <YaProfiMapRadar />}
+
+          {/* TAB 7: АКАДЕМИЧЕСКИЙ ХАБ (.ICS ИМПОРТ & 10-БАЛЛЬНЫЙ КАЛЬКУЛЯТОР ВШЭ & БРС РУДН) */}
+          {activeTab === 'academic' && !isWidgetMode && <AcademicTracker />}
+
+          {/* TAB 8: ГЕНЕРАТОР СВИДАНИЙ («ЧТО ДЕЛАЕМ 4 НОЯБРЯ? 💕») */}
+          {activeTab === 'date-night' && !isWidgetMode && <DateNightPlanner />}
 
           {/* Drag Overlay for smooth preview */}
           <DragOverlay>
@@ -295,6 +321,18 @@ export const App: React.FC = () => {
         onSave={(data) => addTask(data)}
         onUpdate={(id, updates) => updateTask(id, updates)}
         onDelete={(id) => deleteTask(id)}
+      />
+
+      {/* Telegram Bot Direct Bridge Modal */}
+      <TelegramBridgeModal
+        isOpen={activeTelegramModal}
+        onClose={() => setActiveTelegramModal(false)}
+      />
+
+      {/* Tamagotchi Room & Mascot Wardrobe Modal */}
+      <TamagotchiRoomModal
+        isOpen={activeTamagotchiModal}
+        onClose={() => setActiveTamagotchiModal(false)}
       />
 
       {/* Command Palette (Cmd+K) */}

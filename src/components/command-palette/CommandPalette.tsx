@@ -189,9 +189,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const quickNavActions = [
     { label: 'Перейти: Центр управления (Задачи)', tab: 'command-center' as NexusTab, icon: LayoutDashboard },
+    { label: 'Перейти: Интерактивный План квартиры 📐', tab: 'blueprint' as NexusTab, icon: LayoutDashboard },
     { label: 'Перейти: Совместные Финансы & ЖКХ', tab: 'finances' as NexusTab, icon: CreditCard },
     { label: 'Перейти: Вишлист («Берем или нет?»)', tab: 'wishlist' as NexusTab, icon: Gift },
-    { label: 'Перейти: Учеба, Работа & Pomodoro', tab: 'study-work' as NexusTab, icon: GraduationCap },
+    { label: 'Перейти: ВШЭ x РУДН x Я-Профи', tab: 'study-work' as NexusTab, icon: GraduationCap },
+    { label: 'Перейти: Радар ЦФО ⇄ ДФО 📡', tab: 'yaprofi-radar' as NexusTab, icon: Sparkles },
+    { label: 'Перейти: Расписание .ics & БРС Калькулятор 🎓', tab: 'academic' as NexusTab, icon: GraduationCap },
+    { label: 'Перейти: Свидания: «Что делаем 4 ноября?» 💕', tab: 'date-night' as NexusTab, icon: Gift },
   ];
 
   return (

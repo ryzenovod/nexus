@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Heart, Crown, Glasses, Zap } from 'lucide-react';
 import { CoupleGamification } from '../../types/nexus';
+import { soundEffects } from '../../utils/soundEffects';
 
 interface CyberCatMascotProps {
   gamification: CoupleGamification;
@@ -70,9 +71,10 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
   }, []);
 
   const handleCatClick = () => {
-    // Purr & show floating hearts
+    // Purr & show floating hearts & trigger cozy purr sound
     setPurring(true);
     setExpression('*_*');
+    soundEffects.playPurr();
 
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setSpeechQuote(randomQuote);
@@ -279,6 +281,41 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
               d="M32 72 Q50 82 68 72 L65 80 Q50 88 35 80 Z"
               fill="#ec4899"
               className="drop-shadow-[0_0_6px_rgba(236,72,153,0.7)]"
+            />
+          )}
+
+          {/* Cosmetic: Cyber Wings */}
+          {gamification.equippedCosmetic === 'wings' && (
+            <g opacity="0.85">
+              <path
+                d="M18 45 Q-10 20 8 70 Q16 55 22 50 Z"
+                fill="rgba(56,189,248,0.4)"
+                stroke="#38bdf8"
+                strokeWidth="1.5"
+                className="drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]"
+              />
+              <path
+                d="M82 45 Q110 20 92 70 Q84 55 78 50 Z"
+                fill="rgba(56,189,248,0.4)"
+                stroke="#38bdf8"
+                strokeWidth="1.5"
+                className="drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]"
+              />
+            </g>
+          )}
+
+          {/* Cosmetic: Razer Purple Cat Headphones Pulsing Aura */}
+          {gamification.equippedCosmetic === 'cat_headphones' && (
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
+              className="animate-spin drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+              style={{ animationDuration: '8s' }}
             />
           )}
         </svg>
