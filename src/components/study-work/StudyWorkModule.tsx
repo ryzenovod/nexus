@@ -230,17 +230,68 @@ export const StudyWorkModule: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. COZY FOCUS ROOM (PLAY. FOCUS. WIN. REPEAT.) */}
-      <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-[#170e2b] via-[#100d1e] to-[#0d0f17] p-5 shadow-glass">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+      {/* 2. COZY FOCUS ROOM (PLAY. FOCUS. WIN. REPEAT. - EXACTLY AS IN REFERENCE PHOTO) */}
+      <div className="relative rounded-2xl border border-purple-500/30 bg-gradient-to-r from-[#170e2b] via-[#100d1e] to-[#0d0f17] p-5 sm:p-6 shadow-glass overflow-hidden">
+        {/* Neon Ambient Wall Glows */}
+        <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-purple-500/20 blur-[80px]" />
+        <div className="pointer-events-none absolute -bottom-12 -left-12 h-44 w-44 rounded-full bg-pink-500/15 blur-[80px]" />
+
+        {/* Top Header Row with Neon Signs & Sticky Notes */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+          <div className="flex items-center gap-3">
+            {/* Glowing Neon Gamepad (from reference) */}
+            <div className="relative flex h-10 w-12 items-center justify-center rounded-xl bg-purple-950/40 border border-purple-400/50 shadow-[0_0_18px_rgba(168,85,247,0.5)]">
+              <span className="text-xl">🎮</span>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-extrabold uppercase tracking-widest text-purple-200">
+                  PLAY. FOCUS. WIN. REPEAT.
+                </span>
+                <span className="text-pink-400">💜</span>
+              </div>
+              <p className="font-mono text-[11px] text-purple-300/70">
+                one more level. one step closer.
+              </p>
+            </div>
+          </div>
+
+          {/* Wall Sticky Notes & Signs from Reference Photo */}
+          <div className="flex items-center gap-2.5">
+            {/* Sticky note 1 */}
+            <div className="rotate-[-2deg] rounded bg-[#2a1a45]/90 border border-purple-500/30 px-2.5 py-1 text-[10px] font-mono text-purple-200 shadow-md">
+              don't stop now ♡
+            </div>
+
+            {/* Sticky note 2 */}
+            <div className="rotate-[3deg] rounded bg-[#2a1a45]/90 border border-purple-500/30 px-2.5 py-1 text-[10px] font-mono text-purple-200 shadow-md">
+              you got this! ♡
+            </div>
+
+            {/* LEVEL UP poster */}
+            <div className="rounded bg-black/60 border border-purple-400/40 px-2 py-0.5 text-center font-mono text-[9px] font-bold text-amber-300 tracking-wider shadow-sm">
+              LEVEL UP ↑
+            </div>
+
+            {/* GAME ON neon acrylic stand */}
+            <div className="rounded bg-purple-950/60 border border-pink-400/50 px-2 py-0.5 font-mono text-[9px] font-extrabold text-pink-300 shadow-[0_0_10px_rgba(244,114,182,0.4)]">
+              GAME ON
+            </div>
+          </div>
+        </div>
+
+        {/* Focus Room Body */}
+        <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
           {/* Cyber-Cat on Focus Desk */}
-          <div className="flex flex-col items-center justify-center text-center p-3 rounded-xl bg-black/30 border border-white/[0.06]">
+          <div className="flex flex-col items-center justify-center text-center p-4 rounded-xl bg-black/35 border border-purple-500/20 shadow-inner">
             <CyberCatMascot
               gamification={gamification}
               onEquipCosmetic={equipCosmetic}
             />
-            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-purple-300/80 font-bold">
-              PLAY. FOCUS. WIN. REPEAT. 🎧
+            <div className="mt-2 font-mono text-[10px] uppercase tracking-wider text-purple-300/90 font-bold flex items-center gap-1.5">
+              <span>FOCUS &gt;&gt; WIN</span>
+              <span className="text-pink-400">✦</span>
             </div>
           </div>
 
@@ -286,7 +337,7 @@ export const StudyWorkModule: React.FC = () => {
 
             {/* Time display */}
             <div>
-              <span className="font-mono text-5xl font-extrabold tracking-tight text-white drop-shadow-lg">
+              <span className="font-mono text-5xl font-extrabold tracking-tight text-white drop-shadow-[0_0_20px_rgba(168,85,247,0.35)]">
                 {formattedTime}
               </span>
               <p className="text-xs text-zinc-400 mt-1">
