@@ -6,13 +6,12 @@ import {
   Calendar as CalendarIcon, 
   Plus
 } from 'lucide-react';
-import { NexusTask } from '../../types/nexus';
-import { SortableGlassCard } from '../visual/SortableGlassCard';
+import { NexusTask, BracketColor } from '../../types/nexus';
 
 interface DayColumnProps {
   dateString: string;
   dayName: string;
-  formattedDate: string;
+  dayNumber: number;
   isToday: boolean;
   tasks: NexusTask[];
   onToggleTask: (id: string) => void;
@@ -21,15 +20,31 @@ interface DayColumnProps {
   onAddTaskForDay: (dateString: string) => void;
 }
 
+const getBorderColor = (color: BracketColor) => {
+  switch (color) {
+    case 'critical':
+      return 'border-l-red-500';
+    case 'active':
+      return 'border-l-emerald-500';
+    case 'finance':
+      return 'border-l-amber-500';
+    case 'neutral':
+    default:
+      return 'border-l-zinc-500';
+  }
+};
+
+const cleanCategory = (cat: string) => {
+  return cat.replace(/[📦🎓🏆💼🚀💰🛒📋💕✨]/g, '').trim();
+};
+
 const DayColumn: React.FC<DayColumnProps> = ({
   dateString,
   dayName,
-  formattedDate,
+  dayNumber,
   isToday,
   tasks,
-  onToggleTask,
   onTaskClick,
-  onDeleteTask,
   onAddTaskForDay,
 }) => {
   const { setNodeRef, isOver } = useDroppable({
@@ -40,29 +55,23 @@ const DayColumn: React.FC<DayColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
-      style={{
-        border: isToday
-          ? '1px solid rgba(245, 158, 11, 0.3)'
-          : isOver
-          ? '1px solid rgba(255, 255, 255, 0.25)'
-          : '1px solid rgba(255, 255, 255, 0.07)',
-      }}
-      className={`flex flex-col rounded-lg bg-[rgba(18,18,21,0.65)] backdrop-blur-[24px] p-2 transition-all duration-150 min-h-[150px] ${
-        isOver ? 'bg-[rgba(32,32,38,0.85)]' : ''
+      className={`h-full flex flex-col min-w-0 transition-colors group ${
+        isOver ? 'bg-white/[0.04]' : 'bg-[#0b0b0e]'
       }`}
     >
-      {/* Day Header */}
-      <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-white/[0.06]">
+      {/* Day Header: thin clean line */}
+      <div className="h-8 px-2.5 border-b border-white/[0.06] flex items-center justify-between text-xs select-none shrink-0 bg-[#09090c]/70">
         <div className="flex items-center gap-1.5">
-          <span className={`text-xs font-semibold tracking-tight ${isToday ? 'text-amber-400' : 'text-zinc-200'}`}>
+          <span className="text-[11px] font-medium text-zinc-400">
             {dayName}
           </span>
-          <span className="text-[11px] text-zinc-500 font-mono">
-            {formattedDate}
-          </span>
-          {isToday && (
-            <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1 py-0.2 font-mono text-[9px] font-semibold text-amber-300 border border-amber-500/25">
-              СЕГОДНЯ
+          {isToday ? (
+            <span className="bg-amber-400 text-zinc-950 font-semibold px-1.5 py-0.2 rounded text-[10.5px] font-mono leading-none">
+              {dayNumber}
+            </span>
+          ) : (
+            <span className="text-zinc-500 font-mono text-[11px]">
+              {dayNumber}
             </span>
           )}
         </div>
@@ -70,29 +79,42 @@ const DayColumn: React.FC<DayColumnProps> = ({
         <button
           type="button"
           onClick={() => onAddTaskForDay(dateString)}
-          className="rounded p-0.5 text-zinc-500 hover:text-zinc-200 hover:bg-white/10 transition-colors"
+          className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-500 hover:text-zinc-200 transition-opacity"
           title={`Добавить задачу на ${dayName}`}
         >
-          <Plus className="h-3 w-3" />
+          <Plus size={12} strokeWidth={2} />
         </button>
       </div>
 
-      {/* Task List */}
-      <div className="flex-1 space-y-1.5 overflow-y-auto max-h-[340px] pr-0.5 no-scrollbar flex flex-col">
-        {tasks.map((task) => (
-          <SortableGlassCard
-            key={task.id}
-            task={task}
-            onToggle={onToggleTask}
-            onClick={onTaskClick}
-            onDelete={onDeleteTask}
-            mode="week"
-            compact
-          />
-        ))}
+      {/* Task List inside day */}
+      <div className="flex-1 p-1.5 space-y-1 overflow-y-auto no-scrollbar">
+        {tasks.map((task) => {
+          const borderColor = getBorderColor(task.bracketColor);
+          const tag = cleanCategory(task.category || 'Задача');
+
+          return (
+            <div
+              key={task.id}
+              onClick={() => onTaskClick(task)}
+              className={`p-1.5 px-2 rounded bg-white/[0.025] hover:bg-white/[0.06] border-l-2 ${borderColor} transition-colors cursor-pointer select-none text-left ${
+                task.completed ? 'opacity-40 grayscale line-through' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between gap-1 text-[9.5px] font-mono uppercase text-zinc-500 mb-0.5 truncate">
+                <span className="truncate">{tag}</span>
+                {task.isOverdue && !task.completed && (
+                  <span className="text-red-400 font-semibold">Срочно</span>
+                )}
+              </div>
+              <div className="text-[11.5px] font-normal text-zinc-200 leading-snug line-clamp-2 break-words">
+                {task.title}
+              </div>
+            </div>
+          );
+        })}
 
         {tasks.length === 0 && (
-          <div className="flex flex-1 items-center justify-center py-4 text-center text-xs text-zinc-600 tracking-wide select-none">
+          <div className="h-full flex items-center justify-center text-center text-[11px] text-zinc-600 select-none py-6">
             Свободно
           </div>
         )}
@@ -120,10 +142,9 @@ export const WeekPlanner: React.FC<WeekPlannerProps> = ({
   onDeleteTask,
   onAddTaskForDay,
 }) => {
-  // Base reference date is Monday, Nov 2, 2026 (matching system date & widget screenshot)
-  const baseDate = new Date(2026, 10, 2); // Nov 2, 2026
+  // Base reference date is Monday, Nov 2, 2026
+  const baseDate = new Date(2026, 10, 2);
   
-  // Calculate Monday of the targeted week offset
   const currentWeekMonday = new Date(baseDate);
   currentWeekMonday.setDate(baseDate.getDate() + activeWeekOffset * 7);
 
@@ -139,13 +160,13 @@ export const WeekPlanner: React.FC<WeekPlannerProps> = ({
     const day = String(d.getDate()).padStart(2, '0');
     const dateString = `${year}-${month}-${day}`;
 
-    const isToday = activeWeekOffset === 0 && i === 0; // Monday Nov 2, 2026 is today
-
+    const isToday = activeWeekOffset === 0 && i === 0;
     const dayTasks = tasks.filter((t) => t.date === dateString);
 
     return {
       dateString,
       dayName: dayNames[i],
+      dayNumber: d.getDate(),
       formattedDate: `${d.getDate()} ${monthNames[d.getMonth()]}`,
       isToday,
       tasks: dayTasks,
@@ -153,60 +174,60 @@ export const WeekPlanner: React.FC<WeekPlannerProps> = ({
   });
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2 shrink-0">
       {/* Week Navigation Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center justify-between text-xs px-0.5">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="h-3.5 w-3.5 text-zinc-400" />
-          <h2 className="text-xs font-semibold tracking-tight text-zinc-200">
-            Недельное расписание
-          </h2>
+          <CalendarIcon size={13} className="text-zinc-500" />
+          <span className="font-medium text-zinc-300">
+            Расписание недели
+          </span>
           <span className="text-[11px] text-zinc-500 font-mono">
-            {days[0].formattedDate} — {days[6].formattedDate} {days[0].dateString.slice(0, 4)}
+            {days[0].formattedDate} — {days[6].formattedDate}
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 font-mono text-[11px]">
           <button
             type="button"
             onClick={() => onOffsetChange(activeWeekOffset - 1)}
-            className="flex h-6 w-6 items-center justify-center rounded border border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
+            className="h-6 w-6 flex items-center justify-center rounded border border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:text-zinc-200 transition-colors"
             title="Предыдущая неделя"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft size={13} />
           </button>
 
           <button
             type="button"
             onClick={() => onOffsetChange(0)}
-            className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium border transition-colors ${
+            className={`px-2 py-0.5 rounded border transition-colors ${
               activeWeekOffset === 0
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'bg-white/[0.03] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
+                ? 'bg-white/[0.08] text-zinc-200 border-white/[0.1]'
+                : 'bg-white/[0.02] text-zinc-500 border-white/[0.06] hover:text-zinc-300'
             }`}
           >
-            <span>Сегодня</span>
+            Сегодня
           </button>
 
           <button
             type="button"
             onClick={() => onOffsetChange(activeWeekOffset + 1)}
-            className="flex h-6 w-6 items-center justify-center rounded border border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
+            className="h-6 w-6 flex items-center justify-center rounded border border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:text-zinc-200 transition-colors"
             title="Следующая неделя"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight size={13} />
           </button>
         </div>
       </div>
 
-      {/* 7 Columns Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+      {/* RULE 3: SEAMLESS MONOLITHIC 7-DAY MATRIX (Amie / Notion Calendar style) */}
+      <div className="grid grid-cols-7 divide-x divide-white/[0.06] border border-white/[0.07] rounded-xl bg-[#0b0b0e] overflow-hidden h-[180px] shadow-sm">
         {days.map((day) => (
           <DayColumn
             key={day.dateString}
             dateString={day.dateString}
             dayName={day.dayName}
-            formattedDate={day.formattedDate}
+            dayNumber={day.dayNumber}
             isToday={day.isToday}
             tasks={day.tasks}
             onToggleTask={onToggleTask}

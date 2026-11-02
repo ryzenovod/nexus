@@ -108,7 +108,7 @@ export const YaProfiMapRadar: React.FC = () => {
 
     if (localHour >= 9 && localHour < 18) {
       return {
-        label: 'Гуманно звонить ✨',
+        label: 'Рабочее время',
         color: '#22c55e',
         bgColor: 'rgba(34, 197, 94, 0.15)',
         borderColor: 'rgba(34, 197, 94, 0.35)',
@@ -117,7 +117,7 @@ export const YaProfiMapRadar: React.FC = () => {
       };
     } else if (localHour >= 18 && localHour < 21) {
       return {
-        label: 'Вечерний созвон ☕️',
+        label: 'Вечерний слот',
         color: '#eab308',
         bgColor: 'rgba(234, 179, 8, 0.15)',
         borderColor: 'rgba(234, 179, 8, 0.35)',
@@ -126,7 +126,7 @@ export const YaProfiMapRadar: React.FC = () => {
       };
     } else {
       return {
-        label: 'Ночь, регион спит 😴',
+        label: 'Ночь, регион спит',
         color: '#ef4444',
         bgColor: 'rgba(239, 68, 68, 0.15)',
         borderColor: 'rgba(239, 68, 68, 0.35)',
@@ -145,17 +145,17 @@ export const YaProfiMapRadar: React.FC = () => {
     const sakhalin = padHour((selectedMskHour + 8) % 24);
     const kamchatka = padHour((selectedMskHour + 9) % 24);
 
-    return `📢 *Всероссийская олимпиада «Я-Профессионал»*\n` +
+    return `*Всероссийская олимпиада «Я-Профессионал»*\n` +
       `Координация ЦФО ⇄ ДФО\n\n` +
-      `📌 *Тема:* ${webinarTopic}\n` +
-      `📅 *Дата:* ${webinarDate}\n\n` +
-      `⏰ *Время подключения по часовым поясам:*\n` +
+      `*Тема:* ${webinarTopic}\n` +
+      `*Дата:* ${webinarDate}\n\n` +
+      `*Время подключения по часовым поясам:*\n` +
       `• *${mskFormatted}* — Москва (ЦФО / МСК)\n` +
       `• *${yakutsk}* — Якутск (МСК+6)\n` +
       `• *${vladivostok}* — Владивосток & Хабаровск (МСК+7)\n` +
       `• *${sakhalin}* — Южно-Сахалинск (МСК+8)\n` +
       `• *${kamchatka}* — Петропавловск-Камчатский (МСК+9)\n\n` +
-      `💻 Подключение по ссылке: https://telemost.yandex.ru/j/...\n` +
+      `Подключение по ссылке: https://telemost.yandex.ru/j/...\n` +
       `_Федеральный Лидер ДФО & Региональный Лидер ЦФО: Анна_`;
   };
 

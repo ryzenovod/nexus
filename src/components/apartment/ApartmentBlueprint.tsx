@@ -37,7 +37,7 @@ const ROOMS_CONFIG: RoomMeta[] = [
   {
     id: 'Ванная',
     label: 'Ванная комната',
-    icon: '🚿',
+    icon: '',
     x: 40,
     y: 40,
     width: 250,
@@ -50,7 +50,7 @@ const ROOMS_CONFIG: RoomMeta[] = [
   {
     id: 'Кухня',
     label: 'Кухня & Столовая',
-    icon: '🍳',
+    icon: '',
     x: 320,
     y: 40,
     width: 360,
@@ -63,7 +63,7 @@ const ROOMS_CONFIG: RoomMeta[] = [
   {
     id: 'Балкон',
     label: 'Балкон / Лоджия',
-    icon: '🌿',
+    icon: '',
     x: 710,
     y: 40,
     width: 220,
@@ -76,7 +76,7 @@ const ROOMS_CONFIG: RoomMeta[] = [
   {
     id: 'Коридор',
     label: 'Прихожая / Коридор',
-    icon: '🚪',
+    icon: '',
     x: 40,
     y: 320,
     width: 250,
@@ -89,7 +89,7 @@ const ROOMS_CONFIG: RoomMeta[] = [
   {
     id: 'Комната',
     label: 'Комната (Спальня & Дримтим Офис)',
-    icon: '💻',
+    icon: '',
     x: 320,
     y: 320,
     width: 610,
@@ -166,7 +166,7 @@ export const ApartmentBlueprint: React.FC = () => {
       title: newTaskTitle.trim(),
       completed: false,
       bracketColor: 'active',
-      category: '📦 Для дома!',
+      category: 'Дом',
       room: selectedBlueprintRoom,
       assignee: 'together',
       date: 'inbox',
@@ -500,7 +500,7 @@ export const ApartmentBlueprint: React.FC = () => {
                 <g transform="translate(-40, -42)">
                   <rect x="0" y="0" width="80" height="20" rx="8" fill="#1a1130" stroke="#a855f7" strokeWidth="1" />
                   <text x="40" y="14" fill="#fde047" fontSize="9" fontWeight="bold" textAnchor="middle">
-                    Нексус здесь! 🐾
+                    Нексус здесь
                   </text>
                 </g>
               </motion.g>
@@ -514,7 +514,7 @@ export const ApartmentBlueprint: React.FC = () => {
           <div className="rounded-3xl border border-white/10 bg-[#0d0e19]/90 p-5 shadow-xl backdrop-blur-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{currentRoomMeta.icon}</span>
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: currentRoomMeta.color }} />
                 <div>
                   <h3 className="text-base font-bold text-zinc-100">{currentRoomMeta.label}</h3>
                   <p className="text-xs text-zinc-400">{currentRoomMeta.description}</p>
@@ -646,7 +646,7 @@ export const ApartmentBlueprint: React.FC = () => {
             {/* Tasks List */}
             <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
               {roomTasks.length === 0 ? (
-                <p className="text-xs text-zinc-500 py-3 text-center">Все дела в этой комнате завершены! 🌟</p>
+                <p className="text-xs text-zinc-500 py-3 text-center">Все дела в этой комнате завершены</p>
               ) : (
                 roomTasks.map((t) => (
                   <div

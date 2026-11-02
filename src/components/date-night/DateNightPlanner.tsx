@@ -83,7 +83,7 @@ export const DateNightPlanner: React.FC = () => {
           </span>
           <div>
             <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-              <span>Генератор Свиданий: «Что делаем 4 ноября? 💕»</span>
+              <span>Генератор Свиданий: «Что делаем 4 ноября?»</span>
               <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/[0.08]">
                 Выходной
               </span>

@@ -74,16 +74,16 @@ export const FinancesModule: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* 1. TOP SECTION: JOINT BUDGET DASHBOARD */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      {/* 1. TOP SECTION: JOINT BUDGET DASHBOARD (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
         {/* Total Joint Balance Card */}
-        <div className="rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 flex flex-col justify-between">
+        <div className="bg-[#0b0b0e] p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                 Совместный бюджет пары
               </span>
-              <span className="flex h-5 items-center rounded bg-emerald-500/10 px-1.5 font-mono text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
+              <span className="font-mono text-[11px] text-zinc-400">
                 Взносы: {budget.depositDates}
               </span>
             </div>
@@ -119,15 +119,15 @@ export const FinancesModule: React.FC = () => {
               setNewTxCategory('Общий счет');
               setShowAddTxModal(true);
             }}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-white py-1.5 text-xs font-medium text-zinc-950 transition-colors"
+            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md bg-white hover:bg-zinc-200 py-1.5 text-xs font-medium text-zinc-950 transition-colors shadow-sm"
           >
-            <ArrowUpRight className="h-3.5 w-3.5" />
+            <ArrowUpRight size={13} strokeWidth={2.2} />
             <span>Пополнить общий счет</span>
           </button>
         </div>
 
         {/* Egor Contribution Card */}
-        <div className="rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 flex flex-col justify-between">
+        <div className="bg-[#0b0b0e] p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -143,19 +143,19 @@ export const FinancesModule: React.FC = () => {
               </span>
             </div>
 
-            <p className="mt-1.5 text-[11px] text-zinc-400 leading-relaxed">
+            <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">
               Аренда, интернет, техника, ремонт душевой кабины и закупка в Леруа.
             </p>
           </div>
 
-          <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
+          <div className="mt-4 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500">
             <span>Статус:</span>
             <span className="text-emerald-400 font-medium">Переведено в полном объеме</span>
           </div>
         </div>
 
         {/* Anya Contribution Card */}
-        <div className="rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 flex flex-col justify-between">
+        <div className="bg-[#0b0b0e] p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
@@ -171,12 +171,12 @@ export const FinancesModule: React.FC = () => {
               </span>
             </div>
 
-            <p className="mt-1.5 text-[11px] text-zinc-400 leading-relaxed">
+            <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">
               Совместные продукты (ВкусВилл по Сберу 5%), уют дома, текстиль и посуда.
             </p>
           </div>
 
-          <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
+          <div className="mt-4 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500">
             <span>Статус:</span>
             <span className="text-emerald-400 font-medium">Переведено в полном объеме</span>
           </div>
@@ -186,33 +186,31 @@ export const FinancesModule: React.FC = () => {
       {/* 2. CASHBACK ADVISOR (SMART SPLIT) */}
       <CashbackAdvisor />
 
-      {/* 3. ЖКХ-ТЕРМИНАЛ МОСКВЫ С ДИНАМИКОЙ ПЛАТЕЖЕЙ */}
-      <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
+      {/* 3. ЖКХ-ТЕРМИНАЛ МОСКВЫ (SEAMLESS 1PX HAIRLINE BENTO GRID) */}
+      <div className="rounded-xl border border-white/[0.07] bg-[#0b0b0e] p-5 shadow-sm space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <Building2 className="h-4 w-4" />
-            </div>
+            <Building2 className="h-4 w-4 text-zinc-400" />
             <div>
-              <h2 className="text-sm font-bold text-white uppercase tracking-tight">
+              <h2 className="text-xs font-semibold text-zinc-100 uppercase tracking-tight">
                 ЖКХ-Терминал Москвы & Счета
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-[11px] text-zinc-500">
                 Домиленд, Мосэнергосбыт, ЕПД mos.ru, Wi-Fi с динамикой начислений
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-zinc-400">Окно передачи показаний счетчиков:</span>
-            <span className="rounded bg-amber-500/20 px-2 py-0.5 font-mono font-semibold text-amber-300 border border-amber-500/30">
+            <span className="text-zinc-500">Окно передачи показаний:</span>
+            <span className="font-mono text-zinc-300">
               15–26 число
             </span>
           </div>
         </div>
 
-        {/* Grid of Utility Cards */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 1px Hairline Grid of Utility Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
           {utilityBills.map((bill) => {
             const isDomiland = bill.id === 'util-domiland';
             const isMosenergo = bill.id === 'util-mosenergo';
@@ -227,7 +225,7 @@ export const FinancesModule: React.FC = () => {
                 style={{
                   borderLeft: bill.status === 'overdue' ? '3px solid #ef4444' : '3px solid #eab308',
                 }}
-                className="relative rounded-r-lg border-y border-r border-white/[0.07] bg-[rgba(24,24,28,0.65)] hover:bg-[rgba(32,32,38,0.85)] p-3.5 space-y-2.5 transition-colors"
+                className="relative bg-[#0b0b0e] hover:bg-[#121217] p-4 space-y-2.5 transition-colors flex flex-col justify-between"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
@@ -378,9 +376,9 @@ export const FinancesModule: React.FC = () => {
       </div>
 
       {/* 4. ИСТОРИЯ ОПЕРАЦИЙ */}
-      <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 backdrop-blur-2xl p-5 shadow-glass">
-        <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-          <h2 className="text-sm font-bold text-white uppercase tracking-tight">
+      <div className="rounded-xl border border-white/[0.07] bg-[#0b0b0e] p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+          <h2 className="text-xs font-semibold text-zinc-100 uppercase tracking-tight">
             История операций & Сплит расходов
           </h2>
           <button
@@ -389,9 +387,9 @@ export const FinancesModule: React.FC = () => {
               setNewTxType('expense');
               setShowAddTxModal(true);
             }}
-            className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20 transition-colors"
+            className="flex items-center gap-1.5 rounded-md bg-white text-zinc-950 hover:bg-zinc-200 px-3 py-1.5 text-xs font-medium transition-colors shadow-sm"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus size={13} strokeWidth={2.2} />
             <span>Добавить расход</span>
           </button>
         </div>

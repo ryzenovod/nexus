@@ -4,7 +4,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   // --- ВАННАЯ ---
   {
     id: 'pin-bath-1',
-    title: '💧 Кабина: герметик',
+    title: 'Кабина: герметик',
     room: 'Ванная',
     x: 22,
     y: 28,
@@ -15,7 +15,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-bath-2',
-    title: '🚽 Кнопка унитаза',
+    title: 'Кнопка унитаза',
     room: 'Ванная',
     x: 18,
     y: 44,
@@ -26,7 +26,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-bath-3',
-    title: '🪝 Клей. Крючок',
+    title: 'Клей. Крючок',
     room: 'Ванная',
     x: 26,
     y: 52,
@@ -39,7 +39,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   // --- БАЛКОН ---
   {
     id: 'pin-balcony-1',
-    title: '📦 Разобрать коробки',
+    title: 'Разобрать коробки',
     room: 'Балкон',
     x: 82,
     y: 18,
@@ -50,7 +50,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-balcony-2',
-    title: '🧱 Затирка плитки',
+    title: 'Затирка плитки',
     room: 'Балкон',
     x: 75,
     y: 35,
@@ -61,7 +61,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-balcony-3',
-    title: '🪟 Помыть окна',
+    title: 'Помыть окна',
     room: 'Балкон',
     x: 88,
     y: 40,
@@ -74,7 +74,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   // --- КУХНЯ ---
   {
     id: 'pin-kitchen-1',
-    title: '🚰 Сменить картридж фильтра',
+    title: 'Сменить картридж фильтра',
     room: 'Кухня',
     x: 52,
     y: 24,
@@ -85,7 +85,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-kitchen-2',
-    title: '🔌 Заглушка над шкафом',
+    title: 'Заглушка над шкафом',
     room: 'Кухня',
     x: 44,
     y: 18,
@@ -96,7 +96,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-kitchen-3',
-    title: '🧼 Отмыть раковину',
+    title: 'Отмыть раковину',
     room: 'Кухня',
     x: 58,
     y: 36,
@@ -109,7 +109,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   // --- КОМНАТА ---
   {
     id: 'pin-room-1',
-    title: '💡 Повесить люстру',
+    title: 'Повесить люстру',
     room: 'Комната',
     x: 48,
     y: 65,
@@ -120,7 +120,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-room-2',
-    title: '📏 Плинтус у рабочего места',
+    title: 'Плинтус у рабочего места',
     room: 'Комната',
     x: 72,
     y: 82,
@@ -131,7 +131,7 @@ export const initialBlueprintPins: BlueprintPin[] = [
   },
   {
     id: 'pin-room-3',
-    title: '🛋 Перестановка стола?',
+    title: 'Перестановка стола?',
     room: 'Комната',
     x: 35,
     y: 75,
@@ -158,7 +158,7 @@ export const initialDateScenarios: DateScenario[] = [
   {
     id: 'date-1',
     title: 'ГЭС-2: Арт-вечер, кофе и закат на Болотной набережной',
-    emoji: '🎨',
+    emoji: '',
     vibe: 'art',
     vibeLabel: 'Арт и выставки',
     budget: 'low',
@@ -222,7 +222,7 @@ export const initialDateScenarios: DateScenario[] = [
   {
     id: 'date-5',
     title: 'Оранжерея Аптекарского огорода + Цветочный чай на Проспекте Мира',
-    emoji: '🌿',
+    emoji: '',
     vibe: 'walk',
     vibeLabel: 'Романтическая прогулка',
     budget: 'low',

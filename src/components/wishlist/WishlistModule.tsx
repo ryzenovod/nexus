@@ -135,7 +135,7 @@ export const WishlistModule: React.FC = () => {
             }`}
           >
             <MapPin className="h-3.5 w-3.5" />
-            <span>План квартиры 📐</span>
+            <span>План квартиры</span>
           </button>
 
           <button
@@ -148,7 +148,7 @@ export const WishlistModule: React.FC = () => {
             }`}
           >
             <Heart className="h-3.5 w-3.5 text-zinc-400" />
-            <span>Свидания 💕</span>
+            <span>Свидания</span>
           </button>
         </div>
 
@@ -230,8 +230,8 @@ export const WishlistModule: React.FC = () => {
             </button>
           </div>
 
-          {/* Wishlist Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {/* Wishlist Cards Grid (SEAMLESS 1PX HAIRLINE BENTO MATRIX) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.06] border border-white/[0.07] rounded-xl overflow-hidden shadow-sm">
             <AnimatePresence>
               {filteredItems.map((item) => {
                 const isApproved = item.status === 'approved';
@@ -241,22 +241,22 @@ export const WishlistModule: React.FC = () => {
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className={`flex flex-col justify-between rounded-xl border bg-[rgba(24,24,28,0.65)] hover:bg-[rgba(32,32,38,0.85)] p-4 transition-colors ${
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={`flex flex-col justify-between bg-[#0b0b0e] hover:bg-[#121217] p-4 transition-colors ${
                       isApproved
-                        ? 'border-emerald-500/30'
+                        ? 'border-l-2 border-l-emerald-500'
                         : isRejected
-                        ? 'border-red-500/20 opacity-50'
-                        : 'border-white/[0.07] hover:border-white/[0.12]'
+                        ? 'opacity-40'
+                        : ''
                     }`}
                   >
                     <div>
                       {/* Top status line without boxes */}
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <span className="text-xs text-zinc-400 font-medium">
-                          {item.category}
+                          {item.category.replace(/[📦🎓🏆💼🚀💰🛒📋💕✨!]/g, '').trim()}
                         </span>
 
                         <div className="flex items-center gap-1.5">
@@ -310,27 +310,27 @@ export const WishlistModule: React.FC = () => {
                     </div>
 
                     {/* Single neat row with two minimalist vote toggles for Egor & Anya */}
-                    <div className="mt-4 pt-3 border-t border-white/[0.05] space-y-2">
+                    <div className="mt-4 pt-3 border-t border-white/[0.04] space-y-2">
                       <div className="flex items-center justify-between gap-2 text-xs">
                         {/* Egor vote toggle */}
                         <div className="flex items-center gap-1">
-                          <span className="text-[11px] text-zinc-400 font-medium">Егор:</span>
-                          <div className="flex items-center bg-white/[0.03] rounded-md p-0.5">
+                          <span className="text-[11px] text-zinc-500 font-mono">Егор:</span>
+                          <div className="flex items-center bg-white/[0.03] rounded p-0.5">
                             <button
                               type="button"
                               onClick={() => voteWishlist(item.id, 'egor', 'yes')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
-                                item.egorVote === 'yes' ? 'bg-emerald-500/20 text-emerald-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                item.egorVote === 'yes' ? 'bg-white/[0.12] text-zinc-100 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
-                              title="Да, берем!"
+                              title="Да"
                             >
-                              👍
+                              Да
                             </button>
                             <button
                               type="button"
                               onClick={() => voteWishlist(item.id, 'egor', 'maybe')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
-                                item.egorVote === 'maybe' ? 'bg-amber-500/20 text-amber-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                item.egorVote === 'maybe' ? 'bg-white/[0.12] text-zinc-100 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
                               title="Под вопросом"
                             >
@@ -339,8 +339,8 @@ export const WishlistModule: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => voteWishlist(item.id, 'egor', 'no')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
-                                item.egorVote === 'no' ? 'bg-red-500/20 text-red-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                item.egorVote === 'no' ? 'bg-white/[0.12] text-zinc-100 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
                               title="Нет"
                             >
@@ -351,23 +351,23 @@ export const WishlistModule: React.FC = () => {
 
                         {/* Anya vote toggle */}
                         <div className="flex items-center gap-1">
-                          <span className="text-[11px] text-zinc-400 font-medium">Аня:</span>
-                          <div className="flex items-center bg-white/[0.03] rounded-md p-0.5">
+                          <span className="text-[11px] text-zinc-500 font-mono">Аня:</span>
+                          <div className="flex items-center bg-white/[0.03] rounded p-0.5">
                             <button
                               type="button"
                               onClick={() => voteWishlist(item.id, 'anya', 'yes')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
-                                item.anyaVote === 'yes' ? 'bg-emerald-500/20 text-emerald-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                item.anyaVote === 'yes' ? 'bg-white/[0.12] text-zinc-100 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
-                              title="Да, берем!"
+                              title="Да"
                             >
-                              👍
+                              Да
                             </button>
                             <button
                               type="button"
                               onClick={() => voteWishlist(item.id, 'anya', 'maybe')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
-                                item.anyaVote === 'maybe' ? 'bg-amber-500/20 text-amber-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                item.anyaVote === 'maybe' ? 'bg-white/[0.12] text-zinc-100 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
                               title="Под вопросом"
                             >
@@ -376,8 +376,8 @@ export const WishlistModule: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => voteWishlist(item.id, 'anya', 'no')}
-                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
-                                item.anyaVote === 'no' ? 'bg-red-500/20 text-red-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                                item.anyaVote === 'no' ? 'bg-white/[0.12] text-zinc-100 font-semibold' : 'text-zinc-500 hover:text-zinc-300'
                               }`}
                               title="Нет"
                             >

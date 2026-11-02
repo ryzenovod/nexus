@@ -3,6 +3,15 @@ export type BracketColor = 'critical' | 'active' | 'finance' | 'cyber' | 'neutra
 export type Assignee = 'all' | 'egor' | 'anya' | 'together';
 
 export type TaskCategory = 
+  | 'Дом'
+  | 'ВШЭ'
+  | 'РУДН'
+  | 'Я-Профи'
+  | 'Работа'
+  | 'Проекты'
+  | 'Финансы'
+  | 'Покупки'
+  | 'Общее'
   | '📦 Для дома!'
   | '🎓 ВШЭ (Егор)'
   | '🎓 РУДН (Аня)'
