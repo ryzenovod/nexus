@@ -47,7 +47,7 @@ export const initialTasks: NexusTask[] = [
     notes: 'Хаб-карточка всех коммунальных платежей и квитанций за квартиру.',
     completed: false,
     bracketColor: 'critical',
-    category: 'Дом',
+    category: 'Финансы',
     room: 'Все',
     assignee: 'together',
     date: 'inbox',

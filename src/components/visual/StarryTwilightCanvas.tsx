@@ -53,14 +53,14 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
     let stars: Star[] = [];
     const initStars = () => {
       stars = [];
-      const count = Math.floor((width * height) / 10000);
+      const count = Math.floor((width * height) / 9000);
       for (let i = 0; i < count; i++) {
         stars.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          size: Math.random() * 1.0 + 0.4,
-          alpha: Math.random() * 0.4 + 0.1,
-          twinkleSpeed: (Math.random() * 0.006 + 0.002) * (Math.random() > 0.5 ? 1 : -1),
+          size: Math.random() * 1.1 + 0.4,
+          alpha: Math.random() * 0.5 + 0.15,
+          twinkleSpeed: (Math.random() * 0.007 + 0.002) * (Math.random() > 0.5 ? 1 : -1),
         });
       }
     };
@@ -83,20 +83,20 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
     };
     window.addEventListener('nexus-task-completed', onTaskCompletedEvent);
 
-    // Draw subtle minimal crescent moon
+    // Draw subtle minimal crescent moon using transparent destination-out
     const drawCrescentMoon = () => {
       ctx.save();
       const moonX = width * 0.85;
       const moonY = height * 0.10;
-      const radius = 14;
+      const radius = 13;
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.beginPath();
       ctx.arc(moonX, moonY, radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cutout with pure obsidian background
-      ctx.fillStyle = '#09090b';
+      // Cutout with transparent destination-out
+      ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath();
       ctx.arc(moonX + 5, moonY - 3, radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
@@ -104,27 +104,9 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
       ctx.restore();
     };
 
-    // Main render loop
+    // Main render loop: transparent clear so ambient gradient shines through
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-
-      // Deep, pure obsidian dark surface (#09090b)
-      ctx.fillStyle = '#09090b';
-      ctx.fillRect(0, 0, width, height);
-
-      // Subtle monochromatic vignette
-      const vignette = ctx.createRadialGradient(
-        width * 0.5,
-        height * 0.5,
-        width * 0.2,
-        width * 0.5,
-        height * 0.5,
-        width * 0.85
-      );
-      vignette.addColorStop(0, 'rgba(18, 18, 22, 0.3)');
-      vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
-      ctx.fillStyle = vignette;
-      ctx.fillRect(0, 0, width, height);
 
       // Draw subtle crescent moon
       drawCrescentMoon();
@@ -133,11 +115,11 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
       ctx.save();
       stars.forEach((star) => {
         star.alpha += star.twinkleSpeed;
-        if (star.alpha > 0.5 || star.alpha < 0.1) {
+        if (star.alpha > 0.65 || star.alpha < 0.15) {
           star.twinkleSpeed = -star.twinkleSpeed;
         }
 
-        ctx.fillStyle = `rgba(244, 244, 245, ${star.alpha * 0.5})`;
+        ctx.fillStyle = `rgba(244, 244, 245, ${star.alpha * 0.75})`;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
@@ -153,7 +135,7 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
 
         const grad = ctx.createLinearGradient(tailX, tailY, m.x, m.y);
         grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        grad.addColorStop(1, `rgba(255, 255, 255, ${m.opacity * 0.5})`);
+        grad.addColorStop(1, `rgba(255, 255, 255, ${m.opacity * 0.7})`);
 
         ctx.strokeStyle = grad;
         ctx.lineWidth = 1;
@@ -192,7 +174,7 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-700"
-      style={{ opacity: 0.35 }}
+      style={{ opacity: 0.8 }}
     />
   );
 };
