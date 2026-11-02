@@ -243,17 +243,20 @@ export const FinancesModule: React.FC = () => {
                   </div>
 
                   {bill.status === 'overdue' && (
-                    <span className="rounded bg-red-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-red-300 border border-red-500/40">
+                    <span className="flex items-center gap-1 font-mono text-[10px] font-semibold text-red-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                       ПРОСРОЧЕНО
                     </span>
                   )}
                   {bill.status === 'due' && (
-                    <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-yellow-300 border border-yellow-500/40">
+                    <span className="flex items-center gap-1 font-mono text-[10px] font-semibold text-amber-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                       К ОПЛАТЕ
                     </span>
                   )}
                   {bill.status === 'paid' && (
-                    <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-300 border border-emerald-500/40">
+                    <span className="flex items-center gap-1 font-mono text-[10px] font-semibold text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                       ОПЛАЧЕНО
                     </span>
                   )}
@@ -276,11 +279,11 @@ export const FinancesModule: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Readings Info */}
+                {/* Readings Info (Clean typography, NO NESTED BOXES!) */}
                 {bill.readingsRequired && (
-                  <div className="rounded-lg bg-white/[0.04] p-2 text-[11px] space-y-1 border border-white/[0.06]">
-                    <div className="flex justify-between text-zinc-300">
-                      <span>Показания ({bill.readingsWindow}):</span>
+                  <div className="pt-2 border-t border-white/[0.05] text-[11px] space-y-1">
+                    <div className="flex justify-between text-zinc-400 text-[10px] uppercase font-mono">
+                      <span>Показания ({bill.readingsWindow})</span>
                     </div>
 
                     {bill.currentReadings?.hotWater !== undefined && (

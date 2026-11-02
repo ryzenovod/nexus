@@ -231,7 +231,7 @@ export const WishlistModule: React.FC = () => {
           </div>
 
           {/* Wishlist Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <AnimatePresence>
               {filteredItems.map((item) => {
                 const isApproved = item.status === 'approved';
@@ -244,25 +244,25 @@ export const WishlistModule: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`flex flex-col justify-between rounded-lg border bg-zinc-900/70 backdrop-blur-[20px] p-3 transition-all ${
+                    className={`flex flex-col justify-between rounded-xl border bg-[rgba(24,24,28,0.65)] hover:bg-[rgba(32,32,38,0.85)] p-4 transition-colors ${
                       isApproved
                         ? 'border-emerald-500/30'
                         : isRejected
                         ? 'border-red-500/20 opacity-50'
-                        : 'border-white/[0.07] hover:border-white/[0.15]'
+                        : 'border-white/[0.07] hover:border-white/[0.12]'
                     }`}
                   >
                     <div>
-                      {/* Top status line */}
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className="rounded bg-white/[0.04] px-1.5 py-0.2 text-[10px] text-zinc-400 border border-white/[0.06]">
+                      {/* Top status line without boxes */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs text-zinc-400 font-medium">
                           {item.category}
                         </span>
 
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           {isApproved && (
-                            <span className="inline-flex items-center gap-0.5 rounded bg-emerald-500/10 px-1.5 py-0.2 font-mono text-[9px] font-semibold text-emerald-400 border border-emerald-500/20">
-                              <CheckCircle2 className="h-2.5 w-2.5" />
+                            <span className="flex items-center gap-1 font-mono text-[10px] font-semibold text-emerald-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                               БЕРЕМ
                             </span>
                           )}
@@ -270,22 +270,22 @@ export const WishlistModule: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => deleteWishlistItem(item.id)}
-                            className="p-1 text-zinc-500 hover:text-zinc-200 transition-colors"
+                            className="p-1 text-zinc-500 hover:text-red-400 transition-colors"
                             title="Удалить позицию"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-xs font-semibold text-zinc-100 leading-snug">
+                      <h3 className="text-[13px] font-semibold text-zinc-100 leading-snug">
                         {item.title}
                       </h3>
 
-                      {/* Price and Notes */}
-                      <div className="mt-1.5 flex items-center justify-between">
-                        <span className="font-mono text-sm font-semibold text-zinc-200">
+                      {/* Price in large monospace tabular-nums */}
+                      <div className="mt-2 flex items-baseline justify-between">
+                        <span className="font-mono text-lg font-bold text-zinc-100 tabular-nums">
                           {item.estimatedPrice.toLocaleString('ru-RU')} ₽
                         </span>
 
@@ -303,93 +303,87 @@ export const WishlistModule: React.FC = () => {
                       </div>
 
                       {item.notes && (
-                        <p className="mt-1 text-[11px] text-zinc-400/80 line-clamp-2">
+                        <p className="mt-1.5 text-xs text-zinc-400 line-clamp-2 leading-relaxed">
                           {item.notes}
                         </p>
                       )}
                     </div>
 
-                    {/* Bottom voting controls */}
-                    <div className="mt-3 pt-2.5 border-t border-white/[0.06] space-y-2">
-                      <div className="flex items-center justify-between gap-1 text-[10px]">
-                        <div>{renderVoteBadge(item.egorVote, 'Егор')}</div>
-                        <div>{renderVoteBadge(item.anyaVote, 'Аня')}</div>
-                      </div>
-
-                      {/* Voting buttons */}
-                      <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    {/* Single neat row with two minimalist vote toggles for Egor & Anya */}
+                    <div className="mt-4 pt-3 border-t border-white/[0.05] space-y-2">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        {/* Egor vote toggle */}
                         <div className="flex items-center gap-1">
-                          <span className="text-[10px] text-zinc-500 font-mono">Е:</span>
-                          <button
-                            type="button"
-                            onClick={() => voteWishlist(item.id, 'egor', 'yes')}
-                            className={`flex-1 rounded py-0.5 text-[10px] font-medium transition-colors ${
-                              item.egorVote === 'yes'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
-                            }`}
-                          >
-                            Да
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => voteWishlist(item.id, 'egor', 'maybe')}
-                            className={`rounded px-1 py-0.5 text-[10px] font-medium transition-colors ${
-                              item.egorVote === 'maybe'
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
-                            }`}
-                          >
-                            ?
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => voteWishlist(item.id, 'egor', 'no')}
-                            className={`rounded px-1 py-0.5 text-[10px] font-medium transition-colors ${
-                              item.egorVote === 'no'
-                                ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
-                            }`}
-                          >
-                            ✕
-                          </button>
+                          <span className="text-[11px] text-zinc-400 font-medium">Егор:</span>
+                          <div className="flex items-center bg-white/[0.03] rounded-md p-0.5">
+                            <button
+                              type="button"
+                              onClick={() => voteWishlist(item.id, 'egor', 'yes')}
+                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
+                                item.egorVote === 'yes' ? 'bg-emerald-500/20 text-emerald-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              }`}
+                              title="Да, берем!"
+                            >
+                              👍
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => voteWishlist(item.id, 'egor', 'maybe')}
+                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
+                                item.egorVote === 'maybe' ? 'bg-amber-500/20 text-amber-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              }`}
+                              title="Под вопросом"
+                            >
+                              ?
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => voteWishlist(item.id, 'egor', 'no')}
+                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
+                                item.egorVote === 'no' ? 'bg-red-500/20 text-red-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              }`}
+                              title="Нет"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
 
+                        {/* Anya vote toggle */}
                         <div className="flex items-center gap-1">
-                          <span className="text-[10px] text-zinc-500 font-mono">А:</span>
-                          <button
-                            type="button"
-                            onClick={() => voteWishlist(item.id, 'anya', 'yes')}
-                            className={`flex-1 rounded py-0.5 text-[10px] font-medium transition-colors ${
-                              item.anyaVote === 'yes'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
-                            }`}
-                          >
-                            Да
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => voteWishlist(item.id, 'anya', 'maybe')}
-                            className={`rounded px-1 py-0.5 text-[10px] font-medium transition-colors ${
-                              item.anyaVote === 'maybe'
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
-                            }`}
-                          >
-                            ?
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => voteWishlist(item.id, 'anya', 'no')}
-                            className={`rounded px-1 py-0.5 text-[10px] font-medium transition-colors ${
-                              item.anyaVote === 'no'
-                                ? 'bg-red-500/20 text-red-300 border border-red-500/30'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
-                            }`}
-                          >
-                            ✕
-                          </button>
+                          <span className="text-[11px] text-zinc-400 font-medium">Аня:</span>
+                          <div className="flex items-center bg-white/[0.03] rounded-md p-0.5">
+                            <button
+                              type="button"
+                              onClick={() => voteWishlist(item.id, 'anya', 'yes')}
+                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
+                                item.anyaVote === 'yes' ? 'bg-emerald-500/20 text-emerald-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              }`}
+                              title="Да, берем!"
+                            >
+                              👍
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => voteWishlist(item.id, 'anya', 'maybe')}
+                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
+                                item.anyaVote === 'maybe' ? 'bg-amber-500/20 text-amber-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              }`}
+                              title="Под вопросом"
+                            >
+                              ?
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => voteWishlist(item.id, 'anya', 'no')}
+                              className={`px-1.5 py-0.5 rounded text-[11px] transition-colors ${
+                                item.anyaVote === 'no' ? 'bg-red-500/20 text-red-300 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+                              }`}
+                              title="Нет"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -398,10 +392,10 @@ export const WishlistModule: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => convertWishlistToTask(item.id)}
-                          className="mt-1 flex w-full items-center justify-center gap-1 rounded bg-zinc-100 hover:bg-white py-1 text-xs font-medium text-zinc-950 transition-colors"
+                          className="flex w-full items-center justify-center gap-1 rounded bg-zinc-100 hover:bg-white py-1.5 text-xs font-medium text-zinc-950 transition-colors"
                         >
                           <ShoppingBag className="h-3 w-3" />
-                          <span>В задачи покупок</span>
+                          <span>Перенести в задачи покупок</span>
                           <ArrowRight className="h-3 w-3" />
                         </button>
                       )}
