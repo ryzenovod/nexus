@@ -18,10 +18,6 @@ import { TaskModal } from './components/command-center/TaskModal';
 import { FinancesModule } from './components/finances/FinancesModule';
 import { WishlistModule } from './components/wishlist/WishlistModule';
 import { StudyWorkModule } from './components/study-work/StudyWorkModule';
-import { ApartmentBlueprint } from './components/apartment/ApartmentBlueprint';
-import { YaProfiMapRadar } from './components/study-work/YaProfiMapRadar';
-import { AcademicTracker } from './components/study-work/AcademicTracker';
-import { DateNightPlanner } from './components/date-night/DateNightPlanner';
 import { TelegramBridgeModal } from './components/telegram/TelegramBridgeModal';
 import { TamagotchiRoomModal } from './components/visual/TamagotchiRoomModal';
 import { CommandPalette } from './components/command-palette/CommandPalette';
@@ -48,9 +44,9 @@ export const App: React.FC = () => {
     activeWeekOffset,
     setActiveWeekOffset,
     toggleTaskCompletion,
-    deleteTask,
     addTask,
     updateTask,
+    deleteTask,
     moveTaskToDate,
     wishlist,
     tickPomodoro,
@@ -96,7 +92,7 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [pomodoroIsRunning, tickPomodoro]);
 
-  // Keyboard shortcut listener for numbers 1-9 for tab switching
+  // Keyboard shortcut listener: 1-4 for clean tabs, 'n' for new task
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
@@ -104,14 +100,9 @@ export const App: React.FC = () => {
       }
 
       if (e.key === '1') setActiveTab('command-center');
-      if (e.key === '2') setActiveTab('blueprint');
-      if (e.key === '3') setActiveTab('finances');
-      if (e.key === '4') setActiveTab('wishlist');
-      if (e.key === '5') setActiveTab('study-work');
-      if (e.key === '6') setActiveTab('yaprofi-radar');
-      if (e.key === '7') setActiveTab('academic');
-      if (e.key === '8') setActiveTab('date-night');
-      if (e.key === '9') setActiveTab('pomodoro');
+      if (e.key === '2') setActiveTab('finances');
+      if (e.key === '3') setActiveTab('wishlist');
+      if (e.key === '4') setActiveTab('study-work');
       if (e.key.toLowerCase() === 'n') {
         e.preventDefault();
         setInitialTaskDate('inbox');
@@ -175,10 +166,10 @@ export const App: React.FC = () => {
       className={`relative min-h-screen text-zinc-100 transition-colors ${
         atmosphereMode === 'transparent' || isWidgetMode
           ? 'bg-transparent overflow-hidden'
-          : 'bg-[#090714]'
+          : 'bg-[#09090b]'
       }`}
     >
-      {/* Procedural Animated Canvas: Starry Twilight & Shooting Stars */}
+      {/* Procedural Animated Canvas: Starry Twilight with subtle stars */}
       <StarryTwilightCanvas mode={atmosphereMode} />
 
       {/* Main Top Header */}
@@ -209,7 +200,7 @@ export const App: React.FC = () => {
       {/* Main Content Area */}
       <main
         className={`relative z-10 mx-auto max-w-[1720px] pb-24 md:pb-12 ${
-          isWidgetMode ? 'p-3' : 'p-4 sm:p-6'
+          isWidgetMode ? 'p-2 sm:p-3' : 'p-3 sm:p-5'
         }`}
       >
         <DndContext
@@ -217,9 +208,9 @@ export const App: React.FC = () => {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          {/* TAB 1: COMMAND CENTER */}
+          {/* TAB 1: COMMAND CENTER (Week Planner + 4-Column Inbox Grid) */}
           {(activeTab === 'command-center' || isWidgetMode) && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Upper Section: 7 Day Columns Planner */}
               <WeekPlanner
                 tasks={tasks}
@@ -231,7 +222,7 @@ export const App: React.FC = () => {
                 onAddTaskForDay={handleOpenNewTaskForDate}
               />
 
-              {/* Lower Section: 4-Column Inbox & Backlog Grid */}
+              {/* Lower Section: 4-Column Flat Widget Grid */}
               <InboxGrid
                 tasks={tasks}
                 searchQuery={searchQuery}
@@ -258,28 +249,14 @@ export const App: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: INTERACTIVE APARTMENT BLUEPRINT (Ремонт, зоны & пины дефектов) */}
-          {activeTab === 'blueprint' && !isWidgetMode && <ApartmentBlueprint />}
-
-          {/* TAB 3: FINANCES & ЖКХ МОСКВЫ & CASHBACK ADVISOR */}
+          {/* TAB 2: FINANCES & ЖКХ МОСКВЫ & CASHBACK ADVISOR */}
           {activeTab === 'finances' && !isWidgetMode && <FinancesModule />}
 
-          {/* TAB 4: WISHLIST («БЕРЕМ ИЛИ НЕТ? 🐾») */}
+          {/* TAB 3: WISHLIST («БЕРЕМ ИЛИ НЕТ?») + РЕМОНТ КВАРТИРЫ + СВИДАНИЯ */}
           {activeTab === 'wishlist' && !isWidgetMode && <WishlistModule />}
 
-          {/* TAB 5 & 9: ВШЭ x РУДН x Я-ПРОФИ & COZY FOCUS ROOM */}
-          {(activeTab === 'study-work' || activeTab === 'pomodoro') && !isWidgetMode && (
-            <StudyWorkModule />
-          )}
-
-          {/* TAB 6: РАДАР КОМАНДОВАНИЯ ЦФО ⇄ ДФО */}
-          {activeTab === 'yaprofi-radar' && !isWidgetMode && <YaProfiMapRadar />}
-
-          {/* TAB 7: АКАДЕМИЧЕСКИЙ ХАБ (.ICS ИМПОРТ & 10-БАЛЛЬНЫЙ КАЛЬКУЛЯТОР ВШЭ & БРС РУДН) */}
-          {activeTab === 'academic' && !isWidgetMode && <AcademicTracker />}
-
-          {/* TAB 8: ГЕНЕРАТОР СВИДАНИЙ («ЧТО ДЕЛАЕМ 4 НОЯБРЯ? 💕») */}
-          {activeTab === 'date-night' && !isWidgetMode && <DateNightPlanner />}
+          {/* TAB 4: ВШЭ x РУДН x Я-ПРОФИ (КАНБАН + РАДАР ЦФО/ДФО + РАСПИСАНИЕ & БРС + FOCUS ROOM) */}
+          {activeTab === 'study-work' && !isWidgetMode && <StudyWorkModule />}
 
           {/* Drag Overlay for smooth preview */}
           <DragOverlay>
@@ -312,45 +289,53 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Task Creation & Editing Modal */}
+      {/* MODALS */}
       <TaskModal
         isOpen={activeTaskModal}
-        onClose={() => setActiveTaskModal(false)}
         taskToEdit={selectedTaskToEdit}
         initialDate={initialTaskDate}
-        onSave={(data) => addTask(data)}
-        onUpdate={(id, updates) => updateTask(id, updates)}
-        onDelete={(id) => deleteTask(id)}
+        onClose={() => {
+          setActiveTaskModal(false);
+          setSelectedTaskToEdit(null);
+        }}
+        onSave={(data) => {
+          addTask(data);
+          setActiveTaskModal(false);
+          setSelectedTaskToEdit(null);
+        }}
+        onUpdate={(id, updates) => {
+          updateTask(id, updates);
+          setActiveTaskModal(false);
+          setSelectedTaskToEdit(null);
+        }}
+        onDelete={(id) => {
+          deleteTask(id);
+          setActiveTaskModal(false);
+          setSelectedTaskToEdit(null);
+        }}
       />
 
-      {/* Telegram Bot Direct Bridge Modal */}
+      <CommandPalette
+        isOpen={activeCommandPalette}
+        onClose={() => setActiveCommandPalette(false)}
+        onSelectTab={setActiveTab}
+        onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
+        onOpenSettings={() => setActiveSettingsModal(true)}
+      />
+
+      <SettingsModal
+        isOpen={activeSettingsModal}
+        onClose={() => setActiveSettingsModal(false)}
+      />
+
       <TelegramBridgeModal
         isOpen={activeTelegramModal}
         onClose={() => setActiveTelegramModal(false)}
       />
 
-      {/* Tamagotchi Room & Mascot Wardrobe Modal */}
       <TamagotchiRoomModal
         isOpen={activeTamagotchiModal}
         onClose={() => setActiveTamagotchiModal(false)}
-      />
-
-      {/* Command Palette (Cmd+K) */}
-      <CommandPalette
-        isOpen={activeCommandPalette}
-        onClose={() => setActiveCommandPalette(false)}
-        onSelectTab={(tab) => setActiveTab(tab)}
-        onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
-        onOpenSettings={() => {
-          setActiveCommandPalette(false);
-          setActiveSettingsModal(true);
-        }}
-      />
-
-      {/* Settings & Supabase Connection Modal */}
-      <SettingsModal
-        isOpen={activeSettingsModal}
-        onClose={() => setActiveSettingsModal(false)}
       />
     </div>
   );
