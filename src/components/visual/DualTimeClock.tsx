@@ -5,7 +5,7 @@ export interface DualTimeClockProps {
   compact?: boolean;
 }
 
-export const DualTimeClock: React.FC<DualTimeClockProps> = ({ vertical = true, compact = false }) => {
+export const DualTimeClock: React.FC<DualTimeClockProps> = () => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -22,28 +22,29 @@ export const DualTimeClock: React.FC<DualTimeClockProps> = ({ vertical = true, c
   const normalizedDfoHours = (mskHours + 7) % 24;
   const formattedDfo = `${String(normalizedDfoHours).padStart(2, '0')}:${String(mskMinutes).padStart(2, '0')}`;
 
-  if (vertical && !compact) {
-    return (
-      <div className="space-y-0.5 text-[11px] font-mono select-none">
-        <div className="flex items-center justify-between text-zinc-400">
-          <span className="text-zinc-500 font-sans">Москва</span>
-          <span className="text-zinc-300 font-semibold tabular-nums">{formattedMsk}</span>
-        </div>
-        <div className="flex items-center justify-between text-zinc-400">
-          <span className="text-zinc-500 font-sans">Владивосток</span>
-          <span className="text-zinc-400 tabular-nums">{formattedDfo}</span>
-        </div>
-      </div>
-    );
-  }
+  const isMskDay = mskHours >= 7 && mskHours < 22;
+  const isDfoDay = normalizedDfoHours >= 7 && normalizedDfoHours < 22;
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono select-none">
-      <span className="text-zinc-500">Москва</span>
-      <span className="font-semibold text-zinc-200 tabular-nums">{formattedMsk}</span>
-      <span className="text-zinc-700">·</span>
-      <span className="text-zinc-500">Владивосток</span>
-      <span className="font-semibold text-zinc-300 tabular-nums">{formattedDfo}</span>
+    <div className="space-y-1 text-[11.5px] font-mono select-none">
+      <div className="flex items-center justify-between">
+        <span className="text-[#8a8f98] font-sans flex items-center gap-1.5 text-[11px]">
+          <span>{isMskDay ? '☀️' : '🌙'}</span>
+          <span>Москва</span>
+        </span>
+        <span className="text-[#ededef] font-semibold tabular-nums tracking-tight">
+          {formattedMsk}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[#5e636e] font-sans flex items-center gap-1.5 text-[11px]">
+          <span>{isDfoDay ? '☀️' : '🌙'}</span>
+          <span>Владивосток <span className="text-[9.5px] text-[#5e636e] font-mono">+7ч</span></span>
+        </span>
+        <span className="text-[#8a8f98] tabular-nums tracking-tight">
+          {formattedDfo}
+        </span>
+      </div>
     </div>
   );
 };
