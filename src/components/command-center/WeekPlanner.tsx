@@ -87,7 +87,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
       </div>
 
       {/* Task List inside day */}
-      <div className="flex-1 p-1.5 space-y-1 overflow-y-auto no-scrollbar">
+      <div className="flex-1 p-1.5 space-y-1 overflow-y-auto max-h-[175px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tasks.map((task) => {
           const borderColor = getBorderColor(task.bracketColor);
           const tag = cleanCategory(task.category || 'Задача');
@@ -96,17 +96,17 @@ const DayColumn: React.FC<DayColumnProps> = ({
             <div
               key={task.id}
               onClick={() => onTaskClick(task)}
-              className={`p-1.5 px-2 rounded bg-white/[0.025] hover:bg-white/[0.06] border-l-2 ${borderColor} transition-colors cursor-pointer select-none text-left ${
+              className={`py-1.5 px-2 rounded-md bg-white/[0.03] hover:bg-white/[0.06] border-l-[2.5px] ${borderColor} border border-white/[0.04] transition-all cursor-pointer select-none text-left ${
                 task.completed ? 'opacity-40 grayscale line-through' : ''
               }`}
             >
-              <div className="flex items-center justify-between gap-1 text-[9.5px] font-mono uppercase text-zinc-500 mb-0.5 truncate">
+              <div className="flex items-center justify-between gap-1 text-[9px] font-mono uppercase text-zinc-400 mb-0.5 truncate leading-none">
                 <span className="truncate">{tag}</span>
                 {task.isOverdue && !task.completed && (
-                  <span className="text-red-400 font-semibold">Срочно</span>
+                  <span className="text-rose-400 font-semibold text-[8.5px]">Срочно</span>
                 )}
               </div>
-              <div className="text-[11.5px] font-normal text-zinc-200 leading-snug line-clamp-2 break-words">
+              <div className="text-[11px] font-normal text-zinc-200 leading-tight line-clamp-2 break-words">
                 {task.title}
               </div>
             </div>
@@ -221,7 +221,7 @@ export const WeekPlanner: React.FC<WeekPlannerProps> = ({
       </div>
 
       {/* RULE 3: SEAMLESS MONOLITHIC 7-DAY MATRIX (Amie / Notion Calendar style) */}
-      <div className="grid grid-cols-7 divide-x divide-white/[0.06] border border-white/[0.07] rounded-xl bg-[#0b0b0e] overflow-hidden h-[180px] shadow-sm">
+      <div className="grid grid-cols-7 divide-x divide-white/[0.06] border border-white/[0.07] rounded-xl bg-[#0b0b0e] overflow-hidden min-h-[195px] max-h-[220px] h-[205px] shadow-sm">
         {days.map((day) => (
           <DayColumn
             key={day.dateString}

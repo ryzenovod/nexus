@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const levelProgress = Math.min(100, (gamification.xp / (gamification.nextLevelXp || 1000)) * 100);
 
   return (
-    <aside className="w-[220px] shrink-0 border-r border-white/[0.06] bg-[#08080a] flex flex-col justify-between p-3 select-none z-20">
+    <aside className="w-[220px] shrink-0 border-r border-white/[0.06] bg-[#08080a]/80 backdrop-blur-2xl flex flex-col justify-between p-3 select-none z-20">
       {/* TOP SECTION: Brand & Navigation */}
       <div className="space-y-3.5">
         {/* Brand Block without loud colors */}

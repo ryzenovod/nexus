@@ -31,6 +31,11 @@ interface InboxGridProps {
 
 type QuickFilter = 'all' | 'home' | 'finances' | 'bathroom' | 'balcony' | 'kitchen' | 'room';
 
+const isHubZoneHeader = (task: NexusTask): boolean => {
+  const title = (task.title || '').toLowerCase().trim();
+  return ['ванная', 'балкон', 'комната', 'кухня', 'доп.', 'дополнительно', 'прихожая'].includes(title);
+};
+
 export const InboxGrid: React.FC<InboxGridProps> = ({
   tasks,
   selectedAssignee,
@@ -46,12 +51,15 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
 
   const [activeFilter, setActiveFilter] = useState<QuickFilter>('all');
 
-  // Filter tasks belonging to inbox
+  // Filter tasks belonging to inbox (excluding redundant empty zone-header tasks)
   const inboxTasks = useMemo(() => {
     return tasks.filter((task) => {
       if (task.date !== 'inbox') return false;
 
-      // Assignee
+      // Exclude empty technical zone headers ("ванная", "балкон", "комната", "кухня")
+      if (isHubZoneHeader(task)) return false;
+
+      // Assignee filter
       if (selectedAssignee !== 'all' && task.assignee !== selectedAssignee) {
         return false;
       }
@@ -59,11 +67,11 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
       // Quick tabs
       if (activeFilter === 'home') {
         const cat = (task.category || '').toLowerCase();
-        return cat.includes('дом') || cat.includes('покупк') || task.room;
+        return cat.includes('дом') || cat.includes('покупк') || (task.room && task.room !== 'Все');
       }
       if (activeFilter === 'finances') {
         const cat = (task.category || '').toLowerCase();
-        return cat.includes('финанс') || cat.includes('жкх') || task.bracketColor === 'finance';
+        return cat.includes('финанс') || cat.includes('жкх') || task.bracketColor === 'finance' || task.title.toLowerCase().includes('коммунальн');
       }
       if (activeFilter === 'bathroom') return task.room === 'Ванная';
       if (activeFilter === 'balcony') return task.room === 'Балкон';
@@ -74,7 +82,9 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
     });
   }, [tasks, selectedAssignee, activeFilter]);
 
-  const totalInboxCount = tasks.filter((t) => t.date === 'inbox').length;
+  const totalInboxCount = useMemo(() => {
+    return tasks.filter((t) => t.date === 'inbox' && !isHubZoneHeader(t)).length;
+  }, [tasks]);
 
   const filterTabs: { id: QuickFilter; label: string }[] = [
     { id: 'all', label: `Все (${totalInboxCount})` },
@@ -89,9 +99,9 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className="flex-1 flex flex-col min-h-0 space-y-2 select-none"
+      className="flex-1 flex flex-col min-h-0 space-y-2.5 select-none"
     >
-      {/* RULE 2: SINGLE CLEAN HEADER ROW WITH MINIMALIST TEXT TABS */}
+      {/* SINGLE CLEAN HEADER ROW WITH MINIMALIST TEXT TABS */}
       <div className="flex items-center justify-between text-xs px-0.5 border-b border-white/[0.06] pb-2 shrink-0">
         {/* Left minimal text tabs */}
         <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar">
@@ -136,13 +146,13 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
         </div>
       </div>
 
-      {/* RULE 2: HAIRLINE 4-COLUMN BENTO MATRIX (h-[38px] ROW, GAP 1px, MONOLITHIC COCKPIT) */}
+      {/* FLOATING 4-COLUMN BENTO GRID OF COMPACT GLASS CAPSULES (gap-2, h-[38px]) */}
       <div
-        className={`flex-1 overflow-y-auto min-h-0 rounded-xl border border-white/[0.07] bg-white/[0.04] p-[1px] transition-colors ${
-          isOver ? 'ring-1 ring-white/30' : ''
+        className={`flex-1 overflow-y-auto min-h-0 pr-1 transition-colors ${
+          isOver ? 'ring-1 ring-white/30 rounded-xl' : ''
         }`}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/[0.05]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {inboxTasks.map((task) => (
             <SortableGlassCard
               key={task.id}
@@ -155,7 +165,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
           ))}
 
           {inboxTasks.length === 0 && (
-            <div className="col-span-full py-12 text-center text-xs text-zinc-600 bg-[#0b0b0e]">
+            <div className="col-span-full py-12 text-center text-xs text-zinc-500 bg-white/[0.02] border border-white/[0.06] rounded-lg">
               Нет задач в выбранной категории
             </div>
           )}

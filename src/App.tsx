@@ -177,18 +177,48 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`h-screen overflow-hidden flex text-zinc-100 ${
+      className={`h-screen overflow-hidden flex text-zinc-100 relative ${
         atmosphereMode === 'transparent' || isWidgetMode
           ? 'bg-transparent'
           : 'bg-[#09090b]'
       }`}
     >
+      {/* Multi-layered Ambient Glass Glow (macOS / Raycast style: deep indigo top-left, warm amber/purple bottom-right) */}
+      {!isWidgetMode && atmosphereMode !== 'transparent' && (
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          {/* Deep Indigo glow (top-left) */}
+          <div
+            className="absolute -top-[15%] -left-[10%] w-[55vw] h-[55vw] rounded-full blur-[140px] opacity-75"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(79, 70, 229, 0.14) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 70%)',
+            }}
+          />
+          {/* Warm twilight amber / purple glow (bottom-right) */}
+          <div
+            className="absolute -bottom-[15%] -right-[10%] w-[50vw] h-[50vw] rounded-full blur-[150px] opacity-70"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, rgba(168, 85, 247, 0.07) 45%, transparent 70%)',
+            }}
+          />
+          {/* Central subtle twilight depth */}
+          <div
+            className="absolute top-[35%] left-[30%] w-[40vw] h-[40vw] rounded-full blur-[160px] opacity-50"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(129, 140, 248, 0.05) 0%, transparent 70%)',
+            }}
+          />
+        </div>
+      )}
+
       {/* Procedural Animated Canvas: Starry Twilight with subtle depth */}
       <StarryTwilightCanvas mode={atmosphereMode} />
 
       {/* RULE 1: DESKTOP APP SHELL - LEFT SIDEBAR */}
       {!isWidgetMode && (
-        <div className="hidden md:flex">
+        <div className="hidden md:flex relative z-10">
           <Sidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -204,10 +234,10 @@ export const App: React.FC = () => {
       )}
 
       {/* RULE 1 & 4: RIGHT MAIN CANVAS (NO GLOBAL SCROLL, PERFECT 100VH VIEWPORT) */}
-      <div className="flex-1 h-screen overflow-hidden flex flex-col min-w-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.12),transparent)]">
+      <div className="flex-1 h-screen overflow-hidden flex flex-col min-w-0 bg-[#09090b]/35 backdrop-blur-2xl relative z-10">
         {/* Top Slim Header Bar */}
         {!isWidgetMode && (
-          <header className="px-6 py-3 flex items-center justify-between border-b border-white/[0.05] bg-[#09090b]/80 backdrop-blur-xl shrink-0">
+          <header className="px-6 py-3 flex items-center justify-between border-b border-white/[0.06] bg-[#09090b]/70 backdrop-blur-2xl shrink-0">
             <h1 className="text-sm font-semibold tracking-tight text-zinc-100">
               {tabTitles[activeTab]}
             </h1>
