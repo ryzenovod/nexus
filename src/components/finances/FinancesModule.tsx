@@ -73,8 +73,22 @@ export const FinancesModule: React.FC = () => {
     setEditingReadingsBillId(null);
   };
 
-  const egorSharePercent = Math.round((budget.egorContribution / budget.totalTarget) * 100);
-  const anyaSharePercent = 100 - egorSharePercent;
+  // Honest calculation from real operations or set contributions
+  const egorTransfers = transactions
+    .filter((t) => t.paidBy === 'egor' && (t.type === 'transfer' || t.category === 'Общий счет'))
+    .reduce((sum, t) => sum + t.amount, 0);
+  const anyaTransfers = transactions
+    .filter((t) => t.paidBy === 'anya' && (t.type === 'transfer' || t.category === 'Общий счет'))
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const egorAmount = budget.egorContribution > 0 ? budget.egorContribution : egorTransfers;
+  const anyaAmount = budget.anyaContribution > 0 ? budget.anyaContribution : anyaTransfers;
+
+  const totalTarget = budget.totalTarget || 80000;
+  const targetHalf = Math.round(totalTarget / 2);
+
+  const egorSharePercent = totalTarget > 0 ? Math.round((egorAmount / totalTarget) * 100) : 0;
+  const anyaSharePercent = totalTarget > 0 ? Math.round((anyaAmount / totalTarget) * 100) : 0;
 
   return (
     <div className="space-y-4">
@@ -168,10 +182,10 @@ export const FinancesModule: React.FC = () => {
               setNewTxCategory('Общий счет');
               setShowAddTxModal(true);
             }}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md bg-white hover:bg-zinc-200 py-1.5 text-xs font-medium text-zinc-950 transition-colors shadow-sm"
+            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md bg-white hover:bg-zinc-200 py-1.5 text-xs font-medium text-zinc-950 transition-colors shadow-sm cursor-pointer"
           >
             <ArrowUpRight size={13} strokeWidth={2.2} />
-            <span>Пополнить общий счет</span>
+            <span>+ Внести вклад / Записать операцию</span>
           </button>
         </div>
 
@@ -183,12 +197,15 @@ export const FinancesModule: React.FC = () => {
                 <span className="h-2 w-2 rounded-full bg-blue-400" />
                 <span className="text-xs font-semibold text-zinc-200">Вклад Егора</span>
               </div>
-              <span className="font-mono text-[11px] text-zinc-400">{egorSharePercent}% доли</span>
+              <span className="font-mono text-[11px] text-zinc-400">{egorSharePercent}% цели</span>
             </div>
 
             <div className="mt-2.5">
               <span className="font-mono text-xl font-bold text-zinc-100">
-                {budget.egorContribution.toLocaleString('ru-RU')} ₽
+                {egorAmount.toLocaleString('ru-RU')} ₽
+              </span>
+              <span className="text-xs text-zinc-500 ml-1.5 font-mono">
+                / {targetHalf.toLocaleString('ru-RU')} ₽
               </span>
             </div>
 
@@ -197,9 +214,27 @@ export const FinancesModule: React.FC = () => {
             </p>
           </div>
 
-          <div className="mt-4 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500">
-            <span>Статус:</span>
-            <span className="text-emerald-400 font-medium">Переведено в полном объеме</span>
+          <div>
+            <div className="mt-4 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500">
+              <span>Статус:</span>
+              <span className={egorAmount >= targetHalf ? 'text-emerald-400 font-medium' : egorAmount > 0 ? 'text-amber-400 font-medium' : 'text-zinc-500'}>
+                {egorAmount >= targetHalf ? 'Внесено в полном объеме ✓' : egorAmount > 0 ? `Внесено ${egorAmount.toLocaleString('ru-RU')} ₽` : 'Ожидает внесения (0 ₽)'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setNewTxType('transfer');
+                setNewTxCategory('Общий счет');
+                setNewTxPaidBy('egor');
+                setShowAddTxModal(true);
+              }}
+              className="mt-3 w-full py-1.5 px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-[11.5px] text-zinc-300 hover:text-white border border-white/[0.08] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Plus size={11} />
+              <span>Внести вклад Егора</span>
+            </button>
           </div>
         </div>
 
@@ -211,12 +246,15 @@ export const FinancesModule: React.FC = () => {
                 <span className="h-2 w-2 rounded-full bg-pink-400" />
                 <span className="text-xs font-semibold text-zinc-200">Вклад Ани</span>
               </div>
-              <span className="font-mono text-[11px] text-zinc-400">{anyaSharePercent}% доли</span>
+              <span className="font-mono text-[11px] text-zinc-400">{anyaSharePercent}% цели</span>
             </div>
 
             <div className="mt-2.5">
               <span className="font-mono text-xl font-bold text-zinc-100">
-                {budget.anyaContribution.toLocaleString('ru-RU')} ₽
+                {anyaAmount.toLocaleString('ru-RU')} ₽
+              </span>
+              <span className="text-xs text-zinc-500 ml-1.5 font-mono">
+                / {targetHalf.toLocaleString('ru-RU')} ₽
               </span>
             </div>
 
@@ -225,9 +263,27 @@ export const FinancesModule: React.FC = () => {
             </p>
           </div>
 
-          <div className="mt-4 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500">
-            <span>Статус:</span>
-            <span className="text-emerald-400 font-medium">Переведено в полном объеме</span>
+          <div>
+            <div className="mt-4 pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-500">
+              <span>Статус:</span>
+              <span className={anyaAmount >= targetHalf ? 'text-emerald-400 font-medium' : anyaAmount > 0 ? 'text-pink-400 font-medium' : 'text-zinc-500'}>
+                {anyaAmount >= targetHalf ? 'Внесено в полном объеме ✓' : anyaAmount > 0 ? `Внесено ${anyaAmount.toLocaleString('ru-RU')} ₽` : 'Ожидает внесения (0 ₽)'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setNewTxType('transfer');
+                setNewTxCategory('Общий счет');
+                setNewTxPaidBy('anya');
+                setShowAddTxModal(true);
+              }}
+              className="mt-3 w-full py-1.5 px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-[11.5px] text-zinc-300 hover:text-white border border-white/[0.08] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Plus size={11} />
+              <span>Внести вклад Ани</span>
+            </button>
           </div>
         </div>
       </div>
