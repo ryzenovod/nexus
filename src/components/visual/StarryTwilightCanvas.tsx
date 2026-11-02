@@ -53,14 +53,14 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
     let stars: Star[] = [];
     const initStars = () => {
       stars = [];
-      const count = Math.floor((width * height) / 9000);
+      const count = Math.floor((width * height) / 10000);
       for (let i = 0; i < count; i++) {
         stars.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          size: Math.random() * 1.2 + 0.4,
-          alpha: Math.random() * 0.35 + 0.08,
-          twinkleSpeed: (Math.random() * 0.008 + 0.002) * (Math.random() > 0.5 ? 1 : -1),
+          size: Math.random() * 1.0 + 0.4,
+          alpha: Math.random() * 0.4 + 0.1,
+          twinkleSpeed: (Math.random() * 0.006 + 0.002) * (Math.random() > 0.5 ? 1 : -1),
         });
       }
     };
@@ -70,36 +70,35 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
       meteorsRef.current.push({
         x: Math.random() * (width * 0.8) + width * 0.1,
         y: Math.random() * (height * 0.4),
-        length: Math.random() * 80 + 60,
-        speed: Math.random() * 7 + 12,
+        length: Math.random() * 70 + 40,
+        speed: Math.random() * 8 + 12,
         angle: Math.PI / 4,
-        opacity: 0.8,
+        opacity: 0.6,
         active: true,
       });
     };
 
     const onTaskCompletedEvent = () => {
       triggerMeteor();
-      setTimeout(triggerMeteor, 220);
     };
     window.addEventListener('nexus-task-completed', onTaskCompletedEvent);
 
     // Draw subtle minimal crescent moon
     const drawCrescentMoon = () => {
       ctx.save();
-      const moonX = width * 0.82;
-      const moonY = height * 0.12;
-      const radius = 16;
+      const moonX = width * 0.85;
+      const moonY = height * 0.10;
+      const radius = 14;
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.beginPath();
       ctx.arc(moonX, moonY, radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cutout with dark background color
+      // Cutout with pure obsidian background
       ctx.fillStyle = '#09090b';
       ctx.beginPath();
-      ctx.arc(moonX + 6, moonY - 3, radius * 0.9, 0, Math.PI * 2);
+      ctx.arc(moonX + 5, moonY - 3, radius * 0.9, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
@@ -122,8 +121,8 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
         height * 0.5,
         width * 0.85
       );
-      vignette.addColorStop(0, 'rgba(18, 18, 22, 0.4)');
-      vignette.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+      vignette.addColorStop(0, 'rgba(18, 18, 22, 0.3)');
+      vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, width, height);
 
@@ -134,11 +133,11 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
       ctx.save();
       stars.forEach((star) => {
         star.alpha += star.twinkleSpeed;
-        if (star.alpha > 0.45 || star.alpha < 0.08) {
+        if (star.alpha > 0.5 || star.alpha < 0.1) {
           star.twinkleSpeed = -star.twinkleSpeed;
         }
 
-        ctx.fillStyle = `rgba(244, 244, 245, ${star.alpha * 0.6})`;
+        ctx.fillStyle = `rgba(244, 244, 245, ${star.alpha * 0.5})`;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
@@ -154,10 +153,10 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
 
         const grad = ctx.createLinearGradient(tailX, tailY, m.x, m.y);
         grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        grad.addColorStop(1, `rgba(255, 255, 255, ${m.opacity * 0.7})`);
+        grad.addColorStop(1, `rgba(255, 255, 255, ${m.opacity * 0.5})`);
 
         ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.2;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(tailX, tailY);
         ctx.lineTo(m.x, m.y);
@@ -193,7 +192,7 @@ export const StarryTwilightCanvas: React.FC<StarryTwilightCanvasProps> = ({ mode
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-700"
-      style={{ opacity: 0.95 }}
+      style={{ opacity: 0.35 }}
     />
   );
 };

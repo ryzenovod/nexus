@@ -159,10 +159,10 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
     <div
       ref={setNodeRef}
       style={{
-        border: isOver ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.07)',
+        border: isOver ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(255, 255, 255, 0.07)',
       }}
-      className={`rounded-lg bg-zinc-900/60 backdrop-blur-[20px] p-3 sm:p-4 transition-all ${
-        isOver ? 'bg-zinc-850/80 ring-1 ring-zinc-500/40' : ''
+      className={`rounded-xl bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-3 sm:p-4 transition-all ${
+        isOver ? 'bg-[rgba(32,32,38,0.85)]' : ''
       }`}
     >
       {/* Inbox Header: Title, Counter & Action Bar */}
@@ -182,33 +182,39 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
 
           {/* Grouping switch and quick new button */}
           <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => onToggleSmartGrouping(!isSmartGrouped)}
-              className={`flex items-center gap-1 rounded px-2 py-1 text-xs font-medium border transition-colors ${
-                isSmartGrouped
-                  ? 'bg-white/[0.12] text-zinc-100 border-white/[0.15]'
-                  : 'bg-white/[0.03] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
-              }`}
-              title="Переключить режим: компактные хабы зон или плоская 4-колоночная сетка"
-            >
-              {isSmartGrouped ? (
-                <>
-                  <FoldVertical className="h-3 w-3" />
-                  <span>Хабы комнат</span>
-                </>
-              ) : (
-                <>
-                  <UnfoldVertical className="h-3 w-3" />
-                  <span>Плоская сетка (4 колонки)</span>
-                </>
-              )}
-            </button>
+            {/* Raycast-style Segmented View Mode Switcher */}
+            <div className="inline-flex items-center rounded-lg border border-white/[0.06] bg-white/[0.03] p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => onToggleSmartGrouping(false)}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors ${
+                  !isSmartGrouped
+                    ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <UnfoldVertical className="h-3 w-3" />
+                <span>Плоская сетка</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onToggleSmartGrouping(true)}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors ${
+                  isSmartGrouped
+                    ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <FoldVertical className="h-3 w-3" />
+                <span>Хабы зон</span>
+              </button>
+            </div>
 
             <button
               type="button"
               onClick={onAddNewTask}
-              className="flex items-center gap-1 rounded bg-zinc-100 hover:bg-white px-2.5 py-1 text-xs font-medium text-zinc-950 transition-colors"
+              className="flex items-center gap-1 rounded-lg bg-zinc-100 hover:bg-white px-2.5 py-1 text-xs font-medium text-zinc-950 transition-colors"
             >
               <Plus className="h-3 w-3 stroke-[2.5]" />
               <span>Задача</span>
@@ -231,7 +237,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
           </div>
 
           {/* Assignee Filter Pills */}
-          <div className="flex items-center rounded border border-white/[0.08] bg-zinc-950/60 p-0.5 text-xs">
+          <div className="flex items-center rounded border border-white/[0.06] bg-white/[0.02] p-0.5 text-xs">
             {assignees.map((a) => (
               <button
                 key={a.id}
@@ -239,7 +245,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
                 onClick={() => onAssigneeChange(a.id)}
                 className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
                   selectedAssignee === a.id
-                    ? 'bg-white/[0.12] text-zinc-100'
+                    ? 'bg-white/[0.1] text-zinc-100'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
@@ -255,7 +261,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
               onClick={() => onBracketChange('all')}
               className={`rounded px-1.5 py-0.5 text-[11px] font-mono border transition-colors ${
                 selectedBracket === 'all'
-                  ? 'bg-white/[0.12] text-white border-white/[0.15]'
+                  ? 'bg-white/[0.1] text-white border-white/[0.12]'
                   : 'text-zinc-400 border-transparent hover:text-zinc-200'
               }`}
             >
@@ -264,7 +270,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             <button
               type="button"
               onClick={() => onBracketChange('critical')}
-              className={`h-4 w-4 rounded border border-red-500/50 bg-red-500/30 transition-all ${
+              className={`h-3.5 w-3.5 rounded border border-red-500/50 bg-red-500/30 transition-all ${
                 selectedBracket === 'critical' ? 'ring-1 ring-red-400 scale-105' : 'opacity-70 hover:opacity-100'
               }`}
               title="Критичные / Коммуналка (красный)"
@@ -272,7 +278,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             <button
               type="button"
               onClick={() => onBracketChange('active')}
-              className={`h-4 w-4 rounded border border-emerald-500/50 bg-emerald-500/30 transition-all ${
+              className={`h-3.5 w-3.5 rounded border border-emerald-500/50 bg-emerald-500/30 transition-all ${
                 selectedBracket === 'active' ? 'ring-1 ring-emerald-400 scale-105' : 'opacity-70 hover:opacity-100'
               }`}
               title="Дом / Уют (зеленый)"
@@ -280,7 +286,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             <button
               type="button"
               onClick={() => onBracketChange('finance')}
-              className={`h-4 w-4 rounded border border-amber-500/50 bg-amber-500/30 transition-all ${
+              className={`h-3.5 w-3.5 rounded border border-amber-500/50 bg-amber-500/30 transition-all ${
                 selectedBracket === 'finance' ? 'ring-1 ring-amber-400 scale-105' : 'opacity-70 hover:opacity-100'
               }`}
               title="Финансы / ЖКХ (янтарный)"
@@ -288,7 +294,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             <button
               type="button"
               onClick={() => onBracketChange('neutral')}
-              className={`h-4 w-4 rounded border border-zinc-500/50 bg-zinc-500/30 transition-all ${
+              className={`h-3.5 w-3.5 rounded border border-zinc-500/50 bg-zinc-500/30 transition-all ${
                 selectedBracket === 'neutral' ? 'ring-1 ring-zinc-400 scale-105' : 'opacity-70 hover:opacity-100'
               }`}
               title="Нейтральные / Вишлист (серый)"
@@ -326,13 +332,13 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
       {/* Main Content Area */}
       <div className="mt-3">
         {isSmartGrouped && groupedHubs.length > 0 ? (
-          // --- SMART GROUPED ROOM HUBS VIEW ---
+          // --- BENTO ROOM HUBS (NO DOUBLE NESTED FRAMES) ---
           <div className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
               {groupedHubs.map(({ hub, children }) => (
                 <div
                   key={hub.id}
-                  className="rounded-lg border border-white/[0.07] bg-zinc-950/50 p-2 space-y-1.5"
+                  className="rounded-lg border border-white/[0.06] bg-[rgba(24,24,28,0.4)] p-2 space-y-1.5"
                 >
                   {/* Hub Header Card */}
                   <GlassCard
@@ -387,7 +393,7 @@ export const InboxGrid: React.FC<InboxGridProps> = ({
             )}
           </div>
         ) : (
-          // --- FLAT 4-COLUMN WIDGET GRID (MATCHING SCREENSHOT) ---
+          // --- FLAT 4-COLUMN WIDGET GRID (MATCHING ORIGINAL SCREENSHOT) ---
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {inboxTasks.map((task) => (
               <SortableGlassCard

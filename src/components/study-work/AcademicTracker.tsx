@@ -118,17 +118,17 @@ END:VCALENDAR`;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl border border-white/10 bg-[#0d0e19]/85 p-5 shadow-2xl backdrop-blur-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-            <GraduationCap className="h-5 w-5" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
+            <GraduationCap className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-              Академический Хаб & Калькуляторы Оценок
-              <span className="rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 px-2 py-0.5 text-[10px] font-mono text-indigo-300 border border-indigo-500/30">
+            <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <span>Академический Хаб & Калькуляторы Оценок</span>
+              <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/[0.08]">
                 ВШЭ x РУДН
               </span>
             </h2>
@@ -139,39 +139,39 @@ END:VCALENDAR`;
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 rounded-2xl border border-white/10 bg-black/40 p-1">
+        <div className="inline-flex items-center gap-1 rounded-lg border border-white/[0.06] bg-white/[0.03] p-1 text-xs">
           <button
             type="button"
             onClick={() => setActiveTab('hse')}
-            className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
+            className={`rounded-md px-3 py-1 font-medium transition-colors ${
               activeTab === 'hse'
-                ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-500/40 shadow-sm'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            🎓 ВШЭ (10 баллов)
+            ВШЭ (10 баллов)
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('rudn')}
-            className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
+            className={`rounded-md px-3 py-1 font-medium transition-colors ${
               activeTab === 'rudn'
-                ? 'bg-purple-500/25 text-purple-200 border border-purple-500/40 shadow-sm'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            🎓 РУДН (БРС 100 б.)
+            РУДН (БРС 100 б.)
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('ics-import')}
-            className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
+            className={`rounded-md px-3 py-1 font-medium transition-colors ${
               activeTab === 'ics-import'
-                ? 'bg-amber-500/25 text-amber-200 border border-amber-500/40 shadow-sm'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            📥 Импорт .ics
+            Импорт .ics
           </button>
         </div>
       </div>
@@ -269,39 +269,39 @@ END:VCALENDAR`;
                 className="rounded-3xl border border-white/10 bg-[#0d0e19]/90 p-5 shadow-2xl backdrop-blur-2xl space-y-4"
               >
                 <div>
-                  <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-purple-400">
+                  <span className="text-[10px] uppercase font-mono text-zinc-500">
                     РУДН Онлайн • Психология
                   </span>
-                  <h3 className="text-sm font-bold text-zinc-100 mt-0.5 line-clamp-1">{subj.subjectName}</h3>
+                  <h3 className="text-sm font-semibold text-zinc-100 mt-0.5 line-clamp-1">{subj.subjectName}</h3>
                 </div>
 
                 {/* Total Score & ECTS Grade */}
-                <div className="flex items-center justify-between rounded-2xl bg-black/50 p-4 border border-white/10">
+                <div className="flex items-center justify-between rounded-lg bg-zinc-950/60 p-3.5 border border-white/[0.06]">
                   <div>
-                    <span className="text-[11px] text-zinc-400 block">БРС Балл:</span>
-                    <span className="font-mono text-2xl font-extrabold text-purple-300">
+                    <span className="text-[11px] text-zinc-500 block">БРС Балл:</span>
+                    <span className="font-mono text-2xl font-bold text-zinc-100">
                       {totalScore} <span className="text-sm text-zinc-500">/ 100</span>
                     </span>
                   </div>
 
                   <div className="text-right">
                     <span
-                      className="font-mono text-2xl font-black px-2 py-0.5 rounded-lg border"
+                      className="font-mono text-xl font-bold px-2 py-0.5 rounded border"
                       style={{ color: ects.color, borderColor: ects.color, backgroundColor: `${ects.color}15` }}
                     >
                       {ects.grade}
                     </span>
-                    <span className="block text-[10px] text-zinc-400 mt-1 font-medium">{ects.desc}</span>
+                    <span className="block text-[10px] text-zinc-400 mt-1">{ects.desc}</span>
                   </div>
                 </div>
 
                 {/* 3 BRS Controls */}
-                <div className="space-y-3 text-xs">
+                <div className="space-y-2 text-xs">
                   {/* 1. Текущий контроль (до 60) */}
-                  <div className="rounded-xl bg-white/[0.03] p-2.5 border border-white/5 space-y-1">
+                  <div className="rounded bg-white/[0.02] p-2 border border-white/[0.05] space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-zinc-300">Текущий контроль</span>
-                      <span className="font-mono font-bold text-zinc-200">{subj.currentControl} / 60</span>
+                      <span className="text-zinc-400">Текущий контроль</span>
+                      <span className="font-mono font-medium text-zinc-200">{subj.currentControl} / 60</span>
                     </div>
                     <input
                       type="range"
@@ -311,15 +311,15 @@ END:VCALENDAR`;
                       onChange={(e) =>
                         updateRUDNSubjectScore(subj.id, 'currentControl', parseInt(e.target.value, 10))
                       }
-                      className="w-full accent-purple-500 cursor-pointer"
+                      className="w-full accent-zinc-300 cursor-pointer"
                     />
                   </div>
 
                   {/* 2. Рубежный контроль (до 20) */}
-                  <div className="rounded-xl bg-white/[0.03] p-2.5 border border-white/5 space-y-1">
+                  <div className="rounded bg-white/[0.02] p-2 border border-white/[0.05] space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-zinc-300">Рубежный контроль</span>
-                      <span className="font-mono font-bold text-zinc-200">{subj.milestoneControl} / 20</span>
+                      <span className="text-zinc-400">Рубежный контроль</span>
+                      <span className="font-mono font-medium text-zinc-200">{subj.milestoneControl} / 20</span>
                     </div>
                     <input
                       type="range"
@@ -329,15 +329,15 @@ END:VCALENDAR`;
                       onChange={(e) =>
                         updateRUDNSubjectScore(subj.id, 'milestoneControl', parseInt(e.target.value, 10))
                       }
-                      className="w-full accent-purple-500 cursor-pointer"
+                      className="w-full accent-zinc-300 cursor-pointer"
                     />
                   </div>
 
                   {/* 3. Итоговый экзамен / зачет (до 20) */}
-                  <div className="rounded-xl bg-white/[0.03] p-2.5 border border-white/5 space-y-1">
+                  <div className="rounded bg-white/[0.02] p-2 border border-white/[0.05] space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-zinc-300">Экзамен / Зачет</span>
-                      <span className="font-mono font-bold text-zinc-200">{subj.finalExam} / 20</span>
+                      <span className="text-zinc-400">Экзамен / Зачет</span>
+                      <span className="font-mono font-medium text-zinc-200">{subj.finalExam} / 20</span>
                     </div>
                     <input
                       type="range"
@@ -347,7 +347,7 @@ END:VCALENDAR`;
                       onChange={(e) =>
                         updateRUDNSubjectScore(subj.id, 'finalExam', parseInt(e.target.value, 10))
                       }
-                      className="w-full accent-purple-500 cursor-pointer"
+                      className="w-full accent-zinc-300 cursor-pointer"
                     />
                   </div>
                 </div>

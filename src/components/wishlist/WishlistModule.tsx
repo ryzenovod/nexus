@@ -106,20 +106,20 @@ export const WishlistModule: React.FC = () => {
     <div className="space-y-4">
       {/* Sub-navigation Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
-        <div className="flex items-center gap-1.5">
+        <div className="inline-flex items-center gap-1 rounded-lg border border-white/[0.06] bg-white/[0.03] p-1 text-xs">
           <button
             type="button"
             onClick={() => setActiveSubTab('wishlist')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'wishlist'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <Gift className="h-3.5 w-3.5" />
             <span>Вишлист («Берем или нет?»)</span>
             {pendingCount > 0 && (
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.2 font-mono text-[10px] text-amber-300 border border-amber-500/30">
+              <span className="rounded bg-white/[0.08] px-1.5 py-0.2 font-mono text-[10px] text-zinc-300">
                 {pendingCount}
               </span>
             )}
@@ -128,26 +128,26 @@ export const WishlistModule: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('blueprint')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'blueprint'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <MapPin className="h-3.5 w-3.5" />
-            <span>План квартиры (Ремонт) 📐</span>
+            <span>План квартиры 📐</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSubTab('dates')}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
               activeSubTab === 'dates'
-                ? 'bg-white/[0.08] text-zinc-100 border-white/[0.12]'
-                : 'text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-white/[0.04]'
+                ? 'bg-white/[0.09] text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            <Heart className="h-3.5 w-3.5 text-rose-400" />
+            <Heart className="h-3.5 w-3.5 text-zinc-400" />
             <span>Свидания 💕</span>
           </button>
         </div>

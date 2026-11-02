@@ -111,10 +111,10 @@ export const TelegramBridgeModal: React.FC<TelegramBridgeModalProps> = ({
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative z-10 w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0d0e19] shadow-2xl"
+        className="relative z-10 w-full max-w-2xl overflow-hidden rounded-xl border border-white/[0.08] bg-[#09090b] shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-gradient-to-r from-blue-900/30 via-purple-900/20 to-transparent">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3.5 bg-zinc-900/50">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
               <Bot className="h-5 w-5" />

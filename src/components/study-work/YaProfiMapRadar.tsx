@@ -171,18 +171,18 @@ export const YaProfiMapRadar: React.FC = () => {
   const dfoHubs = REGION_HUBS.slice(1);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl border border-purple-500/30 bg-[#0d0a1f]/85 p-5 shadow-2xl backdrop-blur-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/30">
-            <Radio className="h-5 w-5 animate-pulse" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04] text-zinc-300 border border-white/[0.08]">
+            <Radio className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-              Радар Командования ЦФО ⇄ ДФО
-              <span className="rounded-full bg-pink-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-pink-300 border border-pink-500/30">
-                «Я-Профессионал» Ани
+            <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <span>Радар Командования ЦФО ⇄ ДФО</span>
+              <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/[0.08]">
+                Я-Профессионал
               </span>
             </h2>
             <p className="text-xs text-zinc-400">
@@ -192,23 +192,23 @@ export const YaProfiMapRadar: React.FC = () => {
         </div>
 
         {/* Status Pill */}
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-3.5 py-1.5 text-xs font-mono">
-          <Globe2 className="h-4 w-4 text-sky-400" />
-          <span className="text-zinc-400">Охват:</span>
-          <span className="font-bold text-amber-300">11 часовых поясов РФ</span>
+        <div className="flex items-center gap-2 rounded-lg border border-white/[0.06] bg-zinc-950/60 px-3 py-1.5 text-xs font-mono">
+          <Globe2 className="h-3.5 w-3.5 text-zinc-400" />
+          <span className="text-zinc-500">Охват:</span>
+          <span className="font-semibold text-zinc-200">11 поясов РФ</span>
         </div>
       </div>
 
       {/* Main Grid: Interactive Map with Flight Arcs & Timezones Control */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left: Vector Map SVG (7 cols) */}
-        <div className="lg:col-span-7 rounded-3xl border border-white/10 bg-[#070814]/90 p-5 shadow-2xl backdrop-blur-2xl relative overflow-hidden">
+        <div className="lg:col-span-7 rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-              Карта опорных узлов связи (Москва ⇄ Дальний Восток)
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              Карта опорных узлов связи (Москва ⇄ ДФО)
             </span>
-            <span className="text-[11px] font-mono text-purple-300">
+            <span className="text-[11px] font-mono text-zinc-400">
               МСК: {padHour(selectedMskHour)}
             </span>
           </div>
@@ -456,7 +456,7 @@ export const YaProfiMapRadar: React.FC = () => {
             <button
               type="button"
               onClick={handleCopyAnnouncement}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-purple-600 py-2.5 text-xs font-bold text-black shadow-lg shadow-sky-500/25 hover:brightness-110 active:scale-98 transition-all"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-100 hover:bg-white py-2 text-xs font-semibold text-zinc-950 transition-colors shadow-sm"
             >
               {copiedAnnouncement ? (
                 <>

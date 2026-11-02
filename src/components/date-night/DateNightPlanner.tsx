@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Heart, 
-  Sparkles, 
   Dice5, 
   Calendar, 
-  CreditCard, 
   MapPin, 
   Clock, 
-  Tag, 
+  CreditCard, 
+  Gift, 
   CheckCircle2, 
   Filter,
-  Flame,
-  Gift
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { useNexusStore } from '../../store/useNexusStore';
 import { DateScenario } from '../../types/nexus';
@@ -20,77 +19,76 @@ import { soundEffects } from '../../utils/soundEffects';
 
 export const DateNightPlanner: React.FC = () => {
   const { dateScenarios, scheduleDateScenario, addWishlistItem } = useNexusStore();
-
-  const [selectedVibe, setSelectedVibe] = useState<string>('all');
-  const [selectedBudget, setSelectedBudget] = useState<string>('all');
-  const [currentScenario, setCurrentScenario] = useState<DateScenario>(dateScenarios[0]);
+  const [selectedVibe, setSelectedVibe] = useState<'all' | DateScenario['vibe']>('all');
+  const [selectedBudget, setSelectedBudget] = useState<'all' | DateScenario['budget']>('all');
   const [isSpinning, setIsSpinning] = useState(false);
   const [scheduledSuccess, setScheduledSuccess] = useState(false);
 
-  // Filter scenarios
+  // Default featured scenario is the November 4 Special
+  const [currentScenario, setCurrentScenario] = useState<DateScenario>(
+    () => dateScenarios.find((s) => s.id === 'date-nov4-ges2') || dateScenarios[0]
+  );
+
   const filteredScenarios = dateScenarios.filter((s) => {
-    const matchVibe = selectedVibe === 'all' || s.vibe === selectedVibe;
-    const matchBudget = selectedBudget === 'all' || s.budget === selectedBudget;
-    return matchVibe && matchBudget;
+    if (selectedVibe !== 'all' && s.vibe !== selectedVibe) return false;
+    if (selectedBudget !== 'all' && s.budget !== selectedBudget) return false;
+    return true;
   });
 
-  // Slot machine roulette spin
   const handleSpinRoulette = () => {
-    if (isSpinning) return;
+    if (filteredScenarios.length === 0) return;
     setIsSpinning(true);
     setScheduledSuccess(false);
+    soundEffects.playClick();
 
     let counter = 0;
-    const totalTicks = 18;
-    const pool = filteredScenarios.length > 0 ? filteredScenarios : dateScenarios;
-
     const interval = setInterval(() => {
+      const randomIdx = Math.floor(Math.random() * filteredScenarios.length);
+      setCurrentScenario(filteredScenarios[randomIdx]);
       counter++;
-      const randomIndex = Math.floor(Math.random() * pool.length);
-      setCurrentScenario(pool[randomIndex]);
-      soundEffects.playClick();
 
-      if (counter >= totalTicks) {
+      if (counter >= 12) {
         clearInterval(interval);
         setIsSpinning(false);
-        soundEffects.playLevelUp();
+        soundEffects.playSuccess();
       }
-    }, 90);
+    }, 70);
   };
 
   const handleScheduleForNov4 = () => {
     scheduleDateScenario(currentScenario, '2026-11-04');
     setScheduledSuccess(true);
-    setTimeout(() => setScheduledSuccess(false), 3500);
+    soundEffects.playSuccess();
+    setTimeout(() => setScheduledSuccess(false), 4000);
   };
 
   const handleSendToWishlist = () => {
     addWishlistItem({
-      title: currentScenario.title,
-      category: 'Свидания & Релакс',
+      title: `Свидание: ${currentScenario.title}`,
+      category: 'Спальня',
       estimatedPrice: currentScenario.estimatedCost,
-      notes: `${currentScenario.description}\nЛокация: ${currentScenario.location}`,
+      notes: `${currentScenario.description} (Локация: ${currentScenario.location})`,
       addedBy: 'egor',
     });
     soundEffects.playSuccess();
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl border border-pink-500/30 bg-gradient-to-r from-pink-950/40 via-purple-950/30 to-[#0d0e19] p-6 shadow-2xl backdrop-blur-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl border border-white/[0.07] bg-[rgba(18,18,21,0.75)] backdrop-blur-[24px] p-4 sm:p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/30">
-            <Heart className="h-6 w-6 fill-current animate-pulse" />
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/[0.04] text-rose-400 border border-white/[0.08]">
+            <Heart className="h-5 w-5 fill-current" />
           </span>
           <div>
-            <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
-              Генератор Свиданий: «Что делаем 4 ноября? 💕»
-              <span className="rounded-full bg-pink-500/20 px-2.5 py-0.5 text-[11px] font-mono font-bold text-pink-300 border border-pink-500/30">
-                День народного единства
+            <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <span>Генератор Свиданий: «Что делаем 4 ноября? 💕»</span>
+              <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-white/[0.08]">
+                Выходной
               </span>
             </h2>
-            <p className="text-xs text-zinc-300">
+            <p className="text-xs text-zinc-400">
               Интерактивная рулетка для идеального выходного в Москве или уютного домашнего вечера
             </p>
           </div>
@@ -101,36 +99,36 @@ export const DateNightPlanner: React.FC = () => {
           type="button"
           disabled={isSpinning}
           onClick={handleSpinRoulette}
-          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-amber-400 px-6 py-3 text-sm font-extrabold text-black shadow-xl shadow-pink-500/25 hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+          className="flex items-center gap-2 rounded-lg bg-zinc-100 hover:bg-white px-4 py-2 text-xs font-semibold text-zinc-950 disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
         >
-          <Dice5 className={`h-5 w-5 stroke-[2.5] ${isSpinning ? 'animate-spin' : ''}`} />
-          <span>{isSpinning ? 'Выбираем лучшее...' : '🎰 Крутить рулетку свиданий!'}</span>
+          <Dice5 className={`h-4 w-4 stroke-[2.5] ${isSpinning ? 'animate-spin' : ''}`} />
+          <span>{isSpinning ? 'Выбираем...' : 'Крутить рулетку'}</span>
         </button>
       </div>
 
       {/* Filter Pills */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0d0e19]/80 p-3.5 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-white/[0.06] bg-zinc-950/50 p-2.5">
         {/* Vibe filter */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-1 text-xs">
           <span className="text-zinc-500 text-[11px] font-medium mr-1 flex items-center gap-1">
             <Filter className="h-3 w-3" /> Вайб:
           </span>
           {[
-            { id: 'all', label: 'Все вайбы' },
-            { id: 'home', label: '🏠 Дома' },
-            { id: 'gastro', label: '🍜 Гастро' },
-            { id: 'art', label: '🎨 Арт/ГЭС-2' },
-            { id: 'gaming', label: '🎮 Кооп/Игры' },
-            { id: 'walk', label: '🌿 Прогулка' },
+            { id: 'all', label: 'Все' },
+            { id: 'home', label: 'Дома' },
+            { id: 'gastro', label: 'Гастро' },
+            { id: 'art', label: 'Арт / ГЭС-2' },
+            { id: 'gaming', label: 'Игры' },
+            { id: 'walk', label: 'Прогулка' },
           ].map((v) => (
             <button
               key={v.id}
               type="button"
-              onClick={() => setSelectedVibe(v.id)}
-              className={`rounded-xl px-2.5 py-1 transition-all ${
+              onClick={() => setSelectedVibe(v.id as any)}
+              className={`rounded px-2 py-0.5 text-[11px] transition-colors ${
                 selectedVibe === v.id
-                  ? 'bg-pink-500/25 text-pink-200 border border-pink-500/50 shadow-sm'
-                  : 'bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-zinc-200'
+                  ? 'bg-white/[0.12] text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               {v.label}
@@ -139,23 +137,23 @@ export const DateNightPlanner: React.FC = () => {
         </div>
 
         {/* Budget filter */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1 text-xs">
           <span className="text-zinc-500 text-[11px] font-medium mr-1">Бюджет:</span>
           {[
             { id: 'all', label: 'Все' },
-            { id: 'free', label: '0-800 ₽' },
-            { id: 'low', label: 'до 2 000 ₽' },
-            { id: 'medium', label: 'до 5 000 ₽' },
-            { id: 'festive', label: 'Праздничный 5k+' },
+            { id: 'free', label: '0 ₽' },
+            { id: 'low', label: 'до 1.5k' },
+            { id: 'medium', label: 'до 4k' },
+            { id: 'high', label: 'премиум' },
           ].map((b) => (
             <button
               key={b.id}
               type="button"
-              onClick={() => setSelectedBudget(b.id)}
-              className={`rounded-xl px-2.5 py-1 transition-all ${
+              onClick={() => setSelectedBudget(b.id as any)}
+              className={`rounded px-2 py-0.5 text-[11px] transition-colors ${
                 selectedBudget === b.id
-                  ? 'bg-amber-500/25 text-amber-200 border border-amber-500/50 shadow-sm'
-                  : 'bg-white/[0.03] text-zinc-400 border border-white/5 hover:text-zinc-200'
+                  ? 'bg-white/[0.12] text-zinc-100'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               {b.label}
@@ -168,70 +166,66 @@ export const DateNightPlanner: React.FC = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentScenario.id}
-          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          initial={{ opacity: 0, scale: 0.98, y: 6 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="rounded-3xl border border-pink-500/40 bg-[#0d0a1b]/90 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl relative overflow-hidden"
+          exit={{ opacity: 0, scale: 0.98, y: -6 }}
+          transition={{ duration: 0.15 }}
+          className="rounded-xl border border-white/[0.08] bg-[rgba(24,24,28,0.7)] p-4 sm:p-5 backdrop-blur-[24px]"
         >
-          {/* Background Ambient Glow */}
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-pink-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
             {/* Left Info: Emoji & Header */}
-            <div className="lg:col-span-8 space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-4xl">{currentScenario.emoji}</span>
-                <span className="rounded-full bg-pink-500/20 px-3 py-1 text-xs font-semibold text-pink-300 border border-pink-500/40">
+            <div className="lg:col-span-8 space-y-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-2xl">{currentScenario.emoji}</span>
+                <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[11px] text-zinc-300 border border-white/[0.07]">
                   {currentScenario.vibeLabel}
                 </span>
-                <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-mono font-bold text-amber-300 border border-amber-500/40">
+                <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[11px] font-mono text-zinc-300 border border-white/[0.07]">
                   {currentScenario.budgetLabel}
                 </span>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-mono text-zinc-300 flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {currentScenario.duration}
+                <span className="rounded bg-white/[0.05] px-2 py-0.5 text-[11px] font-mono text-zinc-400 flex items-center gap-1">
+                  <Clock className="h-2.5 w-2.5" /> {currentScenario.duration}
                 </span>
               </div>
 
-              <h3 className="text-2xl font-black text-zinc-100 tracking-tight leading-snug">
+              <h3 className="text-base font-semibold text-zinc-100 tracking-tight leading-snug">
                 {currentScenario.title}
               </h3>
 
-              <p className="text-sm text-zinc-300 leading-relaxed">
+              <p className="text-xs text-zinc-400 leading-relaxed">
                 {currentScenario.description}
               </p>
 
-              <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <MapPin className="h-4 w-4 text-rose-400 shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                <MapPin className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
                 <span>{currentScenario.location}</span>
               </div>
 
               {/* Recommended Bank Card & Cashback Advice */}
-              <div className="rounded-2xl border border-white/10 bg-black/50 p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    <CreditCard className="h-4 w-4" />
+              <div className="rounded-lg border border-white/[0.06] bg-zinc-950/60 p-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded bg-white/[0.04] text-zinc-300 border border-white/[0.06]">
+                    <CreditCard className="h-3.5 w-3.5" />
                   </span>
                   <div>
-                    <span className="text-[10px] uppercase font-mono text-zinc-400 block">
-                      Рекомендация по оплате с кэшбэком:
+                    <span className="text-[10px] uppercase font-mono text-zinc-500 block">
+                      Рекомендация по оплате:
                     </span>
                     <strong className="text-xs text-zinc-200">{currentScenario.recommendedCard}</strong>
                   </div>
                 </div>
 
-                <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 font-mono text-xs font-bold text-emerald-300 border border-emerald-500/30 shrink-0">
+                <span className="rounded bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-medium text-emerald-400 border border-emerald-500/20 shrink-0">
                   {currentScenario.cardBonusText}
                 </span>
               </div>
 
               {/* Tags */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              <div className="flex flex-wrap gap-1 pt-0.5">
                 {currentScenario.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-md bg-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-400 border border-white/5"
+                    className="rounded bg-white/[0.03] px-1.5 py-0.2 text-[10px] text-zinc-500 border border-white/[0.05]"
                   >
                     #{tag}
                   </span>
@@ -240,85 +234,80 @@ export const DateNightPlanner: React.FC = () => {
             </div>
 
             {/* Right Controls: One-Click Calendar Scheduling */}
-            <div className="lg:col-span-4 flex flex-col justify-center space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-              <span className="text-xs font-mono text-zinc-400 uppercase text-center block">
+            <div className="lg:col-span-4 flex flex-col justify-center space-y-2 rounded-lg border border-white/[0.06] bg-zinc-950/40 p-4">
+              <span className="text-[11px] font-mono text-zinc-500 uppercase text-center block">
                 Выходной: 4 ноября 2026
               </span>
 
               {scheduledSuccess ? (
-                <div className="rounded-xl bg-emerald-500/20 border border-emerald-500/40 p-4 text-center space-y-1">
-                  <CheckCircle2 className="mx-auto h-6 w-6 text-emerald-400" />
-                  <span className="block text-xs font-bold text-emerald-200">
-                    Ура! Запланировано в еженедельник на 4 ноября!
+                <div className="rounded bg-emerald-500/10 border border-emerald-500/20 p-3 text-center space-y-1">
+                  <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-400" />
+                  <span className="block text-xs font-medium text-emerald-300">
+                    Запланировано в еженедельник на 4 ноября!
                   </span>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={handleScheduleForNov4}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 py-3 text-xs font-extrabold text-white shadow-lg shadow-pink-500/25 hover:brightness-110 active:scale-98 transition-all"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-white py-2 text-xs font-semibold text-zinc-950 transition-colors"
                 >
-                  <Calendar className="h-4 w-4" />
-                  <span>✨ Запланировать на 4 ноября!</span>
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>Запланировать на 4 ноября</span>
                 </button>
               )}
 
               <button
                 type="button"
                 onClick={handleSendToWishlist}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/[0.06] py-2.5 text-xs font-semibold text-zinc-300 border border-white/10 hover:bg-white/10 transition-colors"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.04] py-1.5 text-xs text-zinc-300 border border-white/[0.06] hover:bg-white/[0.08] transition-colors"
               >
-                <Gift className="h-3.5 w-3.5 text-pink-400" />
-                <span>Добавить в вишлист пары</span>
+                <Gift className="h-3 w-3" />
+                <span>В вишлист пары</span>
               </button>
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Grid of Other Date Ideas (20+ ideas) */}
-      <div className="space-y-3 pt-2">
-        <h4 className="text-sm font-bold text-zinc-200 flex items-center justify-between">
-          <span>Все идеи для уикенда ({filteredScenarios.length})</span>
-          <span className="text-xs text-zinc-400 font-normal">Кликни, чтобы выбрать идею</span>
-        </h4>
+      {/* Grid of Other Date Ideas */}
+      <div className="space-y-2 pt-1">
+        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-tight">
+          Все идеи свиданий ({filteredScenarios.length})
+        </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredScenarios.map((scenario) => {
-            const isSelected = currentScenario.id === scenario.id;
-
-            return (
-              <div
-                key={scenario.id}
-                onClick={() => {
-                  soundEffects.playClick();
-                  setCurrentScenario(scenario);
-                }}
-                className={`rounded-2xl p-4 transition-all cursor-pointer border flex flex-col justify-between space-y-3 ${
-                  isSelected
-                    ? 'border-pink-500/60 bg-pink-500/10 shadow-lg shadow-pink-500/10'
-                    : 'border-white/10 bg-[#0d0e19]/80 hover:border-white/20 hover:bg-white/[0.04]'
-                }`}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl">{scenario.emoji}</span>
-                    <span className="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[10px] text-zinc-300">
-                      {scenario.budgetLabel}
-                    </span>
-                  </div>
-
-                  <h5 className="font-bold text-xs text-zinc-100 line-clamp-2">{scenario.title}</h5>
-                  <p className="text-[11px] text-zinc-400 line-clamp-2">{scenario.description}</p>
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-2 border-t border-white/5">
-                  <span className="text-pink-300 font-medium">{scenario.vibeLabel}</span>
-                  <span>~{scenario.estimatedCost} ₽</span>
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+          {filteredScenarios.map((scenario) => (
+            <div
+              key={scenario.id}
+              onClick={() => {
+                setCurrentScenario(scenario);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="rounded-lg border border-white/[0.07] bg-[rgba(24,24,28,0.65)] hover:bg-[rgba(32,32,38,0.85)] p-3 space-y-2 cursor-pointer transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xl">{scenario.emoji}</span>
+                <span className="rounded bg-white/[0.04] px-1.5 py-0.2 font-mono text-[10px] text-zinc-400 border border-white/[0.06]">
+                  {scenario.budgetLabel}
+                </span>
               </div>
-            );
-          })}
+
+              <div>
+                <h4 className="text-xs font-medium text-zinc-100 leading-snug">
+                  {scenario.title}
+                </h4>
+                <p className="mt-1 text-[11px] text-zinc-500 line-clamp-2">
+                  {scenario.description}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-[10px] text-zinc-500">
+                <span>{scenario.vibeLabel}</span>
+                <span className="text-zinc-400">{scenario.location.split(',')[0]}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
