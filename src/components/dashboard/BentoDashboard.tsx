@@ -155,6 +155,7 @@ export const BentoDashboard: React.FC<BentoDashboardProps> = ({
               onAddNewTask={() => onAddTask()}
               selectedAssignee={selectedAssignee}
               onAssigneeChange={onAssigneeChange}
+              isWidgetMode={isWidgetMode}
             />
           </div>
         </div>

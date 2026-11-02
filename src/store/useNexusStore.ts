@@ -41,7 +41,12 @@ import {
   initialHSECalculators,
   initialRUDNSubjects
 } from '../data/blueprintAndDatesData';
-import { getSupabaseClient, executeBidirectionalSync } from '../services/supabaseClient';
+import { 
+  getSupabaseClient, 
+  executeBidirectionalSync,
+  fetchNexusSyncFeed,
+  pushSharedStateToNexusSync
+} from '../services/supabaseClient';
 import { cozyAudio } from '../utils/CozyAudioSynthesizer';
 import { soundEffects } from '../utils/soundEffects';
 import { telegramBotService } from '../services/telegramBotService';
@@ -166,7 +171,9 @@ export interface NexusState {
 
   // Live Data Pipeline Sync
   setGcalEvents: (events: GCalEvent[]) => void;
-  syncWithLivePipeline: () => Promise<{ success: boolean; count?: number; error?: string }>;
+  syncWithLivePipeline: () => Promise<{ success: boolean; count?: number; error?: string; source?: string }>;
+  pushCloudState: () => Promise<boolean>;
+  saveSupabaseToLocalEnv: (url: string, key: string) => Promise<{ success: boolean; message?: string }>;
 
   addStudyWorkItem: (item: Omit<StudyWorkItem, 'id'>) => void;
   updateStudyWorkStatus: (id: string, status: StudyWorkItem['status']) => void;
@@ -741,6 +748,9 @@ export const useNexusStore = create<NexusState>()(
               : w
           ),
         }));
+
+        // Mirror to Cloud
+        get().pushCloudState();
       },
 
       deleteWishlistItem: (id) => {
@@ -1016,22 +1026,49 @@ export const useNexusStore = create<NexusState>()(
         set({ isSyncingLive: true });
         try {
           let rawData: any = null;
+          let syncSource = 'live-data.json';
+          const { supabaseConfig } = get();
 
-          // 1. Dev endpoint
+          // 1. Try local dev-middleware /api/live-sync
           try {
-            const resp = await fetch('/api/sync', { signal: AbortSignal.timeout(6000) });
+            const resp = await fetch('/api/live-sync', { signal: AbortSignal.timeout(5000) });
             if (resp.ok) {
               rawData = await resp.json();
+              syncSource = 'local-bridge (/api/live-sync)';
             }
           } catch {
-            // Dev server middleware not reachable or timed out
+            // Not local or bridge not reachable
           }
 
-          // 2. Fallback to public live-data.json
+          // 2. Try Supabase REST feed if configured (for iPhone, Windows & Android remote sync)
+          if (!rawData && supabaseConfig.url && supabaseConfig.anonKey) {
+            try {
+              const cloudData = await fetchNexusSyncFeed(supabaseConfig.url, supabaseConfig.anonKey);
+              if (cloudData && cloudData.payload) {
+                rawData = cloudData.payload;
+                syncSource = 'supabase-cloud (nexus_sync)';
+
+                // If cloud has shared_state (couple votes, custom expenses), merge it
+                if (cloudData.shared_state) {
+                  const ss = cloudData.shared_state;
+                  set((state) => ({
+                    wishlist: ss.wishlist || state.wishlist,
+                    transactions: ss.transactions || state.transactions,
+                    budget: ss.budget || state.budget,
+                  }));
+                }
+              }
+            } catch (e) {
+              console.warn('Supabase cloud sync failed:', e);
+            }
+          }
+
+          // 3. Fallback to public live-data.json snapshot
           if (!rawData) {
             const resp = await fetch('./live-data.json', { cache: 'no-cache' });
             if (resp.ok) {
               rawData = await resp.json();
+              syncSource = 'static-snapshot (live-data.json)';
             }
           }
 
@@ -1055,18 +1092,87 @@ export const useNexusStore = create<NexusState>()(
             };
           });
 
-          set({
-            gcalEvents: gcalItems,
-            lastSyncTime: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-          });
+          // Automatically extract all questions with '?' from ticktick.inbox into wishlist!
+          const inboxItems: any[] = rawData.ticktick?.inbox || [];
+          const currentWishlist = get().wishlist;
+          const existingTitles = new Set(currentWishlist.map((w) => w.title.toLowerCase().trim()));
+          const newWishes: WishlistItem[] = [];
 
-          return { success: true, count: (rawData.ticktick?.results?.length || 0) + (rawData.ticktick?.inbox?.length || 0) };
+          for (const item of inboxItems) {
+            const title = (item.plainTitle || item.title || '').trim();
+            if (title.includes('?') && !existingTitles.has(title.toLowerCase())) {
+              const isBathroom = title.toLowerCase().includes('ванн') || title.toLowerCase().includes('коврик');
+              const isRoom = title.toLowerCase().includes('комнат') || title.toLowerCase().includes('подушка') || title.toLowerCase().includes('перестановка');
+              const cat = isBathroom ? 'Ванная' : isRoom ? 'Комната' : 'Кухня';
+
+              newWishes.push({
+                id: `wish-${item.id || Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                title,
+                category: cat,
+                estimatedPrice: 0,
+                link: '',
+                notes: 'Автоматически подтянуто из TickTick',
+                egorVote: null,
+                anyaVote: null,
+                status: 'pending',
+                addedBy: 'together',
+                createdAt: item.createdTime || new Date().toISOString(),
+              });
+              existingTitles.add(title.toLowerCase());
+            }
+          }
+
+          set((state) => ({
+            gcalEvents: gcalItems,
+            wishlist: newWishes.length > 0 ? [...state.wishlist, ...newWishes] : state.wishlist,
+            lastSyncTime: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+          }));
+
+          return {
+            success: true,
+            count: (rawData.ticktick?.results?.length || 0) + inboxItems.length,
+            source: syncSource,
+          };
         } catch (err: any) {
           console.warn('Sync failed:', err);
           return { success: false, error: err.message };
         } finally {
           set({ isSyncingLive: false });
         }
+      },
+
+      pushCloudState: async () => {
+        const { supabaseConfig, wishlist, budget, transactions } = get();
+        if (!supabaseConfig.url || !supabaseConfig.anonKey) return false;
+        try {
+          return await pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
+            wishlist,
+            budget,
+            transactions,
+          });
+        } catch (e) {
+          console.warn('Push cloud state failed:', e);
+          return false;
+        }
+      },
+
+      saveSupabaseToLocalEnv: async (url: string, key: string) => {
+        try {
+          const resp = await fetch('/api/save-supabase-env', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, key }),
+          });
+          if (resp.ok) {
+            return { success: true, message: 'Ключи успешно сохранены в ~/.config/ubersicht-dashboard/.env!' };
+          }
+        } catch {
+          // not in local dev server
+        }
+        return { 
+          success: false, 
+          message: `Выполните в терминале на Маке:\necho "SUPABASE_URL=\\"${url}\\"\\nSUPABASE_KEY=\\"${key}\\"" > ~/.config/ubersicht-dashboard/.env` 
+        };
       },
 
       resetToDefaultData: () => {

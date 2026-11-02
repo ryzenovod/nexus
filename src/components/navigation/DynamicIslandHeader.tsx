@@ -42,6 +42,7 @@ export const DynamicIslandHeader: React.FC<DynamicIslandHeaderProps> = ({
   } = useNexusStore();
 
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [syncSource, setSyncSource] = useState<string>('');
   const [currentTimeMSK, setCurrentTimeMSK] = useState('');
   const [currentTimeDFO, setCurrentTimeDFO] = useState('');
 
@@ -75,10 +76,11 @@ export const DynamicIslandHeader: React.FC<DynamicIslandHeaderProps> = ({
     const res = await syncWithLivePipeline();
     if (res.success) {
       setSyncStatus('success');
-      setTimeout(() => setSyncStatus('idle'), 3000);
+      if (res.source) setSyncSource(res.source);
+      setTimeout(() => setSyncStatus('idle'), 3500);
     } else {
       setSyncStatus('error');
-      setTimeout(() => setSyncStatus('idle'), 3000);
+      setTimeout(() => setSyncStatus('idle'), 3500);
     }
   };
 
@@ -180,7 +182,17 @@ export const DynamicIslandHeader: React.FC<DynamicIslandHeaderProps> = ({
           className={isSyncingLive ? 'animate-spin text-amber-400' : syncStatus === 'success' ? 'text-emerald-400' : 'text-zinc-400'} 
         />
         <span className="hidden lg:inline text-[11px]">
-          {isSyncingLive ? 'Синхронизация...' : syncStatus === 'success' ? 'Обновлено' : lastSyncTime ? `Live ${lastSyncTime}` : 'Синхронизация'}
+          {isSyncingLive
+            ? 'Синхронизация...'
+            : syncStatus === 'success'
+            ? syncSource.includes('local')
+              ? 'Локальный мост ✓'
+              : syncSource.includes('supabase')
+              ? 'Supabase Cloud ✓'
+              : 'Обновлено ✓'
+            : lastSyncTime
+            ? `Live ${lastSyncTime}`
+            : 'Обновить'}
         </span>
       </button>
 
