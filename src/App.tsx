@@ -8,6 +8,7 @@ import { ShadcnStudyWork } from './components/study-work/ShadcnStudyWork';
 import { ShadcnTaskDialog } from './components/command-center/ShadcnTaskDialog';
 import { CatRoomDialog } from './components/visual/CatRoomDialog';
 import { CommandPalette } from './components/command-palette/CommandPalette';
+import { SettingsModal } from './components/settings/SettingsModal';
 import { NexusTask } from './types/nexus';
 
 export const App: React.FC = () => {
@@ -30,6 +31,7 @@ export const App: React.FC = () => {
   const [selectedTaskToEdit, setSelectedTaskToEdit] = useState<NexusTask | null>(null);
   const [initialTaskDate, setInitialTaskDate] = useState<string>('inbox');
   const [activeCommandPalette, setActiveCommandPalette] = useState(false);
+  const [activeSettings, setActiveSettings] = useState(false);
 
   // Background live data sync on mount
   useEffect(() => {
@@ -112,6 +114,7 @@ export const App: React.FC = () => {
           onOpenNewTask={() => handleOpenNewTask('inbox')}
           onOpenSearch={() => setActiveCommandPalette(true)}
           onOpenCatRoom={() => setActiveCatRoom(true)}
+          onOpenSettings={() => setActiveSettings(true)}
         />
 
         {/* ── Main Viewport ── */}
@@ -182,7 +185,13 @@ export const App: React.FC = () => {
           else if (tab === 'study-work') setActiveTab('study-work');
         }}
         onToggleWidgetMode={() => {}}
-        onOpenSettings={() => {}}
+        onOpenSettings={() => setActiveSettings(true)}
+      />
+
+      {/* ── Settings & Supabase Modal ── */}
+      <SettingsModal
+        isOpen={activeSettings}
+        onClose={() => setActiveSettings(false)}
       />
     </div>
   );

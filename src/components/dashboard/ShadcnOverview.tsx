@@ -121,9 +121,20 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         return t.date === iso;
       });
 
-      // Filter events from gcal (strictly real events from fetch_data.py)
+      // Filter events from gcal (strictly real events from fetch_data.py, zero demo mock noise)
       const dayEvents = (gcalEvents || []).filter(e => {
         if (!e || !e.start || (e.id && e.id.startsWith('gcal-'))) return false;
+        const summary = (e.summary || '').toLowerCase();
+        if (
+          summary.includes('синхронизация по деплою') ||
+          summary.includes('леруа мерлен') ||
+          summary.includes('свидание пары') ||
+          summary.includes('созвон с амбассадорами') ||
+          summary.includes('семинар по нир') ||
+          summary.includes('лекции и тестирование')
+        ) {
+          return false;
+        }
         const eDate = e.start.date || (e.start.dateTime ? e.start.dateTime.slice(0, 10) : '');
         return eDate === iso;
       });
@@ -211,10 +222,16 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
 
   return (
     <div className="flex-1 flex flex-col space-y-6 max-w-[1600px] mx-auto w-full pb-8">
-      {/* ── 1. METRIC CARDS ROW ── */}
+      {/* ── 1. METRIC CARDS ROW (100% Clickable) ── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Active Tasks */}
-        <div className="rounded-xl border bg-card text-card-foreground shadow-xs p-6">
+        {/* Card 1: Active Tasks -> Scroll to tasks */}
+        <div 
+          onClick={() => {
+            document.getElementById('inbox-tasks-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          title="Нажмите, чтобы перейти к списку активных задач"
+        >
           <div className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs font-medium text-muted-foreground">TickTick Задачи</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -223,12 +240,18 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
             {activeTasks.length} <span className="text-sm font-normal text-muted-foreground">активных</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            +{completedTasks.length} завершено · синхронизировано с Mac
+            +{completedTasks.length} завершено · перейти к списку ↓
           </p>
         </div>
 
-        {/* Card 2: Schedule & Overdue */}
-        <div className="rounded-xl border bg-card text-card-foreground shadow-xs p-6">
+        {/* Card 2: Schedule & Overdue -> Scroll to calendar */}
+        <div 
+          onClick={() => {
+            document.getElementById('week-calendar-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          title="Нажмите, чтобы перейти к недельному календарю"
+        >
           <div className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs font-medium text-muted-foreground">План на неделю</span>
             <CalendarDays className="h-4 w-4 text-sky-400" />
@@ -238,17 +261,18 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           </div>
           <p className="text-xs mt-1">
             {overdueTasks.length > 0 ? (
-              <span className="text-red-400 font-medium">{overdueTasks.length} просрочено</span>
+              <span className="text-red-400 font-medium">{overdueTasks.length} просрочено · перейти к календарю ↓</span>
             ) : (
-              <span className="text-muted-foreground">Все задачи выполняются в срок</span>
+              <span className="text-muted-foreground">Все в срок · перейти к календарю ↓</span>
             )}
           </p>
         </div>
 
-        {/* Card 3: Joint Budget */}
+        {/* Card 3: Joint Budget -> Switch to finances tab */}
         <div 
           onClick={() => onNavigateTab('finances')}
-          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 transition-colors"
+          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          title="Нажмите, чтобы открыть раздел Финансы и Бюджет"
         >
           <div className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs font-medium text-muted-foreground">Совместный бюджет пары</span>
@@ -264,10 +288,11 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           </div>
         </div>
 
-        {/* Card 4: Utilities */}
+        {/* Card 4: Utilities -> Switch to finances tab */}
         <div 
           onClick={() => onNavigateTab('finances')}
-          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 transition-colors"
+          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          title="Нажмите, чтобы открыть квитанции и счетчики ЖКХ"
         >
           <div className="flex flex-row items-center justify-between pb-2">
             <span className="text-xs font-medium text-muted-foreground">ЖКХ Москвы (Ноябрь)</span>
@@ -277,13 +302,13 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
             1 685 ₽ <span className="text-sm font-normal text-muted-foreground">к оплате</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Мосэнерго: передано · Домиленд: 1 685 ₽
+            Мосэнерго: передано · Домиленд: 1 685 ₽ →
           </p>
         </div>
       </div>
 
       {/* ── 2. 7-DAY WEEK CALENDAR TIMELINE ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs">
+      <div id="week-calendar-section" className="rounded-xl border bg-card text-card-foreground shadow-xs">
         <div className="flex flex-wrap items-center justify-between p-5 border-b gap-3">
           <div className="flex items-center gap-3">
             <div>
@@ -352,9 +377,11 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
             return (
               <div
                 key={day.iso}
-                className={`flex flex-col p-3 transition-colors ${
+                onClick={() => onAddTask(day.iso)}
+                className={`flex flex-col p-3 transition-colors cursor-pointer group/day ${
                   day.isToday ? 'bg-muted/20' : 'hover:bg-muted/10'
                 }`}
+                title={`Нажмите для создания задачи на ${day.dayName}, ${day.dayNumber} ${day.monthName}`}
               >
                 {/* Day Header */}
                 <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/60">
@@ -383,7 +410,10 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                     return (
                       <div
                         key={ev.id || eIdx}
-                        onClick={() => setSelectedCalendarEvent({ ...ev, formattedTime: time, dateIso: day.iso, dayLabel: `${day.dayName}, ${day.dayNumber}` })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCalendarEvent({ ...ev, formattedTime: time, dateIso: day.iso, dayLabel: `${day.dayName}, ${day.dayNumber}` });
+                        }}
                         className="flex items-center gap-1.5 p-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/25 text-sky-200 text-xs cursor-pointer transition-colors"
                         title="Нажмите для просмотра события и добавления в задачи"
                       >
@@ -407,7 +437,10 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                               ? 'bg-red-500/10 border-red-500/20 text-foreground'
                               : 'bg-card hover:bg-accent hover:text-accent-foreground'
                         }`}
-                        onClick={() => onTaskClick(task)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTaskClick(task);
+                        }}
                       >
                         <div 
                           className="pt-0.5" 
@@ -441,8 +474,11 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
 
                 {/* Quick Add Button */}
                 <button
-                  onClick={() => onAddTask(day.iso)}
-                  className="mt-2 w-full flex items-center justify-center gap-1 py-1 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors opacity-70 hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddTask(day.iso);
+                  }}
+                  className="mt-2 w-full flex items-center justify-center gap-1 py-1 rounded text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors opacity-70 group-hover/day:opacity-100 cursor-pointer"
                 >
                   <Plus className="h-3 w-3" />
                   <span>Добавить</span>
@@ -454,7 +490,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
       </div>
 
       {/* ── 3. FLAT TASKS INBOX & HUBS BROWSER ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs">
+      <div id="inbox-tasks-section" className="rounded-xl border bg-card text-card-foreground shadow-xs">
         <div className="p-5 border-b">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>

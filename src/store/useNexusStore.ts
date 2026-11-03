@@ -1466,7 +1466,21 @@ export const useNexusStore = create<NexusState>()(
           }));
         }
         // Purge any legacy fake demo events
-        state.gcalEvents = (state.gcalEvents || []).filter(e => e.id && !e.id.startsWith('gcal-'));
+        state.gcalEvents = (state.gcalEvents || []).filter((e) => {
+          if (!e || !e.id || e.id.startsWith('gcal-')) return false;
+          const summary = (e.summary || '').toLowerCase();
+          if (
+            summary.includes('синхронизация по деплою') ||
+            summary.includes('леруа мерлен') ||
+            summary.includes('свидание пары') ||
+            summary.includes('созвон с амбассадорами') ||
+            summary.includes('семинар по нир') ||
+            summary.includes('лекции и тестирование')
+          ) {
+            return false;
+          }
+          return true;
+        });
         // Ensure honest zero budget contributions if legacy 40000 was set
         if (state.budget && state.budget.egorContribution === 40000 && state.budget.anyaContribution === 40000 && state.budget.currentBalance === 0) {
           state.budget.egorContribution = 0;
