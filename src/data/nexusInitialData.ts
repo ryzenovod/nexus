@@ -1133,12 +1133,12 @@ export const initialWishlist: WishlistItem[] = [
 
 // Clean zero balance: user will enter manual balance when ready
 export const initialBudget: JointBudget = {
-  totalTarget: 80000,
+  totalTarget: 0,
   egorContribution: 0,
   anyaContribution: 0,
   currentBalance: 0,
-  depositDates: '10 и 25 числа каждого месяца',
-  lastUpdated: '2026-11-02T15:00:00Z'
+  depositDates: '',
+  lastUpdated: '2026-11-03T12:00:00Z'
 };
 
 export const initialTransactions: FinanceTransaction[] = [];
@@ -1154,7 +1154,6 @@ export const initialCashbackCards: CashbackCard[] = [
     claimed: true,
     claimDeadline: 'Выбран',
     specialFeature: 'Бонусы СберСпасибо · Аня',
-    digits: '7714',
     gradientPreset: 'emerald',
     cardHolder: 'ANYA',
     categories: [
@@ -1173,7 +1172,6 @@ export const initialCashbackCards: CashbackCard[] = [
     claimed: true,
     claimDeadline: 'Выбран',
     specialFeature: 'Егор · Т-Банк Black',
-    digits: '5529',
     gradientPreset: 'titanium',
     cardHolder: 'EGOR',
     categories: [
@@ -1192,7 +1190,6 @@ export const initialCashbackCards: CashbackCard[] = [
     claimed: true,
     claimDeadline: 'Выбран',
     specialFeature: 'WB Кошелек & Скидки',
-    digits: '8831',
     gradientPreset: 'violet',
     cardHolder: 'EGOR',
     categories: [
@@ -1210,7 +1207,6 @@ export const initialCashbackCards: CashbackCard[] = [
     claimed: true,
     claimDeadline: 'Выбран',
     specialFeature: 'Альфа-Карта · Егор',
-    digits: '1409',
     gradientPreset: 'ruby',
     cardHolder: 'EGOR',
     categories: [
@@ -1230,7 +1226,6 @@ export const initialCashbackCards: CashbackCard[] = [
     claimDeadline: 'Выбран',
     specialFeature: 'Акция месяца · Егор',
     actionRequired: 'До 25 числа нажать «Забрать» в приложении',
-    digits: '9276',
     gradientPreset: 'sapphire',
     cardHolder: 'EGOR',
     categories: [
@@ -1248,10 +1243,10 @@ export const initialUtilityBills: UtilityBill[] = [
     id: 'util-domiland',
     serviceName: 'Домиленд: вода гор, хол; отопление',
     provider: 'УК Домиленд',
-    amount: 1685.41,
-    commission: 16.69,
+    amount: 0,
+    commission: 0,
     dueDate: '2026-11-10',
-    periodText: 'Октябрь 2026',
+    periodText: 'Октябрь-Ноябрь 2026',
     status: 'due',
     readingsRequired: true,
     readingsWindow: '18–25 число',
@@ -1269,7 +1264,7 @@ export const initialUtilityBills: UtilityBill[] = [
     amount: 0,
     commission: 0,
     dueDate: '2026-11-15',
-    periodText: 'Октябрь 2026',
+    periodText: 'Октябрь-Ноябрь 2026',
     status: 'due',
     readingsRequired: true,
     readingsWindow: '15–26 число каждого месяца',
@@ -1296,10 +1291,10 @@ export const initialUtilityBills: UtilityBill[] = [
     id: 'util-wifi',
     serviceName: 'ЛК Wi-Fi (lk.formula-start.ru)',
     provider: 'Formula Start',
-    amount: 740.00,
+    amount: 0,
     commission: 0,
     dueDate: '2026-11-05',
-    periodText: 'Октябрь 2026',
+    periodText: 'Октябрь-Ноябрь 2026',
     status: 'paid',
     readingsRequired: false,
     linkUrl: 'http://lk.formula-start.ru',
@@ -1307,99 +1302,4 @@ export const initialUtilityBills: UtilityBill[] = [
   }
 ];
 
-export const initialStudyWorkItems: StudyWorkItem[] = [
-  {
-    id: 'sw-1',
-    space: 'rudn-anya',
-    user: 'anya',
-    title: 'РУДН: лекции и семинары онлайн',
-    description: 'Учебные модули и аттестация',
-    courseOrProject: 'РУДН Онлайн',
-    status: 'in_progress',
-    priority: 'high',
-    deadline: '2026-11-10',
-    tags: ['рудн', 'учеба'],
-    subtasks: [
-      { id: 'sub-1', title: 'Пройти модуль 3 по правоведению', completed: true },
-      { id: 'sub-2', title: 'Сдать промежуточное тестирование БРС', completed: false },
-      { id: 'sub-3', title: 'Загрузить эссе в личный кабинет', completed: false }
-    ],
-    notes: 'Лекции доступны на портале ТУИС РУДН. Дедлайн по эссе жесткий — до 10 ноября.',
-    linkUrl: 'https://esystem.rudn.ru'
-  },
-  {
-    id: 'sw-2',
-    space: 'yaprofi-dfo',
-    user: 'anya',
-    title: '«Я-Профессионал» координация ДФО',
-    description: 'Связь с амбассадорами и вузами Дальнего Востока',
-    courseOrProject: 'Я-Профи ДФО',
-    status: 'in_progress',
-    priority: 'high',
-    deadline: '2026-11-04',
-    timezoneNote: 'Владивосток/Хабаровск (+7ч)',
-    tags: ['дфо', 'владивосток', 'я-профи'],
-    subtasks: [
-      { id: 'sub-4', title: 'Связаться с координатором ДВФУ (Русский остров)', completed: true },
-      { id: 'sub-5', title: 'Созвон по амбассадорам Хабаровска (ТОГУ)', completed: false },
-      { id: 'sub-6', title: 'Сверить таблицу регистраций треков', completed: false }
-    ],
-    notes: 'Учитывать разницу во времени +7 часов! Звонки строго до 13:00 по Москве.',
-    linkUrl: 'https://yandex.ru/profi'
-  },
-  {
-    id: 'sw-3',
-    space: 'hse-egor',
-    user: 'egor',
-    title: 'ВШЭ: Магистратура',
-    description: 'НИР и исследовательские проекты',
-    courseOrProject: 'НИУ ВШЭ',
-    status: 'in_progress',
-    priority: 'high',
-    deadline: '2026-11-06',
-    tags: ['вшэ', 'магистратура'],
-    subtasks: [
-      { id: 'sub-7', title: 'Подготовить литературный обзор источников', completed: true },
-      { id: 'sub-8', title: 'Согласовать драфт НИР с научруком', completed: false },
-      { id: 'sub-9', title: 'Оформить библиографию по ГОСТу в Overleaf', completed: false }
-    ],
-    notes: 'Научный семинар по пятницам в 15:00. Семинар по НИР на Покровском бульваре.',
-    linkUrl: 'https://hse.ru'
-  },
-  {
-    id: 'sw-4',
-    space: 'work-projects',
-    user: 'egor',
-    title: 'OpenMap: синхронизация и деплой шлюза',
-    description: 'Архитектура микросервисов и Cloud.ru',
-    courseOrProject: 'OpenMap Core',
-    status: 'in_progress',
-    priority: 'high',
-    deadline: '2026-11-08',
-    tags: ['работа', 'openmap', 'деплой'],
-    subtasks: [
-      { id: 'sub-10', title: 'Проверить соединение с OpenMap Production', completed: true },
-      { id: 'sub-11', title: 'Настроить Supabase Realtime sync для дашборда', completed: false }
-    ],
-    notes: 'Шлюз 10.1.1.2:24562, прод 192.168.1.250:22122.',
-    linkUrl: 'https://github.com/ryzenovod/nexus'
-  },
-  {
-    id: 'sw-5',
-    space: 'work-projects',
-    user: 'anya',
-    title: 'Портфолио & Дизайн-система (Figma)',
-    description: 'Кейсы и компоненты для продуктовых проектов',
-    courseOrProject: 'UI/UX Проекты',
-    status: 'in_progress',
-    priority: 'medium',
-    deadline: '2026-11-12',
-    tags: ['дизайн', 'портфолио', 'figma'],
-    subtasks: [
-      { id: 'sub-12', title: 'Собрать UI kit токенов в Figma', completed: true },
-      { id: 'sub-13', title: 'Подготовить презентационные шоты', completed: false }
-    ],
-    notes: 'Интеграция с дизайн-системой NEXUS и Raycast/Linear стилем.',
-    linkUrl: 'https://figma.com'
-  }
-];
+export const initialStudyWorkItems: StudyWorkItem[] = [];

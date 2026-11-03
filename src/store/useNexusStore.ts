@@ -181,6 +181,7 @@ export interface NexusState {
   removeCashbackCategory: (cardId: string, categoryIndex: number) => void;
   updateMeterReadings: (billId: string, readings: { hotWater?: number; coldWater?: number; electricity?: number }) => void;
   payUtilityBill: (id: string) => void;
+  updateUtilityBill: (id: string, updates: Partial<UtilityBill>) => void;
 
   // Live Data Pipeline Sync
   setGcalEvents: (events: GCalEvent[]) => void;
@@ -209,6 +210,60 @@ export interface NexusState {
   setSupabaseConfig: (config: Partial<SupabaseConfig>) => void;
   syncWithSupabase: () => Promise<void>;
   resetToDefaultData: () => void;
+}
+
+// LocalStorage Migration: Clean out sticky fake mock data from legacy cache
+if (typeof window !== 'undefined') {
+  try {
+    const legacyRaw = localStorage.getItem('nexus-real-sync-v1');
+    const v2Raw = localStorage.getItem('nexus-real-sync-v2');
+    if (legacyRaw && !v2Raw) {
+      try {
+        const parsed = JSON.parse(legacyRaw);
+        if (parsed && parsed.state) {
+          const s = parsed.state;
+          if (s.budget) {
+            if (s.budget.totalTarget === 80000) s.budget.totalTarget = 0;
+            if (s.budget.currentBalance === 5000) s.budget.currentBalance = 0;
+            if (s.budget.egorContribution === 40000) s.budget.egorContribution = 0;
+            if (s.budget.anyaContribution === 40000) s.budget.anyaContribution = 0;
+            if (s.budget.depositDates === '10 и 25 числа каждого месяца') s.budget.depositDates = '';
+          }
+          if (Array.isArray(s.utilityBills)) {
+            s.utilityBills = s.utilityBills.map((b: any) =>
+              b.amount === 1685.41 || b.amount === 1685 || b.id === 'util-domiland'
+                ? { ...b, amount: 0, commission: 0 }
+                : b
+            );
+          }
+          if (Array.isArray(s.studyWorkItems)) {
+            s.studyWorkItems = s.studyWorkItems.filter((it: any) => {
+              if (!it) return false;
+              if (['sw-1', 'sw-2', 'sw-3', 'sw-4', 'sw-5'].includes(it.id)) return false;
+              const t = (it.title || '').toLowerCase();
+              return (
+                !t.includes('openmap') &&
+                !t.includes('портфолио') &&
+                !t.includes('дизайн-система') &&
+                !t.includes('рудн: лекции') &&
+                !t.includes('координация дфо') &&
+                !t.includes('вшэ: магистратура')
+              );
+            });
+          }
+          if (Array.isArray(s.cashbackCards)) {
+            const fakeDigits = new Set(['7714', '5529', '8831', '1409', '9276']);
+            s.cashbackCards = s.cashbackCards.map((c: any) => ({
+              ...c,
+              digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
+            }));
+          }
+          localStorage.setItem('nexus-real-sync-v2', JSON.stringify(parsed));
+        }
+      } catch {}
+      localStorage.removeItem('nexus-real-sync-v1');
+    }
+  } catch {}
 }
 
 export const useNexusStore = create<NexusState>()(
@@ -907,15 +962,21 @@ export const useNexusStore = create<NexusState>()(
       },
 
       updateBudgetContributions: (egor, anya, target) => {
-        set((state) => ({
-          budget: {
-            ...state.budget,
-            egorContribution: egor,
-            anyaContribution: anya,
-            totalTarget: target,
-            lastUpdated: new Date().toISOString(),
-          },
-        }));
+        set((state) => {
+          const deltaEgor = egor - (state.budget.egorContribution || 0);
+          const deltaAnya = anya - (state.budget.anyaContribution || 0);
+          const currentBal = state.budget.currentBalance || 0;
+          return {
+            budget: {
+              ...state.budget,
+              egorContribution: egor,
+              anyaContribution: anya,
+              totalTarget: target,
+              currentBalance: Math.max(0, currentBal + deltaEgor + deltaAnya),
+              lastUpdated: new Date().toISOString(),
+            },
+          };
+        });
         get().pushCloudState().catch(() => {});
       },
 
@@ -1105,6 +1166,15 @@ export const useNexusStore = create<NexusState>()(
             bill.id === id ? { ...bill, status: 'paid' } : bill
           ),
         }));
+      },
+
+      updateUtilityBill: (id, updates) => {
+        set((state) => ({
+          utilityBills: state.utilityBills.map((bill) =>
+            bill.id === id ? { ...bill, ...updates } : bill
+          ),
+        }));
+        get().pushCloudState().catch(() => {});
       },
 
       // --- Study & Work Actions ---
@@ -1330,6 +1400,38 @@ export const useNexusStore = create<NexusState>()(
                 // If cloud has shared_state (couple votes, custom expenses, cards, tasks), merge it
                 if (cloudData.shared_state) {
                   const ss = cloudData.shared_state;
+
+                  // Hotfix: sanitize any legacy fake mock data from cloud shared_state
+                  if (ss.budget) {
+                    if (ss.budget.totalTarget === 80000) ss.budget.totalTarget = 0;
+                    if (ss.budget.currentBalance === 5000) ss.budget.currentBalance = 0;
+                    if (ss.budget.egorContribution === 40000) ss.budget.egorContribution = 0;
+                    if (ss.budget.anyaContribution === 40000) ss.budget.anyaContribution = 0;
+                    if (ss.budget.depositDates === '10 и 25 числа каждого месяца') ss.budget.depositDates = '';
+                  }
+                  if (Array.isArray(ss.studyWorkItems)) {
+                    ss.studyWorkItems = ss.studyWorkItems.filter((it: any) => {
+                      if (!it) return false;
+                      if (['sw-1', 'sw-2', 'sw-3', 'sw-4', 'sw-5'].includes(it.id)) return false;
+                      const t = (it.title || '').toLowerCase();
+                      return (
+                        !t.includes('openmap') &&
+                        !t.includes('портфолио') &&
+                        !t.includes('дизайн-система') &&
+                        !t.includes('рудн: лекции') &&
+                        !t.includes('координация дфо') &&
+                        !t.includes('вшэ: магистратура')
+                      );
+                    });
+                  }
+                  if (Array.isArray(ss.cashbackCards)) {
+                    const fakeDigits = new Set(['7714', '5529', '8831', '1409', '9276']);
+                    ss.cashbackCards = ss.cashbackCards.map((c: any) => ({
+                      ...c,
+                      digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
+                    }));
+                  }
+
                   set((state) => {
                     const mergedCompleted = Array.from(new Set([...(state.completedTaskIds || []), ...(ss.completedTaskIds || [])]));
                     const mergedDeleted = Array.from(new Set([...(state.deletedTaskIds || []), ...(ss.deletedTaskIds || [])]));
@@ -1360,6 +1462,7 @@ export const useNexusStore = create<NexusState>()(
                       tasks: [...updatedTasks, ...incomingCustomTasks],
                     };
                   });
+                  get().pushCloudState().catch(() => {});
                 }
               }
             } catch (e) {
@@ -1621,7 +1724,7 @@ export const useNexusStore = create<NexusState>()(
       },
     }),
     {
-      name: 'nexus-real-sync-v1',
+      name: 'nexus-real-sync-v2',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
@@ -1629,15 +1732,39 @@ export const useNexusStore = create<NexusState>()(
         if (!state.completedTaskIds) state.completedTaskIds = [];
         if (!state.deletedTaskIds) state.deletedTaskIds = [];
         if (!state.customStudySpaces) state.customStudySpaces = [];
-        if (!state.studyWorkItems || state.studyWorkItems.length === 0) {
-          state.studyWorkItems = initialStudyWorkItems;
-        } else {
-          // If items don't have work-projects items yet, seed them
-          const hasWorkProjects = state.studyWorkItems.some((i) => i.space === 'work-projects');
-          if (!hasWorkProjects) {
-            const missing = initialStudyWorkItems.filter((i) => i.space === 'work-projects');
-            state.studyWorkItems.push(...missing);
-          }
+
+        // Clean out any mock study work tasks completely (zero fake items)
+        state.studyWorkItems = (state.studyWorkItems || []).filter((it) => {
+          if (!it) return false;
+          if (['sw-1', 'sw-2', 'sw-3', 'sw-4', 'sw-5'].includes(it.id)) return false;
+          const t = (it.title || '').toLowerCase();
+          return (
+            !t.includes('openmap') &&
+            !t.includes('портфолио') &&
+            !t.includes('дизайн-система') &&
+            !t.includes('рудн: лекции') &&
+            !t.includes('координация дфо') &&
+            !t.includes('вшэ: магистратура')
+          );
+        });
+
+        // Clean out fake budget defaults (5 000, 80 000, 40 000, fake deposit text)
+        if (state.budget) {
+          if (state.budget.totalTarget === 80000) state.budget.totalTarget = 0;
+          if (state.budget.currentBalance === 5000) state.budget.currentBalance = 0;
+          if (state.budget.egorContribution === 40000) state.budget.egorContribution = 0;
+          if (state.budget.anyaContribution === 40000) state.budget.anyaContribution = 0;
+          if (state.budget.depositDates === '10 и 25 числа каждого месяца') state.budget.depositDates = '';
+        }
+
+        // Clean out fake utility amounts (1 685 ₽)
+        if (state.utilityBills && state.utilityBills.length > 0) {
+          state.utilityBills = state.utilityBills.map((bill) => {
+            if (bill.amount === 1685.41 || bill.amount === 1685 || (bill.id === 'util-domiland' && bill.amount === 1685.41)) {
+              return { ...bill, amount: 0, commission: 0 };
+            }
+            return bill;
+          });
         }
 
         // Explicitly uncomplete "Создать общий счет" & "Создать таблицу с финансами для учета" and clear notes
@@ -1656,12 +1783,14 @@ export const useNexusStore = create<NexusState>()(
         completedSet.delete('6ad8c392bf00032b8b10c7dc');
         const deletedSet = new Set(state.deletedTaskIds || []);
 
-        // Ensure initial banks are present if empty
+        // Ensure initial banks are present if empty & purge fake card numbers
+        const fakeDigits = new Set(['7714', '5529', '8831', '1409', '9276']);
         if (!state.cashbackCards || state.cashbackCards.length === 0) {
           state.cashbackCards = initialCashbackCards;
         } else {
-          // Sanitize card holders (strictly EGOR or ANYA, zero BELOUSOV) and ensure cb-tbank is owned by Egor
+          // Sanitize card holders (strictly EGOR or ANYA, zero BELOUSOV) and strip fake digits
           state.cashbackCards = state.cashbackCards.map((c) => {
+            const cleanDigits = c.digits && fakeDigits.has(c.digits) ? undefined : c.digits;
             if (c.id === 'cb-tbank' || c.bankName.toLowerCase().includes('т-банк')) {
               return {
                 ...c,
@@ -1669,11 +1798,13 @@ export const useNexusStore = create<NexusState>()(
                 cardHolder: 'EGOR',
                 bankName: 'Т-Банк Black',
                 specialFeature: 'Егор · Т-Банк Black',
+                digits: cleanDigits,
               };
             }
             return {
               ...c,
               cardHolder: c.user === 'anya' ? 'ANYA' : 'EGOR',
+              digits: cleanDigits,
             };
           });
         }
@@ -1699,11 +1830,6 @@ export const useNexusStore = create<NexusState>()(
           }
           return true;
         });
-        // Ensure honest zero budget contributions if legacy 40000 was set
-        if (state.budget && state.budget.egorContribution === 40000 && state.budget.anyaContribution === 40000 && state.budget.currentBalance === 0) {
-          state.budget.egorContribution = 0;
-          state.budget.anyaContribution = 0;
-        }
         // Ensure parentId and isHub are preserved on tasks in rehydrated state, and user completed status is kept!
         if (state.tasks && state.tasks.length > 0) {
           const initialMap = new Map(initialTasks.map((t) => [t.id, t]));
