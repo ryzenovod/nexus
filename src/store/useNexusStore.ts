@@ -152,6 +152,7 @@ export interface NexusState {
 
   // Academic Actions
   updateHSEComponentScore: (calcId: string, compId: string, score: number) => void;
+  updateHSEComponentWeight: (calcId: string, compId: string, weight: number) => void;
   updateRUDNSubjectScore: (subjId: string, field: 'currentControl' | 'milestoneControl' | 'finalExam', value: number) => void;
   importCalendarTasks: (newTasks: NexusTask[]) => void;
 
@@ -591,6 +592,23 @@ export const useNexusStore = create<NexusState>()(
               : calc
           ),
         }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateHSEComponentWeight: (calcId, compId, weight) => {
+        set((state) => ({
+          hseCalculators: state.hseCalculators.map((calc) =>
+            calc.id === calcId
+              ? {
+                  ...calc,
+                  components: calc.components.map((comp) =>
+                    comp.id === compId ? { ...comp, weight } : comp
+                  ),
+                }
+              : calc
+          ),
+        }));
+        get().pushCloudState().catch(() => {});
       },
 
       updateRUDNSubjectScore: (subjId, field, value) => {
@@ -599,6 +617,7 @@ export const useNexusStore = create<NexusState>()(
             subj.id === subjId ? { ...subj, [field]: value } : subj
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       importCalendarTasks: (newTasks) => {
