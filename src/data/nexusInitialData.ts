@@ -1388,7 +1388,14 @@ export const initialStudyWorkItems: StudyWorkItem[] = [
     status: 'in_progress',
     priority: 'high',
     deadline: '2026-11-10',
-    tags: ['рудн', 'учеба']
+    tags: ['рудн', 'учеба'],
+    subtasks: [
+      { id: 'sub-1', title: 'Пройти модуль 3 по правоведению', completed: true },
+      { id: 'sub-2', title: 'Сдать промежуточное тестирование БРС', completed: false },
+      { id: 'sub-3', title: 'Загрузить эссе в личный кабинет', completed: false }
+    ],
+    notes: 'Лекции доступны на портале ТУИС РУДН. Дедлайн по эссе жесткий — до 10 ноября.',
+    linkUrl: 'https://esystem.rudn.ru'
   },
   {
     id: 'sw-2',
@@ -1401,7 +1408,14 @@ export const initialStudyWorkItems: StudyWorkItem[] = [
     priority: 'high',
     deadline: '2026-11-04',
     timezoneNote: 'Владивосток/Хабаровск (+7ч)',
-    tags: ['дфо', 'владивосток', 'я-профи']
+    tags: ['дфо', 'владивосток', 'я-профи'],
+    subtasks: [
+      { id: 'sub-4', title: 'Связаться с координатором ДВФУ (Русский остров)', completed: true },
+      { id: 'sub-5', title: 'Созвон по амбассадорам Хабаровска (ТОГУ)', completed: false },
+      { id: 'sub-6', title: 'Сверить таблицу регистраций треков', completed: false }
+    ],
+    notes: 'Учитывать разницу во времени +7 часов! Звонки строго до 13:00 по Москве.',
+    linkUrl: 'https://yandex.ru/profi'
   },
   {
     id: 'sw-3',
@@ -1413,6 +1427,49 @@ export const initialStudyWorkItems: StudyWorkItem[] = [
     status: 'in_progress',
     priority: 'high',
     deadline: '2026-11-06',
-    tags: ['вшэ', 'магистратура']
+    tags: ['вшэ', 'магистратура'],
+    subtasks: [
+      { id: 'sub-7', title: 'Подготовить литературный обзор источников', completed: true },
+      { id: 'sub-8', title: 'Согласовать драфт НИР с научруком', completed: false },
+      { id: 'sub-9', title: 'Оформить библиографию по ГОСТу в Overleaf', completed: false }
+    ],
+    notes: 'Научный семинар по пятницам в 15:00. Семинар по НИР на Покровском бульваре.',
+    linkUrl: 'https://hse.ru'
+  },
+  {
+    id: 'sw-4',
+    space: 'work-projects',
+    user: 'egor',
+    title: 'OpenMap: синхронизация и деплой шлюза',
+    description: 'Архитектура микросервисов и Cloud.ru',
+    courseOrProject: 'OpenMap Core',
+    status: 'in_progress',
+    priority: 'high',
+    deadline: '2026-11-08',
+    tags: ['работа', 'openmap', 'деплой'],
+    subtasks: [
+      { id: 'sub-10', title: 'Проверить соединение с OpenMap Production', completed: true },
+      { id: 'sub-11', title: 'Настроить Supabase Realtime sync для дашборда', completed: false }
+    ],
+    notes: 'Шлюз 10.1.1.2:24562, прод 192.168.1.250:22122.',
+    linkUrl: 'https://github.com/ryzenovod/nexus'
+  },
+  {
+    id: 'sw-5',
+    space: 'work-projects',
+    user: 'anya',
+    title: 'Портфолио & Дизайн-система (Figma)',
+    description: 'Кейсы и компоненты для продуктовых проектов',
+    courseOrProject: 'UI/UX Проекты',
+    status: 'in_progress',
+    priority: 'medium',
+    deadline: '2026-11-12',
+    tags: ['дизайн', 'портфолио', 'figma'],
+    subtasks: [
+      { id: 'sub-12', title: 'Собрать UI kit токенов в Figma', completed: true },
+      { id: 'sub-13', title: 'Подготовить презентационные шоты', completed: false }
+    ],
+    notes: 'Интеграция с дизайн-системой NEXUS и Raycast/Linear стилем.',
+    linkUrl: 'https://figma.com'
   }
 ];

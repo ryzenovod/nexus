@@ -9,6 +9,7 @@ import {
   CashbackCard, 
   UtilityBill, 
   StudyWorkItem, 
+  StudySpaceColumn,
   BracketColor, 
   Assignee, 
   RoomArea, 
@@ -103,7 +104,8 @@ export interface NexusState {
 
   // Study & Work
   studyWorkItems: StudyWorkItem[];
-  activeStudySpace: StudySpace;
+  customStudySpaces: StudySpaceColumn[];
+  activeStudySpace: string;
 
   // Pomodoro
   pomodoroMode: 'work' | 'shortBreak' | 'longBreak';
@@ -185,9 +187,15 @@ export interface NexusState {
   saveSupabaseToLocalEnv: (url: string, key: string) => Promise<{ success: boolean; message?: string }>;
 
   addStudyWorkItem: (item: Omit<StudyWorkItem, 'id'>) => void;
+  updateStudyWorkItem: (id: string, updates: Partial<StudyWorkItem>) => void;
   updateStudyWorkStatus: (id: string, status: StudyWorkItem['status']) => void;
   deleteStudyWorkItem: (id: string) => void;
-  setActiveStudySpace: (space: StudySpace) => void;
+  toggleStudyWorkSubtask: (itemId: string, subtaskId: string) => void;
+  addStudyWorkSubtask: (itemId: string, title: string) => void;
+  deleteStudyWorkSubtask: (itemId: string, subtaskId: string) => void;
+  addStudySpace: (space: StudySpaceColumn) => void;
+  deleteStudySpace: (spaceId: string) => void;
+  setActiveStudySpace: (space: string) => void;
 
   startPomodoro: () => void;
   pausePomodoro: () => void;
@@ -258,6 +266,7 @@ export const useNexusStore = create<NexusState>()(
       gpbCashbackClaimed: false,
 
       studyWorkItems: initialStudyWorkItems,
+      customStudySpaces: [],
       activeStudySpace: 'yaprofi-dfo',
 
       pomodoroMode: 'work',
@@ -1022,24 +1031,96 @@ export const useNexusStore = create<NexusState>()(
         const newItem: StudyWorkItem = {
           ...itemData,
           id: `sw-${Date.now()}`,
+          subtasks: itemData.subtasks || [],
         };
         set((state) => ({
           studyWorkItems: [newItem, ...state.studyWorkItems],
         }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateStudyWorkItem: (id, updates) => {
+        set((state) => ({
+          studyWorkItems: state.studyWorkItems.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ),
+        }));
+        get().pushCloudState().catch(() => {});
       },
 
       updateStudyWorkStatus: (id, status) => {
+        const isDone = status === 'done';
+        if (isDone) {
+          get().addXp(15);
+          try {
+            soundEffects.playSuccess();
+          } catch {}
+        }
         set((state) => ({
           studyWorkItems: state.studyWorkItems.map((item) =>
             item.id === id ? { ...item, status } : item
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       deleteStudyWorkItem: (id) => {
         set((state) => ({
           studyWorkItems: state.studyWorkItems.filter((item) => item.id !== id),
         }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      toggleStudyWorkSubtask: (itemId, subtaskId) => {
+        set((state) => ({
+          studyWorkItems: state.studyWorkItems.map((item) => {
+            if (item.id !== itemId) return item;
+            const updatedSubtasks = (item.subtasks || []).map((sub) =>
+              sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
+            );
+            return { ...item, subtasks: updatedSubtasks };
+          }),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      addStudyWorkSubtask: (itemId, title) => {
+        if (!title.trim()) return;
+        set((state) => ({
+          studyWorkItems: state.studyWorkItems.map((item) => {
+            if (item.id !== itemId) return item;
+            const newSub = { id: `sub-${Date.now()}`, title: title.trim(), completed: false };
+            return { ...item, subtasks: [...(item.subtasks || []), newSub] };
+          }),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      deleteStudyWorkSubtask: (itemId, subtaskId) => {
+        set((state) => ({
+          studyWorkItems: state.studyWorkItems.map((item) => {
+            if (item.id !== itemId) return item;
+            return {
+              ...item,
+              subtasks: (item.subtasks || []).filter((sub) => sub.id !== subtaskId),
+            };
+          }),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      addStudySpace: (space) => {
+        set((state) => ({
+          customStudySpaces: [...state.customStudySpaces, space],
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      deleteStudySpace: (spaceId) => {
+        set((state) => ({
+          customStudySpaces: state.customStudySpaces.filter((s) => s.id !== spaceId),
+        }));
+        get().pushCloudState().catch(() => {});
       },
 
       setActiveStudySpace: (space) => set({ activeStudySpace: space }),
@@ -1172,6 +1253,8 @@ export const useNexusStore = create<NexusState>()(
                     wishlist: ss.wishlist || state.wishlist,
                     transactions: ss.transactions || state.transactions,
                     budget: ss.budget || state.budget,
+                    studyWorkItems: ss.studyWorkItems || state.studyWorkItems,
+                    customStudySpaces: ss.customStudySpaces || state.customStudySpaces,
                   }));
                 }
               }
@@ -1295,13 +1378,15 @@ export const useNexusStore = create<NexusState>()(
       },
 
       pushCloudState: async () => {
-        const { supabaseConfig, wishlist, budget, transactions } = get();
+        const { supabaseConfig, wishlist, budget, transactions, studyWorkItems, customStudySpaces } = get();
         if (!supabaseConfig.url || !supabaseConfig.anonKey) return false;
         try {
           return await pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
             wishlist,
             budget,
             transactions,
+            studyWorkItems,
+            customStudySpaces,
           });
         } catch (e) {
           console.warn('Push cloud state failed:', e);
@@ -1337,6 +1422,7 @@ export const useNexusStore = create<NexusState>()(
           cashbackCards: initialCashbackCards,
           utilityBills: initialUtilityBills,
           studyWorkItems: initialStudyWorkItems,
+          customStudySpaces: [],
           gamification: initialCoupleGamification,
           blueprintPins: initialBlueprintPins,
           dateScenarios: initialDateScenarios,
@@ -1353,6 +1439,17 @@ export const useNexusStore = create<NexusState>()(
         // Ensure completedTaskIds and deletedTaskIds exist
         if (!state.completedTaskIds) state.completedTaskIds = [];
         if (!state.deletedTaskIds) state.deletedTaskIds = [];
+        if (!state.customStudySpaces) state.customStudySpaces = [];
+        if (!state.studyWorkItems || state.studyWorkItems.length === 0) {
+          state.studyWorkItems = initialStudyWorkItems;
+        } else {
+          // If items don't have work-projects items yet, seed them
+          const hasWorkProjects = state.studyWorkItems.some((i) => i.space === 'work-projects');
+          if (!hasWorkProjects) {
+            const missing = initialStudyWorkItems.filter((i) => i.space === 'work-projects');
+            state.studyWorkItems.push(...missing);
+          }
+        }
 
         // Apply completed and deleted filters to persisted tasks
         const completedSet = new Set(state.completedTaskIds);
