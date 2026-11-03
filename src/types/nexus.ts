@@ -148,20 +148,43 @@ export type StudySpace =
   | 'yaprofi-dfo' 
   | 'yaprofi-cfo' 
   | 'work-egor' 
-  | 'projects-anya';
+  | 'projects-anya'
+  | 'work-projects'
+  | string;
+
+export interface StudyWorkSubtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface StudySpaceColumn {
+  id: string;
+  title: string;
+  user: 'egor' | 'anya' | 'together';
+  color: string;
+  badgeBg: string;
+  borderAccent?: string;
+  isCustom?: boolean;
+}
 
 export interface StudyWorkItem {
   id: string;
-  space: StudySpace;
+  space: string;
   user: 'egor' | 'anya' | 'together';
   title: string;
-  description: string;
-  courseOrProject: string;
+  description?: string;
+  courseOrProject?: string;
   status: 'backlog' | 'in_progress' | 'review' | 'done';
   priority: 'low' | 'medium' | 'high';
-  deadline: string;
-  tags: string[];
+  deadline?: string;
+  tags?: string[];
   timezoneNote?: string; // for DFO +7h coordination
+  subtasks?: StudyWorkSubtask[];
+  notes?: string;
+  linkUrl?: string;
+  isTickTick?: boolean;
+  tickTickTaskId?: string;
 }
 
 export interface CoupleGamification {
