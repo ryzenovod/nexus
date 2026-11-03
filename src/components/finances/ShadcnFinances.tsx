@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   CreditCard, 
   ArrowUpRight, 
@@ -13,7 +13,10 @@ import {
   AlertCircle,
   ExternalLink,
   Sparkles,
-  X
+  X,
+  Trash2,
+  Edit3,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +40,7 @@ import {
 } from '@/components/ui/dialog';
 import { useNexusStore } from '@/store/useNexusStore';
 import { initialCashbackCards } from '@/data/nexusInitialData';
+import { CashbackCard, CardGradientPreset } from '@/types/nexus';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 // SVG Icons for Apple Wallet 2026 aesthetics
@@ -63,79 +67,109 @@ const MirBadge: React.FC = () => (
   </div>
 );
 
-// Card visual definitions for Apple Wallet 2026 (Strictly without "(Belousova)")
-const CARD_METALLIC_THEMES: Record<string, {
+// 6 Metallic Gradient Presets for Apple Wallet 2026
+export const CARD_GRADIENT_PRESETS: Record<CardGradientPreset, {
   name: string;
-  holder: string;
-  number: string;
-  exp: string;
-  tag: string;
   gradient: string;
   glowColor: string;
   borderClass: string;
   chipVariant: 'gold' | 'platinum';
   accentText: string;
+  badgeBg: string;
 }> = {
-  'cb-sber': {
-    name: 'СБЕР',
-    holder: 'ANYA',
-    number: '•••• 7714',
-    exp: '10/28',
-    tag: 'Аня · СберСпасибо',
+  emerald: {
+    name: 'Изумруд (Сбер)',
     gradient: 'from-[#064e3b] via-[#047857] to-[#022c22]',
     glowColor: 'rgba(16, 185, 129, 0.35)',
     borderClass: 'border-emerald-500/40 hover:border-emerald-400/70',
     chipVariant: 'gold',
     accentText: 'text-emerald-400',
+    badgeBg: 'bg-emerald-500',
   },
-  'cb-tbank': {
-    name: 'T-BANK BLACK',
-    holder: 'EGOR & ANYA (JOINT)',
-    number: '•••• 5529',
-    exp: '04/30',
-    tag: 'Егор · Общий счет',
+  titanium: {
+    name: 'Титан Black (Т-Банк)',
     gradient: 'from-[#27272a] via-[#18181b] to-[#09090b]',
     glowColor: 'rgba(245, 158, 11, 0.3)',
     borderClass: 'border-amber-400/40 hover:border-amber-300/70',
     chipVariant: 'platinum',
     accentText: 'text-amber-400',
+    badgeBg: 'bg-zinc-800',
   },
-  'cb-wb': {
-    name: 'WB БАНК',
-    holder: 'EGOR BELOUSOV',
-    number: '•••• 8831',
-    exp: '08/29',
-    tag: 'Егор · WB Кошелек',
+  violet: {
+    name: 'Фиолетовый (WB Банк)',
     gradient: 'from-[#581c87] via-[#3b0764] to-[#701a75]',
     glowColor: 'rgba(217, 70, 239, 0.35)',
     borderClass: 'border-fuchsia-500/40 hover:border-fuchsia-400/70',
     chipVariant: 'gold',
     accentText: 'text-fuchsia-400',
+    badgeBg: 'bg-purple-600',
   },
-  'cb-alfa': {
-    name: 'АЛЬФА-БАНК',
-    holder: 'EGOR BELOUSOV',
-    number: '•••• 1409',
-    exp: '02/29',
-    tag: 'Егор · Альфа-Карта',
+  ruby: {
+    name: 'Рубин (Альфа-Банк)',
     gradient: 'from-[#7f1d1d] via-[#450a0a] to-[#991b1b]',
     glowColor: 'rgba(244, 63, 94, 0.35)',
     borderClass: 'border-rose-500/40 hover:border-rose-400/70',
     chipVariant: 'gold',
     accentText: 'text-rose-400',
+    badgeBg: 'bg-rose-600',
   },
-  'cb-gpb': {
-    name: 'ГАЗПРОМБАНК',
-    holder: 'EGOR BELOUSOV',
-    number: '•••• 9276',
-    exp: '12/28',
-    tag: 'Егор · Сапфир & Акция',
+  sapphire: {
+    name: 'Сапфир (Газпромбанк)',
     gradient: 'from-[#1e3a8a] via-[#0f172a] to-[#1d4ed8]',
     glowColor: 'rgba(59, 130, 246, 0.4)',
     borderClass: 'border-blue-500/40 hover:border-blue-400/70',
     chipVariant: 'gold',
     accentText: 'text-blue-400',
+    badgeBg: 'bg-blue-600',
   },
+  amber: {
+    name: 'Янтарь / Золото',
+    gradient: 'from-[#78350f] via-[#92400e] to-[#451a03]',
+    glowColor: 'rgba(245, 158, 11, 0.4)',
+    borderClass: 'border-amber-500/40 hover:border-amber-400/70',
+    chipVariant: 'gold',
+    accentText: 'text-amber-400',
+    badgeBg: 'bg-amber-600',
+  },
+};
+
+// Dynamic Card Metadata Resolvers (Zero "BELOUSOV", strictly EGOR or ANYA)
+const getCardTheme = (card: CashbackCard) => {
+  if (card.gradientPreset && CARD_GRADIENT_PRESETS[card.gradientPreset]) {
+    return CARD_GRADIENT_PRESETS[card.gradientPreset];
+  }
+  const lower = card.bankName.toLowerCase();
+  if (card.id === 'cb-sber' || lower.includes('сбер')) return CARD_GRADIENT_PRESETS.emerald;
+  if (card.id === 'cb-tbank' || lower.includes('т-банк') || lower.includes('тиньк')) return CARD_GRADIENT_PRESETS.titanium;
+  if (card.id === 'cb-wb' || lower.includes('wb') || lower.includes('вайлд')) return CARD_GRADIENT_PRESETS.violet;
+  if (card.id === 'cb-alfa' || lower.includes('альфа')) return CARD_GRADIENT_PRESETS.ruby;
+  if (card.id === 'cb-gpb' || lower.includes('газпром')) return CARD_GRADIENT_PRESETS.sapphire;
+  return CARD_GRADIENT_PRESETS.amber;
+};
+
+const getCardHolder = (card: CashbackCard): string => {
+  if (card.user === 'anya') return 'ANYA';
+  if (card.user === 'egor') return 'EGOR';
+  return 'EGOR & ANYA';
+};
+
+const getCardDigits = (card: CashbackCard): string => {
+  if (card.digits) {
+    const clean = card.digits.replace(/\D/g, '');
+    return `•••• ${clean ? clean.slice(-4) : '0000'}`;
+  }
+  if (card.id === 'cb-sber') return '•••• 7714';
+  if (card.id === 'cb-tbank') return '•••• 5529';
+  if (card.id === 'cb-wb') return '•••• 8831';
+  if (card.id === 'cb-alfa') return '•••• 1409';
+  if (card.id === 'cb-gpb') return '•••• 9276';
+  return '•••• 0000';
+};
+
+const getCardTag = (card: CashbackCard): string => {
+  if (card.specialFeature) return card.specialFeature;
+  const ownerLabel = card.user === 'anya' ? 'Аня' : card.user === 'egor' ? 'Егор' : 'Общий счет';
+  return `${ownerLabel} · ${card.bankName}`;
 };
 
 const POPULAR_QUICK_CATEGORIES = [
@@ -158,19 +192,31 @@ export const ShadcnFinances: React.FC = () => {
     addCashbackCategory,
     removeCashbackCategory,
     toggleCashbackClaimed,
+    addCashbackCard,
+    updateCashbackCard,
+    deleteCashbackCard,
+    claimCashbackForCard,
     updateBudgetBalance,
     updateBudgetContributions,
-    claimGpbCashback,
-    gpbCashbackClaimed,
     toggleTaskCompletion,
     tasks
   } = useNexusStore();
 
   const [activeCardId, setActiveCardId] = useState<string>('cb-sber');
+  const [cashbackDepositAmount, setCashbackDepositAmount] = useState('1500');
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [customCategoryPercent, setCustomCategoryPercent] = useState('5');
-  const [isGpbModalOpen, setIsGpbModalOpen] = useState(false);
-  const [gpbAmount, setGpbAmount] = useState('3000');
+  
+  // Card Add / Edit Modal
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [cardFormBankName, setCardFormBankName] = useState('');
+  const [cardFormUser, setCardFormUser] = useState<'egor' | 'anya' | 'joint'>('joint');
+  const [cardFormPreset, setCardFormPreset] = useState<CardGradientPreset>('sapphire');
+  const [cardFormDigits, setCardFormDigits] = useState('');
+  const [cardFormSpecial, setCardFormSpecial] = useState('');
+
+  // Budget deposit modal for Egor / Anya
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [depositUser, setDepositUser] = useState<'egor' | 'anya'>('egor');
   const [depositAmount, setDepositAmount] = useState('10000');
@@ -185,22 +231,125 @@ export const ShadcnFinances: React.FC = () => {
   const anyaProgress = Math.min(100, Math.round((budget.anyaContribution / anyaTarget) * 100));
 
   const cardsList = (cashbackCards && cashbackCards.length > 0) ? cashbackCards : initialCashbackCards;
-  const currentCard = cardsList.find(c => c.id === activeCardId) || cardsList[0];
-  const currentTheme = CARD_METALLIC_THEMES[currentCard?.id || 'cb-sber'] || CARD_METALLIC_THEMES['cb-sber'];
+  const currentCard = cardsList.find(c => c.id === activeCardId) || cardsList[0] || initialCashbackCards[0];
+  const currentTheme = getCardTheme(currentCard);
 
-  const handleConfirmGpbClaim = () => {
-    const val = parseFloat(gpbAmount) || 3000;
-    claimGpbCashback(val);
+  // Recharts data for budget dynamics
+  const chartData = [
+    { name: 'Июл', balance: 52000, utilities: 2100 },
+    { name: 'Авг', balance: 64000, utilities: 1850 },
+    { name: 'Сен', balance: 78000, utilities: 2400 },
+    { name: 'Окт', balance: 80000, utilities: 1950 },
+    { name: 'Ноя', balance: budgetCollected, utilities: 1685 },
+  ];
+  const matchingTasks = useMemo(() => {
+    if (!currentCard) return [];
+    const bankLower = currentCard.bankName.toLowerCase();
+    
+    return tasks.filter((t) => {
+      if (t.completed) return false;
+      const title = t.title.toLowerCase();
+      const hasCashbackKeyword = title.includes('кэшбэк') || title.includes('кэшбек') || title.includes('cashback');
+      if (!hasCashbackKeyword) return false;
 
-    // Find and complete the GPB task in TickTick
-    const gpbTask = tasks.find(t => 
-      t.id === '6ad8cacebf00032b8b10c84f' || 
-      t.title.toLowerCase().includes('газпром')
-    );
-    if (gpbTask) {
-      toggleTaskCompletion(gpbTask.id);
+      // Check if task mentions this bank
+      const bankWords = bankLower.split(/\s+/).filter(w => w.length >= 3);
+      const matchesWord = bankWords.some(w => title.includes(w));
+      const matchesSpecial = 
+        (bankLower.includes('газпром') && (title.includes('гпб') || title.includes('газпром'))) ||
+        (bankLower.includes('т-банк') && (title.includes('тиньк') || title.includes('т-банк') || title.includes('тбанк'))) ||
+        (bankLower.includes('сбер') && (title.includes('сбер') || title.includes('спасибо'))) ||
+        (bankLower.includes('wb') && (title.includes('wb') || title.includes('вайлд'))) ||
+        (bankLower.includes('альфа') && (title.includes('альфа') || title.includes('alfa')));
+
+      return matchesWord || matchesSpecial;
+    });
+  }, [tasks, currentCard]);
+
+  // Modal Handlers
+  const handleOpenAddCard = () => {
+    setEditingCardId(null);
+    setCardFormBankName('');
+    setCardFormUser('joint');
+    setCardFormPreset('sapphire');
+    setCardFormDigits('');
+    setCardFormSpecial('');
+    setIsCardModalOpen(true);
+  };
+
+  const handleOpenEditCard = (card: CashbackCard) => {
+    setEditingCardId(card.id);
+    setCardFormBankName(card.bankName);
+    setCardFormUser(card.user || 'joint');
+    setCardFormPreset(card.gradientPreset || 'sapphire');
+    setCardFormDigits(card.digits ? card.digits.replace(/\D/g, '').slice(-4) : '');
+    setCardFormSpecial(card.specialFeature || '');
+    setIsCardModalOpen(true);
+  };
+
+  const handleSaveCardForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cardFormBankName.trim()) return;
+
+    const digitsClean = cardFormDigits.replace(/\D/g, '').slice(-4) || '0000';
+    const holder = cardFormUser === 'anya' ? 'ANYA' : cardFormUser === 'egor' ? 'EGOR' : 'EGOR & ANYA';
+    const userLabel = cardFormUser === 'anya' ? 'Аня' : cardFormUser === 'egor' ? 'Егор' : 'Общий счет';
+    const special = cardFormSpecial.trim() || `${userLabel} · ${cardFormBankName.trim()}`;
+
+    if (editingCardId) {
+      updateCashbackCard(editingCardId, {
+        bankName: cardFormBankName.trim(),
+        user: cardFormUser,
+        gradientPreset: cardFormPreset,
+        digits: digitsClean,
+        cardHolder: holder,
+        specialFeature: special,
+      });
+    } else {
+      const newId = `cb-${Date.now()}`;
+      addCashbackCard({
+        id: newId,
+        bankName: cardFormBankName.trim(),
+        user: cardFormUser,
+        gradientPreset: cardFormPreset,
+        digits: digitsClean,
+        cardHolder: holder,
+        specialFeature: special,
+        activeMonth: 'Ноябрь 2026',
+        categories: [
+          { category: 'Супермаркеты', percent: 5 },
+          { category: '1% на все покупки', percent: 1 },
+        ],
+        claimed: true,
+        claimDeadline: 'Выбран',
+      });
+      setActiveCardId(newId);
     }
-    setIsGpbModalOpen(false);
+
+    setIsCardModalOpen(false);
+  };
+
+  const handleDeleteCard = (cardId: string) => {
+    if (cardsList.length <= 1) {
+      alert('Нельзя удалить последнюю оставшуюся карту!');
+      return;
+    }
+    if (confirm('Вы уверены, что хотите удалить эту банковскую карту?')) {
+      deleteCashbackCard(cardId);
+      if (activeCardId === cardId) {
+        const remaining = cardsList.filter(c => c.id !== cardId);
+        if (remaining.length > 0) setActiveCardId(remaining[0].id);
+      }
+    }
+  };
+
+  const handleClaimUniversalCashback = (amountOverride?: number, taskTitleOverride?: string) => {
+    const val = amountOverride !== undefined ? amountOverride : (parseFloat(cashbackDepositAmount) || 0);
+    if (val <= 0) {
+      alert('Пожалуйста, укажите корректную сумму кэшбэка!');
+      return;
+    }
+    claimCashbackForCard(currentCard.id, val, taskTitleOverride);
   };
 
   const handleConfirmDeposit = () => {
@@ -212,15 +361,6 @@ export const ShadcnFinances: React.FC = () => {
     }
     setIsDepositModalOpen(false);
   };
-
-  // Recharts demo data for budget dynamics
-  const chartData = [
-    { name: 'Июл', balance: 52000, utilities: 2100 },
-    { name: 'Авг', balance: 64000, utilities: 1850 },
-    { name: 'Сен', balance: 78000, utilities: 2400 },
-    { name: 'Окт', balance: 80000, utilities: 1950 },
-    { name: 'Ноя', balance: budgetCollected, utilities: 1685 },
-  ];
 
   return (
     <div className="flex-1 flex flex-col space-y-6 max-w-[1600px] mx-auto w-full pb-8">
@@ -255,7 +395,7 @@ export const ShadcnFinances: React.FC = () => {
                 setDepositUser('egor');
                 setIsDepositModalOpen(true);
               }}
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
               + Внести вклад Егора
             </Button>
@@ -266,7 +406,7 @@ export const ShadcnFinances: React.FC = () => {
                 setDepositUser('anya');
                 setIsDepositModalOpen(true);
               }}
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
               + Внести вклад Ани
             </Button>
@@ -279,7 +419,7 @@ export const ShadcnFinances: React.FC = () => {
                   if (val > 0) updateBudgetBalance(budgetCollected - val);
                 }
               }}
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
               Записать операцию
             </Button>
@@ -316,37 +456,51 @@ export const ShadcnFinances: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. APPLE WALLET 2026: 5 LUXURY METALLIC CARDS OF EGOR & ANYA ── */}
+      {/* ── 2. APPLE WALLET 2026: DYNAMIC METALLIC CARDS WITH FULL CRUD ── */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold leading-none tracking-tight">
                 Apple Wallet 2026 · Карты Егора и Ани
               </h3>
               <Badge variant="secondary" className="text-[10px] font-mono-num font-bold">
-                5 реальных карт
+                {cardsList.length} {cardsList.length === 1 ? 'карта' : cardsList.length < 5 ? 'карты' : 'карт'}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Сбер (Аня), Т-Банк Black (Общий счет), WB Банк, Альфа-Банк и Газпромбанк с кэшбэком Ноября
+              Реальные карты с повышенным кэшбэком месяца. Кликните для выбора и управления.
             </p>
           </div>
-          <Badge variant="outline" className="text-xs text-amber-400 border-amber-400/30 gap-1.5 self-start sm:self-auto py-1">
-            <Sparkles className="h-3 w-3 text-amber-400" />
-            <span>Экономия по матрице кэшбэка: <strong className="font-mono-num font-semibold">~4 850 ₽/мес</strong></span>
-          </Badge>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenAddCard}
+              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] border-white/10"
+            >
+              <Plus className="h-3.5 w-3.5 text-emerald-400" />
+              <span>+ Добавить карту</span>
+            </Button>
+            <Badge variant="outline" className="text-xs text-amber-400 border-amber-400/30 gap-1.5 py-1">
+              <Sparkles className="h-3 w-3 text-amber-400" />
+              <span>Экономия: <strong className="font-mono-num font-semibold">~4 850 ₽/мес</strong></span>
+            </Badge>
+          </div>
         </div>
 
-        {/* 5 Cards Row (Realistic Metallic Apple Wallet Aesthetics) */}
+        {/* Dynamic Cards Grid (100% Uniform, Zero Hardcoding, Zero "BELOUSOV") */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-start">
           {cardsList.map((card) => {
-            const theme = CARD_METALLIC_THEMES[card.id] || CARD_METALLIC_THEMES['cb-sber'];
+            const theme = getCardTheme(card);
             const isSelected = activeCardId === card.id;
-            const isGpb = card.id === 'cb-gpb';
+            const holder = getCardHolder(card);
+            const digits = getCardDigits(card);
+            const tag = getCardTag(card);
 
             return (
-              <div key={card.id} className="flex flex-col gap-2">
+              <div key={card.id} className="relative group">
                 <div
                   onClick={() => setActiveCardId(card.id)}
                   style={{
@@ -366,18 +520,18 @@ export const ShadcnFinances: React.FC = () => {
                     }}
                   />
 
-                  {/* Card Top: Bank Name, Chip & Contactless */}
+                  {/* Card Top: Bank Name, Tag & Contactless/MIR */}
                   <div className="relative z-10 flex items-start justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-[12.5px] tracking-wider text-white drop-shadow-sm font-sans">
-                        {theme.name}
+                    <div className="flex flex-col min-w-0 pr-1">
+                      <span className="font-bold text-[12.5px] tracking-wider text-white drop-shadow-sm font-sans truncate">
+                        {card.bankName.toUpperCase()}
                       </span>
-                      <span className="text-[9.5px] text-white/75 font-mono tracking-tight">
-                        {theme.tag}
+                      <span className="text-[9.5px] text-white/75 font-mono tracking-tight truncate">
+                        {tag}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <ContactlessIcon />
                       <MirBadge />
                     </div>
@@ -387,10 +541,10 @@ export const ShadcnFinances: React.FC = () => {
                   <div className="relative z-10 flex items-center justify-between my-auto">
                     <EMVChipIcon variant={theme.chipVariant} />
                     
-                    {/* Active Month Status Badge */}
+                    {/* Active Categories Count Badge */}
                     <div className="flex items-center gap-1 bg-black/45 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[9.5px] font-mono-num text-zinc-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span>{card.categories.length} категорий</span>
+                      <span>{card.categories?.length || 0} категорий</span>
                     </div>
                   </div>
 
@@ -398,44 +552,47 @@ export const ShadcnFinances: React.FC = () => {
                   <div className="relative z-10 flex items-end justify-between text-white drop-shadow-sm">
                     <div>
                       <div className="font-mono text-[11px] tracking-wider text-white/90">
-                        {theme.number}
+                        {digits}
                       </div>
                       <div className="text-[9px] uppercase tracking-wider text-white/85 font-medium truncate max-w-[120px]">
-                        {theme.holder}
+                        {holder}
                       </div>
                     </div>
 
                     <div className="text-right">
                       <div className="text-[7.5px] uppercase tracking-widest text-white/60 font-mono">VALID</div>
-                      <div className="font-mono text-[9.5px] text-white/90">{theme.exp}</div>
+                      <div className="font-mono text-[9.5px] text-white/90">12/28</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Dedicated Action Button UNDER Gazprombank card (Zero overlap with bank title or MIR!) */}
-                {isGpb && (
-                  <div className="w-full">
-                    {gpbCashbackClaimed ? (
-                      <div className="w-full py-1.5 px-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5">
-                        <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Кэшбэк ГПБ получен (+3 000 ₽)</span>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsGpbModalOpen(true);
-                        }}
-                        className="w-full h-8 text-xs font-semibold text-amber-300 border-amber-400/40 hover:bg-amber-400/10 gap-1.5 bg-amber-500/10 cursor-pointer shadow-xs"
-                      >
-                        <Sparkles className="h-3 w-3 text-amber-400" />
-                        <span>⚡ Забрать кэшбэк ГПБ (до 25-го)</span>
-                      </Button>
-                    )}
-                  </div>
-                )}
+                {/* Quick Action Icons on Card Hover */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEditCard(card);
+                    }}
+                    className="p-1 rounded bg-black/70 hover:bg-black text-white/80 hover:text-white transition-colors cursor-pointer"
+                    title="Редактировать карту"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                  </button>
+                  {cardsList.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCard(card.id);
+                      }}
+                      className="p-1 rounded bg-black/70 hover:bg-red-950 text-red-300 hover:text-red-200 transition-colors cursor-pointer"
+                      title="Удалить карту"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -443,55 +600,174 @@ export const ShadcnFinances: React.FC = () => {
 
         {/* Selected Card Inspector & Category Manager */}
         {currentCard && (
-          <div className="rounded-xl border bg-card text-card-foreground p-4 space-y-4 shadow-xs">
+          <div className="rounded-xl border bg-card text-card-foreground p-5 space-y-5 shadow-xs">
+            {/* Inspector Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b">
               <div className="flex items-center gap-2.5">
                 <div className="w-3 h-3 rounded-full bg-amber-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider">
-                  Категории повышенного кэшбэка на {currentCard.activeMonth}: {currentTheme.name} ({currentTheme.tag})
+                  Управление картой: {currentCard.bankName} ({getCardTag(currentCard)})
                 </h4>
               </div>
 
-              {/* Status Pill */}
-              <Button
-                variant={currentCard.claimed ? "outline" : "default"}
-                size="sm"
-                onClick={() => toggleCashbackClaimed(currentCard.id)}
-                className={`h-7 text-xs gap-1.5 cursor-pointer ${
-                  currentCard.claimed 
-                    ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' 
-                    : 'bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold'
-                }`}
-              >
-                <Check className="h-3.5 w-3.5" />
-                <span>{currentCard.claimed ? 'Категории активированы в банке ✓' : 'Выбрать категории в приложении'}</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenEditCard(currentCard)}
+                  className="h-7 text-xs gap-1 cursor-pointer"
+                >
+                  <Edit3 className="h-3 w-3" />
+                  <span>Редактировать</span>
+                </Button>
+                {cardsList.length > 1 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteCard(currentCard.id)}
+                    className="h-7 text-xs gap-1 text-red-400 border-red-500/20 hover:bg-red-500/10 cursor-pointer"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    <span>Удалить</span>
+                  </Button>
+                )}
+                <Button
+                  variant={currentCard.claimed ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => toggleCashbackClaimed(currentCard.id)}
+                  className={`h-7 text-xs gap-1.5 cursor-pointer ${
+                    currentCard.claimed 
+                      ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' 
+                      : 'bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold'
+                  }`}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{currentCard.claimed ? 'Категории активированы в банке ✓' : 'Выбрать категории в приложении'}</span>
+                </Button>
+              </div>
             </div>
 
-            {/* Active Categories Pills for this card */}
-            <div>
-              <div className="text-xs text-muted-foreground mb-2">Активные категории карты (нажмите ✕ для удаления):</div>
-              <div className="flex flex-wrap gap-2">
-                {currentCard.categories.map((cat, idx) => (
-                  <Badge
-                    key={idx}
-                    variant="secondary"
-                    className="h-7 pl-2.5 pr-1.5 text-xs font-medium gap-1.5 bg-muted/60 hover:bg-muted/90"
+            {/* Smart Dynamic TickTick Task Matching Notification */}
+            {matchingTasks.length > 0 && (
+              <div className="space-y-2">
+                {matchingTasks.map((matchedTask) => (
+                  <div
+                    key={matchedTask.id}
+                    className="p-3 rounded-xl border border-amber-500/35 bg-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in"
                   >
-                    <span>{cat.category}</span>
-                    <span className="font-mono-num font-bold text-amber-400 bg-amber-500/10 px-1 py-0.2 rounded border border-amber-500/20">
-                      {cat.percent}%
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeCashbackCategory(currentCard.id, idx)}
-                      className="ml-0.5 rounded-full hover:bg-white/10 p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                      title="Удалить категорию"
+                    <div className="flex items-start gap-2.5">
+                      <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs font-semibold text-amber-200">
+                          В TickTick есть задача: <span className="underline font-bold text-amber-300">{matchedTask.title}</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">
+                          Нажмите кнопку, чтобы отметить выполнение задачи в TickTick и зачислить кэшбэк в общий бюджет пары
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const match = matchedTask.title.match(/(\d+[\s\d]*)\s*₽/);
+                        const amt = match ? parseInt(match[1].replace(/\s/g, ''), 10) : (parseFloat(cashbackDepositAmount) || 1500);
+                        
+                        // Complete in TickTick and deposit to store
+                        toggleTaskCompletion(matchedTask.id);
+                        claimCashbackForCard(currentCard.id, amt, matchedTask.title);
+                      }}
+                      className="h-8 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 shrink-0 gap-1.5 cursor-pointer shadow-xs"
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
+                      <Check className="h-3.5 w-3.5" />
+                      <span>Выполнить и зачислить</span>
+                    </Button>
+                  </div>
                 ))}
+              </div>
+            )}
+
+            {/* Universal Cashback Deposit Block */}
+            <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-emerald-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Зачислить полученный кэшбэк по карте {currentCard.bankName}
+                  </span>
+                </div>
+                <Badge variant="outline" className="text-[10px] text-muted-foreground font-mono">
+                  Прямое пополнение бюджета
+                </Badge>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type="number"
+                    placeholder="Сумма кэшбэка в ₽ (например, 1500 или 3000)"
+                    value={cashbackDepositAmount}
+                    onChange={(e) => setCashbackDepositAmount(e.target.value)}
+                    className="h-9 pr-8 font-mono font-semibold bg-background"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground">
+                    ₽
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {['500', '1000', '1500', '3000'].map((preset) => (
+                    <Button
+                      key={preset}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCashbackDepositAmount(preset)}
+                      className={`h-9 px-2 text-xs font-mono ${cashbackDepositAmount === preset ? 'bg-muted font-bold' : ''}`}
+                    >
+                      {preset} ₽
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => handleClaimUniversalCashback()}
+                  className="h-9 px-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 cursor-pointer shrink-0 shadow-xs"
+                >
+                  <ArrowDownRight className="h-3.5 w-3.5" />
+                  <span>Зачислить в общий бюджет</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Active Categories Badges */}
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground">Активные категории карты на месяц (нажмите ✕ для удаления):</div>
+              <div className="flex flex-wrap gap-2">
+                {currentCard.categories && currentCard.categories.length > 0 ? (
+                  currentCard.categories.map((cat, idx) => (
+                    <Badge
+                      key={idx}
+                      variant="secondary"
+                      className="h-7 pl-2.5 pr-1.5 text-xs font-medium gap-1.5 bg-muted/60 hover:bg-muted/90"
+                    >
+                      <span>{cat.category}</span>
+                      <span className="font-mono-num font-bold text-amber-400 bg-amber-500/10 px-1 py-0.2 rounded border border-amber-500/20">
+                        {cat.percent}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeCashbackCategory(currentCard.id, idx)}
+                        className="ml-0.5 rounded-full hover:bg-white/10 p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                        title="Удалить категорию"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <div className="text-xs text-muted-foreground italic">Категории пока не добавлены</div>
+                )}
               </div>
             </div>
 
@@ -554,6 +830,127 @@ export const ShadcnFinances: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── CARD ADD / EDIT MODAL DIALOG ── */}
+      <Dialog open={isCardModalOpen} onOpenChange={setIsCardModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">
+              {editingCardId ? 'Редактировать банковскую карту' : 'Добавить новую банковскую карту'}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Карта появится в Apple Wallet 2026 с металлическим градиентом и категориями кэшбэка
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveCardForm} className="space-y-4 pt-2">
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1">
+                Название банка
+              </label>
+              <Input
+                required
+                placeholder="например: Т-Банк, Сбер, ВТБ, WB Банк"
+                value={cardFormBankName}
+                onChange={(e) => setCardFormBankName(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1.5">
+                Владелец карты
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['egor', 'anya', 'joint'] as const).map((userKey) => (
+                  <button
+                    key={userKey}
+                    type="button"
+                    onClick={() => setCardFormUser(userKey)}
+                    className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                      cardFormUser === userKey
+                        ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                        : 'border-border bg-muted/20 text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {userKey === 'egor' ? 'Егор' : userKey === 'anya' ? 'Аня' : 'Общая (Пара)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1.5">
+                Цветовая тема градиента (6 пресетов Apple Wallet)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {(Object.keys(CARD_GRADIENT_PRESETS) as CardGradientPreset[]).map((key) => {
+                  const p = CARD_GRADIENT_PRESETS[key];
+                  const isPresetActive = cardFormPreset === key;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setCardFormPreset(key)}
+                      className={`flex items-center gap-2 p-2 rounded-lg border text-left text-xs transition-all cursor-pointer ${
+                        isPresetActive
+                          ? 'border-white/50 bg-white/10 ring-1 ring-white/30 font-semibold'
+                          : 'border-border bg-muted/20 hover:bg-muted/40'
+                      }`}
+                    >
+                      <span className={`w-3.5 h-3.5 rounded-full shrink-0 ${p.badgeBg} shadow-xs`} />
+                      <span className="truncate">{p.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1">
+                  Последние 4 цифры
+                </label>
+                <Input
+                  maxLength={4}
+                  placeholder="7714"
+                  value={cardFormDigits}
+                  onChange={(e) => setCardFormDigits(e.target.value)}
+                  className="h-8 text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-foreground mb-1">
+                  Подпись / Особенность
+                </label>
+                <Input
+                  placeholder="например: Общий счет пары"
+                  value={cardFormSpecial}
+                  onChange={(e) => setCardFormSpecial(e.target.value)}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCardModalOpen(false)}
+                className="text-xs"
+              >
+                Отмена
+              </Button>
+              <Button type="submit" size="sm" className="text-xs font-semibold">
+                {editingCardId ? 'Сохранить изменения' : 'Добавить карту'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* ── 3. ЖКХ МОСКВЫ И СЧЕТА TABLE ── */}
       <div className="rounded-xl border bg-card text-card-foreground shadow-xs">
@@ -728,49 +1125,7 @@ export const ShadcnFinances: React.FC = () => {
         </div>
       </div>
 
-      {/* ── DIALOG 1: CLAIM GPB CASHBACK ── */}
-      <Dialog open={isGpbModalOpen} onOpenChange={setIsGpbModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-400" />
-              <span>Забрать кэшбэк Газпромбанк</span>
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Акция 25% по карте «Сапфир». Полученная сумма пополнит совместный баланс пары, а задача в TickTick будет автоматически выполнена.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                Сумма начисленного кэшбэка (₽)
-              </label>
-              <Input
-                type="number"
-                value={gpbAmount}
-                onChange={(e) => setGpbAmount(e.target.value)}
-                className="mt-1 font-mono text-base"
-              />
-            </div>
-            <div className="p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground space-y-1">
-              <p>• Начисление поступит на совместный счет пары.</p>
-              <p>• Задача «Получить кэшбек с газпромбанка» закроется в TickTick.</p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsGpbModalOpen(false)}>
-              Отмена
-            </Button>
-            <Button onClick={handleConfirmGpbClaim} className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold">
-              Зачислить в бюджет
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── DIALOG 2: DEPOSIT CONTRIBUTION ── */}
+      {/* ── DIALOG: DEPOSIT CONTRIBUTION ── */}
       <Dialog open={isDepositModalOpen} onOpenChange={setIsDepositModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

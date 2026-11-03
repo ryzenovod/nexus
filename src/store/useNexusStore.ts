@@ -167,7 +167,11 @@ export interface NexusState {
   deleteTransaction: (id: string) => void;
   updateBudgetContributions: (egor: number, anya: number, target: number) => void;
   claimGpbCashback: (amount: number) => void;
+  claimCashbackForCard: (cardId: string, amount: number, taskTitle?: string) => void;
   updateBudgetBalance: (balance: number) => void;
+  addCashbackCard: (card: Omit<CashbackCard, 'id'> & { id?: string }) => void;
+  updateCashbackCard: (id: string, updates: Partial<CashbackCard>) => void;
+  deleteCashbackCard: (id: string) => void;
   toggleCashbackClaimed: (id: string) => void;
   addCashbackCategory: (cardId: string, category: string, percent: number) => void;
   removeCashbackCategory: (cardId: string, categoryIndex: number) => void;
@@ -879,52 +883,83 @@ export const useNexusStore = create<NexusState>()(
       },
 
       claimGpbCashback: (amount) => {
-        const gpbTaskId = '6ad8cacebf00032b8b10c84f';
-        const newBalance = get().budget.currentBalance + amount;
-        
+        get().claimCashbackForCard('cb-gpb', amount, 'Кэшбэк: Газпромбанк');
+      },
+
+      claimCashbackForCard: (cardId, amount, taskTitle) => {
+        const card = get().cashbackCards.find((c) => c.id === cardId);
+        const bankTitle = card ? card.bankName : 'Банк';
+        const currentBal = get().budget.currentBalance;
+        const newBal = currentBal + amount;
+
         const newTx: FinanceTransaction = {
-          id: `tx-gpb-${Date.now()}`,
-          title: 'Кэшбэк Газпромбанк (акция месяца)',
+          id: `tx-cb-${Date.now()}`,
+          title: taskTitle || `Кэшбэк: ${bankTitle}`,
           amount,
-          date: new Date().toISOString().slice(0, 10),
-          type: 'transfer',
+          type: 'income',
           category: 'Кэшбэк',
-          paidBy: 'egor',
+          paidBy: card?.user === 'anya' ? 'anya' : card?.user === 'egor' ? 'egor' : 'joint',
           splitRatio: '50/50',
-          notes: 'Зачислено по акции месяца (компенсация 25%) на общий счет',
+          date: new Date().toISOString().slice(0, 10),
+          notes: `Зачисление кэшбэка по карте ${bankTitle} в общий бюджет пары`,
         };
 
         set((state) => ({
-          gpbCashbackClaimed: true,
-          completedTaskIds: Array.from(new Set([...state.completedTaskIds, gpbTaskId])),
           budget: {
             ...state.budget,
-            currentBalance: newBalance,
+            currentBalance: newBal,
           },
           transactions: [newTx, ...state.transactions],
-          tasks: state.tasks.map((t) =>
-            t.id === gpbTaskId || t.title.toLowerCase().includes('газпром')
-              ? { ...t, completed: true }
-              : t
-          ),
+          gpbCashbackClaimed: cardId === 'cb-gpb' ? true : state.gpbCashbackClaimed,
         }));
-
-        // Real TickTick complete API via local bridge
-        fetch('/api/ticktick/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskId: gpbTaskId, projectId: '6abeae1535d42cc80be02175' }),
-        }).catch(() => {});
 
         try {
           soundEffects.playSuccess();
           confetti({
-            particleCount: 70,
+            particleCount: 75,
             spread: 70,
             origin: { y: 0.6 },
             colors: ['#3b82f6', '#10b981', '#f59e0b', '#fff'],
           });
         } catch {}
+
+        get().pushCloudState().catch(() => {});
+      },
+
+      addCashbackCard: (cardData) => {
+        const id = cardData.id || `cb-${Date.now()}`;
+        const newCard: CashbackCard = {
+          id,
+          bankName: cardData.bankName,
+          bankColor: cardData.bankColor || '#3b82f6',
+          user: cardData.user || 'joint',
+          activeMonth: cardData.activeMonth || 'Ноябрь 2026',
+          categories: cardData.categories || [],
+          claimed: cardData.claimed !== undefined ? cardData.claimed : true,
+          claimDeadline: cardData.claimDeadline || 'Выбран',
+          specialFeature: cardData.specialFeature || `${cardData.bankName} · ${cardData.user === 'anya' ? 'Аня' : cardData.user === 'egor' ? 'Егор' : 'Общий'}`,
+          digits: cardData.digits || '0000',
+          gradientPreset: cardData.gradientPreset || 'sapphire',
+          cardHolder: cardData.cardHolder || (cardData.user === 'anya' ? 'ANYA' : cardData.user === 'egor' ? 'EGOR' : 'EGOR & ANYA'),
+        };
+        set((state) => ({
+          cashbackCards: [...state.cashbackCards, newCard],
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateCashbackCard: (id, updates) => {
+        set((state) => ({
+          cashbackCards: state.cashbackCards.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      deleteCashbackCard: (id) => {
+        set((state) => ({
+          cashbackCards: state.cashbackCards.filter((c) => c.id !== id),
+        }));
+        get().pushCloudState().catch(() => {});
       },
 
       toggleCashbackClaimed: (id) => {
@@ -1323,9 +1358,15 @@ export const useNexusStore = create<NexusState>()(
         const completedSet = new Set(state.completedTaskIds);
         const deletedSet = new Set(state.deletedTaskIds);
 
-        // Ensure 5 exact banks are present
-        if (!state.cashbackCards || state.cashbackCards.length !== 5 || !state.cashbackCards.some(c => c.id === 'cb-sber')) {
+        // Ensure initial banks are present if empty
+        if (!state.cashbackCards || state.cashbackCards.length === 0) {
           state.cashbackCards = initialCashbackCards;
+        } else {
+          // Sanitize card holders (strictly EGOR or ANYA, zero BELOUSOV)
+          state.cashbackCards = state.cashbackCards.map((c) => ({
+            ...c,
+            cardHolder: c.user === 'anya' ? 'ANYA' : c.user === 'egor' ? 'EGOR' : 'EGOR & ANYA',
+          }));
         }
         // Purge any legacy fake demo events
         state.gcalEvents = (state.gcalEvents || []).filter(e => e.id && !e.id.startsWith('gcal-'));

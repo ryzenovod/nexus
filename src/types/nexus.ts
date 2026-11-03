@@ -98,17 +98,22 @@ export interface CashbackCategory {
   note?: string;
 }
 
+export type CardGradientPreset = 'emerald' | 'titanium' | 'violet' | 'ruby' | 'sapphire' | 'amber';
+
 export interface CashbackCard {
   id: string;
   bankName: string;
-  bankColor: string;
-  user: 'egor' | 'anya';
-  activeMonth: string;
+  bankColor?: string;
+  user: 'egor' | 'anya' | 'joint';
+  activeMonth?: string;
   categories: CashbackCategory[];
-  claimed: boolean;
-  claimDeadline: string;
+  claimed?: boolean;
+  claimDeadline?: string;
   actionRequired?: string;
   specialFeature?: string;
+  digits?: string;
+  gradientPreset?: CardGradientPreset;
+  cardHolder?: string;
 }
 
 export interface UtilityReading {
