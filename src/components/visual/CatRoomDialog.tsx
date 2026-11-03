@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useNexusStore } from '@/store/useNexusStore';
 import { CyberCatMascot } from './CyberCatMascot';
 import { CoupleGamification } from '@/types/nexus';
@@ -44,7 +43,6 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
   const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
 
   const treatsCount = gamification.treats !== undefined ? gamification.treats : 18;
-  const xpPercent = Math.min(100, Math.round((gamification.xp / gamification.nextLevelXp) * 100));
 
   const cosmetics: { 
     id: CoupleGamification['equippedCosmetic']; 
@@ -79,7 +77,7 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-foreground">Комната Котика Нексуса</h3>
                 <Badge variant="outline" className="text-amber-400 border-amber-400/30 text-[10px] font-mono">
-                  Уровень {gamification.level}
+                  Уровень {gamification.level} · {gamification.xp} XP
                 </Badge>
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -92,7 +90,7 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => setSoundMuted(!soundMuted)}
-            className="h-8 w-8 p-0 mr-8 text-muted-foreground hover:text-foreground cursor-pointer"
+            className="h-8 w-8 p-0 mr-12 text-muted-foreground hover:text-foreground cursor-pointer"
             title={soundMuted ? 'Включить звук' : 'Выключить звук'}
           >
             {soundMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -123,17 +121,6 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
 
         {/* Stats & Actions */}
         <div className="p-5 space-y-4 bg-card">
-          {/* Couple XP Progress */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Прогресс заботы пары</span>
-              <span className="font-mono text-muted-foreground">
-                {gamification.xp} / {gamification.nextLevelXp} XP ({xpPercent}%)
-              </span>
-            </div>
-            <Progress value={xpPercent} className="h-2" />
-          </div>
-
           {/* Treats & Feeding */}
           <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
             <div className="flex items-center gap-2">

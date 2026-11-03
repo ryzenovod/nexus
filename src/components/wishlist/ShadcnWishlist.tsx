@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Heart, 
-  ThumbsUp, 
-  ThumbsDown, 
+  Check, 
+  X, 
   Plus, 
   Home, 
   ExternalLink,
@@ -47,6 +47,28 @@ export const ShadcnWishlist: React.FC = () => {
   const [newPrice, setNewPrice] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newCategory, setNewCategory] = useState('Дом');
+
+  // Inline price editing state
+  const [inlinePriceId, setInlinePriceId] = useState<string | null>(null);
+  const [inlinePriceVal, setInlinePriceVal] = useState('');
+
+  const handleStartInlinePrice = (id: string, currentPrice: number) => {
+    setInlinePriceId(id);
+    setInlinePriceVal(currentPrice > 0 ? String(currentPrice) : '');
+  };
+
+  const handleSaveInlinePrice = (id: string) => {
+    const cleanStr = inlinePriceVal.replace(/\s+/g, '').replace('₽', '');
+    const num = parseFloat(cleanStr);
+    const validNum = isNaN(num) || num < 0 ? 0 : num;
+    updateWishlistItem(id, { estimatedPrice: validNum });
+    setInlinePriceId(null);
+  };
+
+  // Filter out any unwanted non-purchase tasks (e.g. "Что делаем 4 ноября?")
+  const displayWishlist = useMemo(() => {
+    return wishlist.filter(item => !item.title.toLowerCase().includes('4 ноября'));
+  }, [wishlist]);
 
   // Edit wish state
   const [editingWish, setEditingWish] = useState<any | null>(null);
@@ -122,7 +144,7 @@ export const ShadcnWishlist: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {wishlist.map((item) => {
+            {displayWishlist.map((item) => {
               const isApproved = item.egorVote === 'yes' && item.anyaVote === 'yes';
 
               return (
@@ -149,45 +171,92 @@ export const ShadcnWishlist: React.FC = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="font-mono-num text-xs">
-                    {item.estimatedPrice > 0 ? `${item.estimatedPrice.toLocaleString('ru-RU')} ₽` : '—'}
+                    {inlinePriceId === item.id ? (
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          value={inlinePriceVal}
+                          onChange={(e) => setInlinePriceVal(e.target.value)}
+                          onBlur={() => handleSaveInlinePrice(item.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveInlinePrice(item.id);
+                            if (e.key === 'Escape') setInlinePriceId(null);
+                          }}
+                          autoFocus
+                          placeholder="0"
+                          className="h-7 w-24 text-xs bg-zinc-900 border-zinc-700 px-2 font-mono"
+                        />
+                        <span className="text-zinc-400 text-xs">₽</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStartInlinePrice(item.id, item.estimatedPrice)}
+                        className="inline-flex items-center gap-1.5 py-1 px-2 rounded-md hover:bg-white/[0.06] text-zinc-300 hover:text-zinc-100 transition cursor-pointer group/price"
+                        title="Нажмите, чтобы ввести или изменить цену в ₽"
+                      >
+                        <span>{item.estimatedPrice > 0 ? `${item.estimatedPrice.toLocaleString('ru-RU')} ₽` : '—'}</span>
+                        <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/price:opacity-60 transition-opacity text-zinc-400" />
+                      </button>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <Button
-                        variant={item.egorVote === 'yes' ? 'default' : 'ghost'}
+                        variant="secondary"
                         size="sm"
-                        onClick={() => voteWishlist(item.id, 'egor', 'yes')}
-                        className="h-7 w-7 p-0"
+                        onClick={() => voteWishlist(item.id, 'egor', item.egorVote === 'yes' ? null as any : 'yes')}
+                        className={`h-7 w-7 p-0 transition-all ${
+                          item.egorVote === 'yes'
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'
+                            : 'bg-white/[0.04] text-zinc-400 hover:text-emerald-400 hover:bg-white/[0.08]'
+                        }`}
+                        title="Одобрить (Егор)"
                       >
-                        👍
+                        <Check className="h-3.5 w-3.5" />
                       </Button>
                       <Button
-                        variant={item.egorVote === 'no' ? 'destructive' : 'ghost'}
+                        variant="secondary"
                         size="sm"
-                        onClick={() => voteWishlist(item.id, 'egor', 'no')}
-                        className="h-7 w-7 p-0"
+                        onClick={() => voteWishlist(item.id, 'egor', item.egorVote === 'no' ? null as any : 'no')}
+                        className={`h-7 w-7 p-0 transition-all ${
+                          item.egorVote === 'no'
+                            ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs'
+                            : 'bg-white/[0.04] text-zinc-400 hover:text-rose-400 hover:bg-white/[0.08]'
+                        }`}
+                        title="Отклонить (Егор)"
                       >
-                        👎
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       <Button
-                        variant={item.anyaVote === 'yes' ? 'default' : 'ghost'}
+                        variant="secondary"
                         size="sm"
-                        onClick={() => voteWishlist(item.id, 'anya', 'yes')}
-                        className="h-7 w-7 p-0"
+                        onClick={() => voteWishlist(item.id, 'anya', item.anyaVote === 'yes' ? null as any : 'yes')}
+                        className={`h-7 w-7 p-0 transition-all ${
+                          item.anyaVote === 'yes'
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'
+                            : 'bg-white/[0.04] text-zinc-400 hover:text-emerald-400 hover:bg-white/[0.08]'
+                        }`}
+                        title="Одобрить (Аня)"
                       >
-                        👍
+                        <Check className="h-3.5 w-3.5" />
                       </Button>
                       <Button
-                        variant={item.anyaVote === 'no' ? 'destructive' : 'ghost'}
+                        variant="secondary"
                         size="sm"
-                        onClick={() => voteWishlist(item.id, 'anya', 'no')}
-                        className="h-7 w-7 p-0"
+                        onClick={() => voteWishlist(item.id, 'anya', item.anyaVote === 'no' ? null as any : 'no')}
+                        className={`h-7 w-7 p-0 transition-all ${
+                          item.anyaVote === 'no'
+                            ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs'
+                            : 'bg-white/[0.04] text-zinc-400 hover:text-rose-400 hover:bg-white/[0.08]'
+                        }`}
+                        title="Отклонить (Аня)"
                       >
-                        👎
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
