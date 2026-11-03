@@ -148,9 +148,10 @@ const getCardTheme = (card: CashbackCard) => {
 };
 
 const getCardHolder = (card: CashbackCard): string => {
+  if (card.id === 'cb-tbank') return 'EGOR';
+  if (card.cardHolder && card.cardHolder !== 'EGOR & ANYA') return card.cardHolder;
   if (card.user === 'anya') return 'ANYA';
-  if (card.user === 'egor') return 'EGOR';
-  return 'EGOR & ANYA';
+  return 'EGOR';
 };
 
 const getCardDigits = (card: CashbackCard): string => {
@@ -167,8 +168,13 @@ const getCardDigits = (card: CashbackCard): string => {
 };
 
 const getCardTag = (card: CashbackCard): string => {
-  if (card.specialFeature) return card.specialFeature;
-  const ownerLabel = card.user === 'anya' ? 'Аня' : card.user === 'egor' ? 'Егор' : 'Общий счет';
+  if (card.id === 'cb-tbank' || card.bankName.toLowerCase().includes('т-банк')) {
+    return 'Егор · Т-Банк Black';
+  }
+  if (card.specialFeature && !card.specialFeature.toLowerCase().includes('общий счет') && !card.specialFeature.toLowerCase().includes('совместный счет')) {
+    return card.specialFeature;
+  }
+  const ownerLabel = card.user === 'anya' ? 'Аня' : 'Егор';
   return `${ownerLabel} · ${card.bankName}`;
 };
 
@@ -772,7 +778,7 @@ export const ShadcnFinances: React.FC = () => {
                   Подпись / Особенность
                 </label>
                 <Input
-                  placeholder="например: Общий счет пары"
+                  placeholder="например: Егор · Т-Банк Black"
                   value={cardFormSpecial}
                   onChange={(e) => setCardFormSpecial(e.target.value)}
                   className="h-8 text-xs"

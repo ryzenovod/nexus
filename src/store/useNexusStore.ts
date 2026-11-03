@@ -1640,19 +1640,42 @@ export const useNexusStore = create<NexusState>()(
           }
         }
 
+        // Explicitly uncomplete "Создать общий счет" & "Создать таблицу с финансами для учета" and clear notes
+        const pendingFinanceTitles = ['создать общий счет', 'создать таблицу с финансами'];
+        const financeTaskIdsToUncomplete = new Set<string>();
+
         // Apply completed and deleted filters to persisted tasks
-        const completedSet = new Set(state.completedTaskIds);
-        const deletedSet = new Set(state.deletedTaskIds);
+        if (state.completedTaskIds) {
+          state.completedTaskIds = state.completedTaskIds.filter((id) => {
+            if (id === '6ad8c39ebf00032b8b10c7ea' || id === '6ad8c392bf00032b8b10c7dc') return false;
+            return true;
+          });
+        }
+        const completedSet = new Set(state.completedTaskIds || []);
+        completedSet.delete('6ad8c39ebf00032b8b10c7ea');
+        completedSet.delete('6ad8c392bf00032b8b10c7dc');
+        const deletedSet = new Set(state.deletedTaskIds || []);
 
         // Ensure initial banks are present if empty
         if (!state.cashbackCards || state.cashbackCards.length === 0) {
           state.cashbackCards = initialCashbackCards;
         } else {
-          // Sanitize card holders (strictly EGOR or ANYA, zero BELOUSOV)
-          state.cashbackCards = state.cashbackCards.map((c) => ({
-            ...c,
-            cardHolder: c.user === 'anya' ? 'ANYA' : c.user === 'egor' ? 'EGOR' : 'EGOR & ANYA',
-          }));
+          // Sanitize card holders (strictly EGOR or ANYA, zero BELOUSOV) and ensure cb-tbank is owned by Egor
+          state.cashbackCards = state.cashbackCards.map((c) => {
+            if (c.id === 'cb-tbank' || c.bankName.toLowerCase().includes('т-банк')) {
+              return {
+                ...c,
+                user: 'egor' as const,
+                cardHolder: 'EGOR',
+                bankName: 'Т-Банк Black',
+                specialFeature: 'Егор · Т-Банк Black',
+              };
+            }
+            return {
+              ...c,
+              cardHolder: c.user === 'anya' ? 'ANYA' : 'EGOR',
+            };
+          });
         }
 
         // Clean out questions that aren't purchases like "Что делаем 4 ноября?" from wishlist
@@ -1688,11 +1711,17 @@ export const useNexusStore = create<NexusState>()(
             .filter((t) => !deletedSet.has(t.id))
             .map((task) => {
               const init = initialMap.get(task.id);
-              const isDone = completedSet.has(task.id) || task.completed;
+              const titleLower = (task.title || '').toLowerCase();
+              const isFinanceTask = pendingFinanceTitles.some((p) => titleLower.includes(p)) ||
+                task.id === '6ad8c39ebf00032b8b10c7ea' || task.id === '6ad8c392bf00032b8b10c7dc';
+              const isDone = isFinanceTask ? false : (completedSet.has(task.id) || task.completed);
+              const cleanNotes = isFinanceTask ? undefined : task.notes;
+
               if (init) {
                 return {
                   ...task,
                   completed: isDone,
+                  notes: cleanNotes,
                   parentId: task.parentId || init.parentId,
                   isHub: init.isHub !== undefined ? init.isHub : task.isHub,
                   subtaskCount: init.subtaskCount !== undefined ? init.subtaskCount : task.subtaskCount,
@@ -1701,6 +1730,7 @@ export const useNexusStore = create<NexusState>()(
               return {
                 ...task,
                 completed: isDone,
+                notes: cleanNotes,
               };
             });
 
