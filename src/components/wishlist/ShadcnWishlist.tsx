@@ -6,7 +6,8 @@ import {
   Plus, 
   Home, 
   ExternalLink,
-  Trash2
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ export const ShadcnWishlist: React.FC = () => {
   const { 
     wishlist, 
     addWishlistItem, 
+    updateWishlistItem,
     voteWishlist, 
     deleteWishlistItem, 
     convertWishlistToTask,
@@ -45,6 +47,29 @@ export const ShadcnWishlist: React.FC = () => {
   const [newPrice, setNewPrice] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newCategory, setNewCategory] = useState('Дом');
+
+  // Edit wish state
+  const [editingWish, setEditingWish] = useState<any | null>(null);
+  const [editPrice, setEditPrice] = useState('');
+  const [editLink, setEditLink] = useState('');
+  const [editCategory, setEditCategory] = useState('Дом');
+
+  const handleStartEdit = (item: any) => {
+    setEditingWish(item);
+    setEditPrice(item.estimatedPrice ? String(item.estimatedPrice) : '');
+    setEditLink(item.link || '');
+    setEditCategory(item.category || 'Дом');
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingWish) return;
+    updateWishlistItem(editingWish.id, {
+      estimatedPrice: parseFloat(editPrice) || 0,
+      link: editLink.trim() || undefined,
+      category: editCategory,
+    });
+    setEditingWish(null);
+  };
 
   const handleAddWish = () => {
     if (!newTitle.trim()) return;
@@ -184,6 +209,15 @@ export const ShadcnWishlist: React.FC = () => {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleStartEdit(item)}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                        title="Редактировать цену, ссылку и категорию"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button
                         variant="outline"
                         size="sm"
                         onClick={() => convertWishlistToTask(item.id)}
@@ -313,6 +347,59 @@ export const ShadcnWishlist: React.FC = () => {
             </Button>
             <Button onClick={handleAddWish}>
               Добавить в вишлист
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit Wish Dialog ── */}
+      <Dialog open={!!editingWish} onOpenChange={(open) => !open && setEditingWish(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Редактировать товар вишлиста</DialogTitle>
+            <DialogDescription>
+              {editingWish?.title}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Ориентировочная цена (₽)</label>
+              <Input
+                type="number"
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+                placeholder="Цена в рублях"
+                className="mt-1 font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Ссылка на товар</label>
+              <Input
+                type="url"
+                value={editLink}
+                onChange={(e) => setEditLink(e.target.value)}
+                placeholder="https://..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Категория</label>
+              <Input
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                placeholder="Кухня, Ванная, Комната, Дом..."
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingWish(null)}>
+              Отмена
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Сохранить
             </Button>
           </DialogFooter>
         </DialogContent>

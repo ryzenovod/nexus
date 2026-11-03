@@ -161,6 +161,7 @@ export interface NexusState {
   sendTelegramPush: (type: 'shopping' | 'utilities' | 'test', extraText?: string) => Promise<{ success: boolean; error?: string }>;
 
   addWishlistItem: (item: Omit<WishlistItem, 'id' | 'createdAt' | 'egorVote' | 'anyaVote' | 'status'>) => void;
+  updateWishlistItem: (id: string, updates: Partial<WishlistItem>) => void;
   voteWishlist: (id: string, user: 'egor' | 'anya', vote: VoteStatus) => void;
   deleteWishlistItem: (id: string) => void;
   convertWishlistToTask: (id: string) => void;
@@ -295,6 +296,7 @@ export const useNexusStore = create<NexusState>()(
         set((state) => ({
           tasks: [newTask, ...state.tasks],
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       updateTask: (id, updates) => {
@@ -303,6 +305,7 @@ export const useNexusStore = create<NexusState>()(
             task.id === id ? { ...task, ...updates } : task
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       deleteTask: (id) => {
@@ -311,6 +314,7 @@ export const useNexusStore = create<NexusState>()(
           completedTaskIds: state.completedTaskIds.filter((tid) => tid !== id),
           tasks: state.tasks.filter((task) => task.id !== id),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       toggleTaskCompletion: (id) => {
@@ -394,6 +398,7 @@ export const useNexusStore = create<NexusState>()(
             ),
           };
         });
+        get().pushCloudState().catch(() => {});
       },
 
       moveTaskToDate: (taskId, targetDate) => {
@@ -402,6 +407,7 @@ export const useNexusStore = create<NexusState>()(
             task.id === taskId ? { ...task, date: targetDate } : task
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       reorderTasks: (newTasks) => {
@@ -734,6 +740,14 @@ export const useNexusStore = create<NexusState>()(
         set((state) => ({
           wishlist: [newItem, ...state.wishlist],
         }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateWishlistItem: (id, updates) => {
+        set((state) => ({
+          wishlist: state.wishlist.map((w) => (w.id === id ? { ...w, ...updates } : w)),
+        }));
+        get().pushCloudState().catch(() => {});
       },
 
       voteWishlist: (id, user, vote) => {
@@ -796,13 +810,14 @@ export const useNexusStore = create<NexusState>()(
         }));
 
         // Mirror to Cloud
-        get().pushCloudState();
+        get().pushCloudState().catch(() => {});
       },
 
       deleteWishlistItem: (id) => {
         set((state) => ({
           wishlist: state.wishlist.filter((w) => w.id !== id),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       convertWishlistToTask: (id) => {
@@ -830,6 +845,7 @@ export const useNexusStore = create<NexusState>()(
           tasks: [newTask, ...state.tasks],
           wishlist: state.wishlist.filter((w) => w.id !== id),
         }));
+        get().pushCloudState().catch(() => {});
 
         try {
           confetti({ particleCount: 40, spread: 50 });
@@ -861,12 +877,14 @@ export const useNexusStore = create<NexusState>()(
             },
           };
         });
+        get().pushCloudState().catch(() => {});
       },
 
       deleteTransaction: (id) => {
         set((state) => ({
           transactions: state.transactions.filter((tx) => tx.id !== id),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       updateBudgetContributions: (egor, anya, target) => {
@@ -879,6 +897,7 @@ export const useNexusStore = create<NexusState>()(
             lastUpdated: new Date().toISOString(),
           },
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       updateBudgetBalance: (balance) => {
@@ -889,6 +908,7 @@ export const useNexusStore = create<NexusState>()(
             lastUpdated: new Date().toISOString(),
           },
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       claimGpbCashback: (amount) => {
@@ -913,14 +933,53 @@ export const useNexusStore = create<NexusState>()(
           notes: `Зачисление кэшбэка по карте ${bankTitle} в общий бюджет пары`,
         };
 
+        // Find any uncompleted task in tasks matching "кэшбэк"/"кэшбек" and bank name
+        const bankLower = bankTitle.toLowerCase();
+        let matchedTaskId: string | null = null;
+        const updatedTasks = get().tasks.map((t) => {
+          if (t.completed) return t;
+          const tLower = t.title.toLowerCase();
+          const isCashback = tLower.includes('кэшбэк') || tLower.includes('кэшбек');
+          const isBank =
+            (bankLower.includes('газпром') && (tLower.includes('газпром') || tLower.includes('гпб'))) ||
+            ((bankLower.includes('тинькофф') || bankLower.includes('т-банк')) &&
+              (tLower.includes('т-банк') || tLower.includes('тинькофф') || tLower.includes('t-bank'))) ||
+            (bankLower.includes('сбер') && tLower.includes('сбер')) ||
+            (bankLower.includes('альфа') && tLower.includes('альфа')) ||
+            ((bankLower.includes('wb') || bankLower.includes('вайлдбер')) &&
+              (tLower.includes('wb') || tLower.includes('вайлдбер') || tLower.includes('вб'))) ||
+            tLower.includes(bankLower);
+
+          if (isCashback && isBank) {
+            matchedTaskId = t.id;
+            return { ...t, completed: true };
+          }
+          return t;
+        });
+
+        const newCompletedIds = matchedTaskId
+          ? Array.from(new Set([...get().completedTaskIds, matchedTaskId]))
+          : get().completedTaskIds;
+
         set((state) => ({
           budget: {
             ...state.budget,
             currentBalance: newBal,
+            lastUpdated: new Date().toISOString(),
           },
           transactions: [newTx, ...state.transactions],
-          gpbCashbackClaimed: cardId === 'cb-gpb' ? true : state.gpbCashbackClaimed,
+          tasks: matchedTaskId ? updatedTasks : state.tasks,
+          completedTaskIds: newCompletedIds,
+          gpbCashbackClaimed: cardId === 'cb-gpb' || bankLower.includes('газпром') ? true : state.gpbCashbackClaimed,
         }));
+
+        if (matchedTaskId) {
+          fetch('/api/ticktick/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: matchedTaskId }),
+          }).catch(() => {});
+        }
 
         try {
           soundEffects.playSuccess();
@@ -977,6 +1036,7 @@ export const useNexusStore = create<NexusState>()(
             card.id === id ? { ...card, claimed: !card.claimed } : card
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       addCashbackCategory: (cardId, category, percent) => {
@@ -990,6 +1050,7 @@ export const useNexusStore = create<NexusState>()(
               : card
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       removeCashbackCategory: (cardId, categoryIndex) => {
@@ -1003,6 +1064,7 @@ export const useNexusStore = create<NexusState>()(
               : card
           ),
         }));
+        get().pushCloudState().catch(() => {});
       },
 
       updateMeterReadings: (billId, readings) => {
@@ -1246,16 +1308,39 @@ export const useNexusStore = create<NexusState>()(
                 rawData = cloudData.payload;
                 syncSource = 'supabase-cloud (nexus_sync)';
 
-                // If cloud has shared_state (couple votes, custom expenses), merge it
+                // If cloud has shared_state (couple votes, custom expenses, cards, tasks), merge it
                 if (cloudData.shared_state) {
                   const ss = cloudData.shared_state;
-                  set((state) => ({
-                    wishlist: ss.wishlist || state.wishlist,
-                    transactions: ss.transactions || state.transactions,
-                    budget: ss.budget || state.budget,
-                    studyWorkItems: ss.studyWorkItems || state.studyWorkItems,
-                    customStudySpaces: ss.customStudySpaces || state.customStudySpaces,
-                  }));
+                  set((state) => {
+                    const mergedCompleted = Array.from(new Set([...(state.completedTaskIds || []), ...(ss.completedTaskIds || [])]));
+                    const mergedDeleted = Array.from(new Set([...(state.deletedTaskIds || []), ...(ss.deletedTaskIds || [])]));
+                    const deletedSet = new Set(mergedDeleted);
+                    const completedSet = new Set(mergedCompleted);
+
+                    const existingTaskIds = new Set(state.tasks.map((t) => t.id));
+                    const incomingCustomTasks: NexusTask[] = (ss.customTasks || []).filter(
+                      (ct: NexusTask) => !existingTaskIds.has(ct.id) && !deletedSet.has(ct.id)
+                    );
+
+                    const updatedTasks = state.tasks
+                      .filter((t) => !deletedSet.has(t.id))
+                      .map((t) => ({
+                        ...t,
+                        completed: completedSet.has(t.id) || t.completed,
+                      }));
+
+                    return {
+                      wishlist: ss.wishlist || state.wishlist,
+                      transactions: ss.transactions || state.transactions,
+                      budget: ss.budget || state.budget,
+                      cashbackCards: ss.cashbackCards || state.cashbackCards,
+                      studyWorkItems: ss.studyWorkItems || state.studyWorkItems,
+                      customStudySpaces: ss.customStudySpaces || state.customStudySpaces,
+                      completedTaskIds: mergedCompleted,
+                      deletedTaskIds: mergedDeleted,
+                      tasks: [...updatedTasks, ...incomingCustomTasks],
+                    };
+                  });
                 }
               }
             } catch (e) {
@@ -1300,9 +1385,17 @@ export const useNexusStore = create<NexusState>()(
 
           for (const item of inboxItems) {
             const title = (item.plainTitle || item.title || '').trim();
-            if (title.includes('?') && !existingTitles.has(title.toLowerCase())) {
-              const isBathroom = title.toLowerCase().includes('ванн') || title.toLowerCase().includes('коврик');
-              const isRoom = title.toLowerCase().includes('комнат') || title.toLowerCase().includes('подушка') || title.toLowerCase().includes('перестановка');
+            const titleLower = title.toLowerCase();
+            const isExcluded =
+              titleLower.includes('ноябр') ||
+              titleLower.includes('делаем') ||
+              titleLower.includes('когда') ||
+              titleLower.includes('куда') ||
+              titleLower.includes('перестановка');
+
+            if (title.includes('?') && !isExcluded && !existingTitles.has(titleLower)) {
+              const isBathroom = titleLower.includes('ванн') || titleLower.includes('коврик');
+              const isRoom = titleLower.includes('комнат') || titleLower.includes('подушка');
               const cat = isBathroom ? 'Ванная' : isRoom ? 'Комната' : 'Кухня';
 
               newWishes.push({
@@ -1318,42 +1411,104 @@ export const useNexusStore = create<NexusState>()(
                 addedBy: 'together',
                 createdAt: item.createdTime || new Date().toISOString(),
               });
-              existingTitles.add(title.toLowerCase());
+              existingTitles.add(titleLower);
             }
           }
 
-          // Also update task deadlines and parentId from TickTick live items, RESPECTING user completed/deleted state!
+          // Also update task deadlines and parentId from TickTick live items, AND import brand-new tasks!
           const timedItems: any[] = rawData.ticktick?.results || [];
           if (timedItems.length > 0 || inboxItems.length > 0) {
+            const allLive = [...timedItems, ...inboxItems];
             const liveTasksMap = new Map<string, any>();
-            [...timedItems, ...inboxItems].forEach((t) => {
+            allLive.forEach((t) => {
               if (t.id) liveTasksMap.set(t.id, t);
             });
 
             set((state) => {
               const completedSet = new Set(state.completedTaskIds || []);
               const deletedSet = new Set(state.deletedTaskIds || []);
+              const existingIds = new Set(state.tasks.map((t) => t.id));
 
-              return {
-                tasks: state.tasks
-                  .filter((t) => !deletedSet.has(t.id))
-                  .map((existingTask) => {
-                    const isCompleted = completedSet.has(existingTask.id) || existingTask.completed;
-                    const live = liveTasksMap.get(existingTask.id);
-                    if (live) {
-                      return {
-                        ...existingTask,
-                        completed: isCompleted,
-                        parentId: live.parentId || existingTask.parentId,
-                        date: live.dueDateLocal || (live.dueDate ? live.dueDate.slice(0, 10) : existingTask.date),
-                        isOverdue: Boolean(live.isOverdue),
-                      };
-                    }
+              // 1. Update existing tasks
+              const updatedTasks = state.tasks
+                .filter((t) => !deletedSet.has(t.id))
+                .map((existingTask) => {
+                  const isCompleted = completedSet.has(existingTask.id) || existingTask.completed;
+                  const live = liveTasksMap.get(existingTask.id);
+                  if (live) {
                     return {
                       ...existingTask,
                       completed: isCompleted,
+                      parentId: live.parentId || existingTask.parentId,
+                      date: live.dueDateLocal || (live.dueDate ? live.dueDate.slice(0, 10) : existingTask.date),
+                      isOverdue: Boolean(live.isOverdue),
                     };
-                  }),
+                  }
+                  return {
+                    ...existingTask,
+                    completed: isCompleted,
+                  };
+                });
+
+              // 2. Discover brand-new tasks from TickTick not yet in state.tasks
+              const newlyAddedTasks: NexusTask[] = [];
+              allLive.forEach((liveItem) => {
+                if (!liveItem.id || existingIds.has(liveItem.id) || deletedSet.has(liveItem.id)) {
+                  return;
+                }
+
+                const titleLower = (liveItem.title || '').toLowerCase();
+                let category: TaskCategory = 'Дом';
+                let bracketColor: BracketColor = 'neutral';
+                let room: RoomArea = 'Все';
+
+                if (titleLower.includes('ванн')) { room = 'Ванная'; category = 'Дом'; }
+                else if (titleLower.includes('кухн')) { room = 'Кухня'; category = 'Дом'; }
+                else if (titleLower.includes('балкон')) { room = 'Балкон'; category = 'Дом'; }
+                else if (titleLower.includes('комнат') || titleLower.includes('спальн')) { room = 'Комната'; category = 'Дом'; }
+                else if (titleLower.includes('жкх') || titleLower.includes('мосэнерго') || titleLower.includes('домиленд') || titleLower.includes('счет')) {
+                  category = 'Финансы'; bracketColor = 'finance';
+                } else if (titleLower.includes('вшэ')) {
+                  category = 'ВШЭ'; bracketColor = 'active';
+                } else if (titleLower.includes('рудн')) {
+                  category = 'РУДН'; bracketColor = 'active';
+                } else if (titleLower.includes('я-профи')) {
+                  category = 'Я-Профи'; bracketColor = 'active';
+                } else if (titleLower.includes('работа') || titleLower.includes('openmap')) {
+                  category = 'Работа'; bracketColor = 'active';
+                }
+
+                if (liveItem.isOverdue) bracketColor = 'critical';
+
+                const newTask: NexusTask = {
+                  id: liveItem.id,
+                  title: liveItem.title || 'Новая задача',
+                  notes: liveItem.notes || liveItem.content || undefined,
+                  completed: completedSet.has(liveItem.id) || Boolean(liveItem.completed || liveItem.status === 2),
+                  bracketColor,
+                  category,
+                  room,
+                  assignee: 'together',
+                  date: liveItem.dueDateLocal || (liveItem.dueDate ? liveItem.dueDate.slice(0, 10) : 'inbox'),
+                  isOverdue: Boolean(liveItem.isOverdue),
+                  parentId: liveItem.parentId || undefined,
+                  isHub: Boolean(liveItem.isHub),
+                  subtasks: (liveItem.items || []).map((it: any) => ({
+                    id: it.id,
+                    title: it.title,
+                    completed: it.status === 1 || it.completed,
+                  })),
+                  subtaskCount: liveItem.subtaskCount || (liveItem.items ? liveItem.items.length : 0),
+                  createdAt: liveItem.createdTime || new Date().toISOString(),
+                  order: liveItem.order || 99,
+                };
+
+                newlyAddedTasks.push(newTask);
+                existingIds.add(liveItem.id);
+              });
+
+              return {
+                tasks: [...updatedTasks, ...newlyAddedTasks],
               };
             });
           }
@@ -1378,15 +1533,30 @@ export const useNexusStore = create<NexusState>()(
       },
 
       pushCloudState: async () => {
-        const { supabaseConfig, wishlist, budget, transactions, studyWorkItems, customStudySpaces } = get();
+        const {
+          supabaseConfig,
+          wishlist,
+          budget,
+          transactions,
+          cashbackCards,
+          studyWorkItems,
+          customStudySpaces,
+          completedTaskIds,
+          deletedTaskIds,
+          tasks,
+        } = get();
         if (!supabaseConfig.url || !supabaseConfig.anonKey) return false;
         try {
           return await pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
             wishlist,
             budget,
             transactions,
+            cashbackCards,
             studyWorkItems,
             customStudySpaces,
+            completedTaskIds,
+            deletedTaskIds,
+            customTasks: tasks.filter((t) => t.id.startsWith('task-')),
           });
         } catch (e) {
           console.warn('Push cloud state failed:', e);
@@ -1465,6 +1635,12 @@ export const useNexusStore = create<NexusState>()(
             cardHolder: c.user === 'anya' ? 'ANYA' : c.user === 'egor' ? 'EGOR' : 'EGOR & ANYA',
           }));
         }
+
+        // Clean out questions that aren't purchases like "Что делаем 4 ноября?" from wishlist
+        state.wishlist = (state.wishlist || []).filter((w) => {
+          const t = (w.title || '').toLowerCase();
+          return !t.includes('ноябр') && !t.includes('делаем') && !t.includes('когда') && !t.includes('куда');
+        });
         // Purge any legacy fake demo events
         state.gcalEvents = (state.gcalEvents || []).filter((e) => {
           if (!e || !e.id || e.id.startsWith('gcal-')) return false;
