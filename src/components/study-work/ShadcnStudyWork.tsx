@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useNexusStore } from '@/store/useNexusStore';
+import { InlineText, InlineNumber } from '@/components/ui/inline-edit';
 import { StudyWorkItem } from '@/types/nexus';
 import { soundEffects } from '@/utils/soundEffects';
 import confetti from 'canvas-confetti';
@@ -122,6 +123,10 @@ export const ShadcnStudyWork: React.FC = () => {
     updateHSEComponentWeight,
     rudnSubjects,
     updateRUDNSubjectScore,
+    updateRUDNSubjectName,
+    updateHSECourseName,
+    customColumnMeta,
+    updateColumnMeta,
     tasks,
     toggleTaskCompletion,
     deleteTask,
@@ -523,18 +528,24 @@ export const ShadcnStudyWork: React.FC = () => {
                     </span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <h4 className="font-semibold text-[15px] text-white truncate leading-tight">
-                          {col.title}
-                        </h4>
+                        <InlineText
+                          value={customColumnMeta?.[col.id]?.title || col.title}
+                          onChange={(val) => updateColumnMeta(col.id, { title: val })}
+                          className="font-semibold text-[15px] text-white leading-tight"
+                        />
                         {col.extraBadge && (
                           <span className="rounded-full bg-amber-500/15 text-amber-300 px-2 py-0.2 text-[10px] font-medium shrink-0">
                             {col.extraBadge}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                        {col.subtitle}
-                      </p>
+                      <div className="text-[11px] text-zinc-400 mt-0.5">
+                        <InlineText
+                          value={customColumnMeta?.[col.id]?.subtitle || col.subtitle}
+                          onChange={(val) => updateColumnMeta(col.id, { subtitle: val })}
+                          className="text-[11px] text-zinc-400"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -958,12 +969,14 @@ export const ShadcnStudyWork: React.FC = () => {
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <h4 className="font-semibold text-sm text-zinc-100">
-                            {subj.subjectName}
-                          </h4>
-                          <span className="text-[11px] text-zinc-400">
+                          <InlineText
+                            value={subj.subjectName}
+                            onChange={(val) => updateRUDNSubjectName(subj.id, val)}
+                            className="font-semibold text-sm text-zinc-100"
+                          />
+                          <p className="text-[11px] text-zinc-400 mt-0.5">
                             РУДН Онлайн · Психология
-                          </span>
+                          </p>
                         </div>
                         <span className={`tabular-nums text-xs px-2.5 py-0.5 rounded-full font-medium ${gradeColor}`}>
                           {total} / 100 · {gradeLabel}
@@ -1085,12 +1098,14 @@ export const ShadcnStudyWork: React.FC = () => {
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <h4 className="font-semibold text-sm text-zinc-100">
-                            {calc.courseName}
-                          </h4>
-                          <span className="text-[11px] text-zinc-400">
+                          <InlineText
+                            value={calc.courseName}
+                            onChange={(val) => updateHSECourseName(calc.id, val)}
+                            className="font-semibold text-sm text-zinc-100"
+                          />
+                          <p className="text-[11px] text-zinc-400 mt-0.5">
                             Целевая оценка: {calc.targetScore} / 10 · {isGoalAchieved ? '🎯 Цель достигнута!' : 'В процессе'}
-                          </span>
+                          </p>
                         </div>
                         <span className={`tabular-nums text-xs px-2.5 py-0.5 rounded-full font-medium ${
                           roundedScore >= 8 ? 'text-emerald-400 bg-emerald-500/15' : 'text-sky-400 bg-sky-500/15'

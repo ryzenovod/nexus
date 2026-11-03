@@ -7,6 +7,7 @@ import {
   FinanceTransaction, 
   JointBudget, 
   CashbackCard, 
+  CashbackCategory,
   UtilityBill, 
   StudyWorkItem, 
   StudySpaceColumn,
@@ -167,6 +168,9 @@ export interface NexusState {
   deleteWishlistItem: (id: string) => void;
   convertWishlistToTask: (id: string) => void;
 
+  customColumnMeta?: Record<string, { title?: string; subtitle?: string }>;
+  updateBudget: (updates: Partial<JointBudget>) => void;
+  updateTransaction: (id: string, updates: Partial<FinanceTransaction>) => void;
   addTransaction: (tx: Omit<FinanceTransaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
   updateBudgetContributions: (egor: number, anya: number, target: number) => void;
@@ -178,10 +182,17 @@ export interface NexusState {
   deleteCashbackCard: (id: string) => void;
   toggleCashbackClaimed: (id: string) => void;
   addCashbackCategory: (cardId: string, category: string, percent: number) => void;
+  updateCashbackCategory: (cardId: string, categoryIndex: number, updates: Partial<CashbackCategory>) => void;
   removeCashbackCategory: (cardId: string, categoryIndex: number) => void;
   updateMeterReadings: (billId: string, readings: { hotWater?: number; coldWater?: number; electricity?: number }) => void;
   payUtilityBill: (id: string) => void;
   updateUtilityBill: (id: string, updates: Partial<UtilityBill>) => void;
+  addUtilityBill: (bill: Omit<UtilityBill, 'id'>) => void;
+  deleteUtilityBill: (id: string) => void;
+  resetUtilityBillsMonth: (monthText?: string) => void;
+  updateColumnMeta: (colId: string, meta: { title?: string; subtitle?: string }) => void;
+  updateHSECourseName: (calcId: string, courseName: string) => void;
+  updateRUDNSubjectName: (subjId: string, subjectName: string) => void;
 
   // Live Data Pipeline Sync
   setGcalEvents: (events: GCalEvent[]) => void;
@@ -215,53 +226,56 @@ export interface NexusState {
 // LocalStorage Migration: Clean out sticky fake mock data from legacy cache
 if (typeof window !== 'undefined') {
   try {
-    const legacyRaw = localStorage.getItem('nexus-real-sync-v1');
-    const v2Raw = localStorage.getItem('nexus-real-sync-v2');
-    if (legacyRaw && !v2Raw) {
-      try {
-        const parsed = JSON.parse(legacyRaw);
-        if (parsed && parsed.state) {
-          const s = parsed.state;
-          if (s.budget) {
-            if (s.budget.totalTarget === 80000) s.budget.totalTarget = 0;
-            if (s.budget.currentBalance === 5000) s.budget.currentBalance = 0;
-            if (s.budget.egorContribution === 40000) s.budget.egorContribution = 0;
-            if (s.budget.anyaContribution === 40000) s.budget.anyaContribution = 0;
-            if (s.budget.depositDates === '10 и 25 числа каждого месяца') s.budget.depositDates = '';
-          }
-          if (Array.isArray(s.utilityBills)) {
-            s.utilityBills = s.utilityBills.map((b: any) =>
-              b.amount === 1685.41 || b.amount === 1685 || b.id === 'util-domiland'
-                ? { ...b, amount: 0, commission: 0 }
-                : b
-            );
-          }
-          if (Array.isArray(s.studyWorkItems)) {
-            s.studyWorkItems = s.studyWorkItems.filter((it: any) => {
-              if (!it) return false;
-              if (['sw-1', 'sw-2', 'sw-3', 'sw-4', 'sw-5'].includes(it.id)) return false;
-              const t = (it.title || '').toLowerCase();
-              return (
-                !t.includes('openmap') &&
-                !t.includes('портфолио') &&
-                !t.includes('дизайн-система') &&
-                !t.includes('рудн: лекции') &&
-                !t.includes('координация дфо') &&
-                !t.includes('вшэ: магистратура')
+    const v3Raw = localStorage.getItem('nexus-real-sync-v3');
+    if (!v3Raw) {
+      const sourceRaw = localStorage.getItem('nexus-real-sync-v2') || localStorage.getItem('nexus-real-sync-v1');
+      if (sourceRaw) {
+        try {
+          const parsed = JSON.parse(sourceRaw);
+          if (parsed && parsed.state) {
+            const s = parsed.state;
+            if (s.budget) {
+              if (s.budget.totalTarget === 80000) s.budget.totalTarget = 0;
+              if (s.budget.currentBalance === 5000) s.budget.currentBalance = 0;
+              if (s.budget.egorContribution === 40000) s.budget.egorContribution = 0;
+              if (s.budget.anyaContribution === 40000) s.budget.anyaContribution = 0;
+              if (s.budget.depositDates === '10 и 25 числа каждого месяца') s.budget.depositDates = '';
+            }
+            if (Array.isArray(s.utilityBills)) {
+              s.utilityBills = s.utilityBills.map((b: any) =>
+                b.amount === 1685.41 || b.amount === 1685 || b.id === 'util-domiland'
+                  ? { ...b, amount: 0, commission: 0 }
+                  : b
               );
-            });
+            }
+            if (Array.isArray(s.studyWorkItems)) {
+              s.studyWorkItems = s.studyWorkItems.filter((it: any) => {
+                if (!it) return false;
+                if (['sw-1', 'sw-2', 'sw-3', 'sw-4', 'sw-5'].includes(it.id)) return false;
+                const t = (it.title || '').toLowerCase();
+                return (
+                  !t.includes('openmap') &&
+                  !t.includes('портфолио') &&
+                  !t.includes('дизайн-система') &&
+                  !t.includes('рудн: лекции') &&
+                  !t.includes('координация дфо') &&
+                  !t.includes('вшэ: магистратура')
+                );
+              });
+            }
+            if (Array.isArray(s.cashbackCards)) {
+              const fakeDigits = new Set(['7714', '5529', '8831', '1409', '9276']);
+              s.cashbackCards = s.cashbackCards.map((c: any) => ({
+                ...c,
+                digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
+              }));
+            }
+            localStorage.setItem('nexus-real-sync-v3', JSON.stringify(parsed));
           }
-          if (Array.isArray(s.cashbackCards)) {
-            const fakeDigits = new Set(['7714', '5529', '8831', '1409', '9276']);
-            s.cashbackCards = s.cashbackCards.map((c: any) => ({
-              ...c,
-              digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
-            }));
-          }
-          localStorage.setItem('nexus-real-sync-v2', JSON.stringify(parsed));
-        }
-      } catch {}
+        } catch {}
+      }
       localStorage.removeItem('nexus-real-sync-v1');
+      localStorage.removeItem('nexus-real-sync-v2');
     }
   } catch {}
 }
@@ -298,6 +312,7 @@ export const useNexusStore = create<NexusState>()(
       // Academic Calculators
       hseCalculators: initialHSECalculators,
       rudnSubjects: initialRUDNSubjects,
+      customColumnMeta: {},
 
       // Telegram Bridge
       telegramConfig: {
@@ -954,9 +969,62 @@ export const useNexusStore = create<NexusState>()(
         get().pushCloudState().catch(() => {});
       },
 
+      updateTransaction: (id, updates) => {
+        set((state) => {
+          const oldTx = state.transactions.find((t) => t.id === id);
+          let newBalance = state.budget.currentBalance;
+          if (oldTx && updates.amount !== undefined && updates.amount !== oldTx.amount) {
+            const diff = updates.amount - oldTx.amount;
+            if (oldTx.type === 'expense') {
+              newBalance -= diff;
+            } else if (oldTx.type === 'income' || oldTx.type === 'transfer') {
+              newBalance += diff;
+            }
+          }
+          return {
+            transactions: state.transactions.map((t) =>
+              t.id === id ? { ...t, ...updates } : t
+            ),
+            budget: {
+              ...state.budget,
+              currentBalance: Math.max(0, newBalance),
+              lastUpdated: new Date().toISOString(),
+            },
+          };
+        });
+        get().pushCloudState().catch(() => {});
+      },
+
       deleteTransaction: (id) => {
+        set((state) => {
+          const tx = state.transactions.find((t) => t.id === id);
+          let newBalance = state.budget.currentBalance;
+          if (tx) {
+            if (tx.type === 'expense') {
+              newBalance += tx.amount;
+            } else if (tx.type === 'income' || tx.type === 'transfer') {
+              newBalance = Math.max(0, newBalance - tx.amount);
+            }
+          }
+          return {
+            transactions: state.transactions.filter((t) => t.id !== id),
+            budget: {
+              ...state.budget,
+              currentBalance: Math.max(0, newBalance),
+              lastUpdated: new Date().toISOString(),
+            },
+          };
+        });
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateBudget: (updates) => {
         set((state) => ({
-          transactions: state.transactions.filter((tx) => tx.id !== id),
+          budget: {
+            ...state.budget,
+            ...updates,
+            lastUpdated: new Date().toISOString(),
+          },
         }));
         get().pushCloudState().catch(() => {});
       },
@@ -1133,6 +1201,20 @@ export const useNexusStore = create<NexusState>()(
         get().pushCloudState().catch(() => {});
       },
 
+      updateCashbackCategory: (cardId, categoryIndex, updates) => {
+        set((state) => ({
+          cashbackCards: state.cashbackCards.map((card) => {
+            if (card.id !== cardId) return card;
+            const updated = [...(card.categories || [])];
+            if (updated[categoryIndex]) {
+              updated[categoryIndex] = { ...updated[categoryIndex], ...updates };
+            }
+            return { ...card, categories: updated };
+          }),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
       removeCashbackCategory: (cardId, categoryIndex) => {
         set((state) => ({
           cashbackCards: state.cashbackCards.map((card) =>
@@ -1172,6 +1254,70 @@ export const useNexusStore = create<NexusState>()(
         set((state) => ({
           utilityBills: state.utilityBills.map((bill) =>
             bill.id === id ? { ...bill, ...updates } : bill
+          ),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      addUtilityBill: (billData) => {
+        const newBill: UtilityBill = {
+          ...billData,
+          id: `util-${Date.now()}`,
+          history: billData.history || [],
+        };
+        set((state) => ({
+          utilityBills: [...state.utilityBills, newBill],
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      deleteUtilityBill: (id) => {
+        set((state) => ({
+          utilityBills: state.utilityBills.filter((b) => b.id !== id),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      resetUtilityBillsMonth: (monthText) => {
+        const period = monthText || new Date().toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
+        set((state) => ({
+          utilityBills: state.utilityBills.map((b) => ({
+            ...b,
+            periodText: period,
+            status: 'due',
+            amount: 0,
+            commission: 0,
+          })),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateColumnMeta: (colId, meta) => {
+        set((state) => ({
+          customColumnMeta: {
+            ...(state.customColumnMeta || {}),
+            [colId]: {
+              ...((state.customColumnMeta && state.customColumnMeta[colId]) || {}),
+              ...meta,
+            },
+          },
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateHSECourseName: (calcId, courseName) => {
+        set((state) => ({
+          hseCalculators: state.hseCalculators.map((c) =>
+            c.id === calcId ? { ...c, courseName } : c
+          ),
+        }));
+        get().pushCloudState().catch(() => {});
+      },
+
+      updateRUDNSubjectName: (subjId, subjectName) => {
+        set((state) => ({
+          rudnSubjects: state.rudnSubjects.map((s) =>
+            s.id === subjId ? { ...s, subjectName } : s
           ),
         }));
         get().pushCloudState().catch(() => {});
@@ -1724,7 +1870,7 @@ export const useNexusStore = create<NexusState>()(
       },
     }),
     {
-      name: 'nexus-real-sync-v2',
+      name: 'nexus-real-sync-v3',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (!state) return;

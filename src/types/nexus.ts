@@ -90,6 +90,12 @@ export interface JointBudget {
   currentBalance: number;
   depositDates: string; // e.g. "10 и 25 числа"
   lastUpdated: string;
+  egorTarget?: number;
+  anyaTarget?: number;
+  egorNote?: string;
+  anyaNote?: string;
+  notes?: string;
+  customSavingsAmount?: number;
 }
 
 export interface CashbackCategory {
@@ -128,19 +134,19 @@ export interface UtilityBill {
   serviceName: string;
   provider: string;
   amount: number;
-  commission: number;
+  commission?: number;
   dueDate: string;
   periodText: string;
   status: 'paid' | 'due' | 'overdue';
-  readingsRequired: boolean;
+  readingsRequired?: boolean;
   readingsWindow?: string; // e.g. "15-26 число"
   currentReadings?: {
     hotWater?: number;
     coldWater?: number;
     electricity?: number;
   };
-  linkUrl: string;
-  history: UtilityReading[];
+  linkUrl?: string;
+  history?: UtilityReading[];
 }
 
 export type StudySpace = 

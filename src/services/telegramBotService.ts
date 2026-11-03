@@ -151,7 +151,7 @@ class TelegramBotService {
     let text = `⚡️ *NEXUS • Напоминание по ЖКХ Москвы*\n\n`;
 
     const dueOrOverdue = bills.filter((b) => b.status !== 'paid');
-    const totalDue = dueOrOverdue.reduce((acc, b) => acc + b.amount + b.commission, 0);
+    const totalDue = dueOrOverdue.reduce((acc, b) => acc + b.amount + (b.commission || 0), 0);
 
     if (dueOrOverdue.length === 0) {
       text += `🎉 *Все коммунальные платежи оплачены! Чистый дзен.*\n`;
@@ -162,7 +162,7 @@ class TelegramBotService {
         const isOverdue = b.status === 'overdue';
         const icon = isOverdue ? '🔴' : '🟡';
         text += `${icon} *${b.serviceName}* (${b.provider})\n`;
-        text += `   Сумма: *${b.amount.toLocaleString('ru-RU')} ₽* (комиссия: ${b.commission} ₽)\n`;
+        text += `   Сумма: *${b.amount.toLocaleString('ru-RU')} ₽* (комиссия: ${b.commission || 0} ₽)\n`;
         text += `   Срок: до ${b.dueDate}\n`;
         if (b.readingsRequired && b.readingsWindow) {
           text += `   💧 *Передача счетчиков:* окно с 15 по 26 число!\n`;
