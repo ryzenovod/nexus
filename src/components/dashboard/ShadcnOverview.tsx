@@ -50,7 +50,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
   onAssigneeChange,
   onNavigateTab,
 }) => {
-  const { gcalEvents, budget, addTask } = useNexusStore();
+  const { gcalEvents, budget, utilityBills, addTask } = useNexusStore();
   const [selectedRoom, setSelectedRoom] = useState<string>('Все');
   const [taskSearch, setTaskSearch] = useState<string>('');
   const [activeHubTask, setActiveHubTask] = useState<NexusTask | null>(null);
@@ -81,9 +81,19 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
     return tasks.filter(t => t.isOverdue && !t.completed);
   }, [tasks]);
 
-  const budgetCollected = budget.currentBalance;
-  const budgetTarget = budget.totalTarget || 80000;
-  const budgetProgress = Math.min(100, Math.round((budgetCollected / budgetTarget) * 100));
+  const budgetCollected = budget.currentBalance || 0;
+  const budgetTarget = budget.totalTarget || 0;
+  const budgetProgress = budgetTarget > 0 ? Math.min(100, Math.round((budgetCollected / budgetTarget) * 100)) : 0;
+
+  const dueBillsAmount = useMemo(() => {
+    return (utilityBills || [])
+      .filter((b) => b.status === 'due')
+      .reduce((sum, b) => sum + (b.amount || 0), 0);
+  }, [utilityBills]);
+
+  const dueBillsCount = useMemo(() => {
+    return (utilityBills || []).filter((b) => b.status === 'due' && (b.amount || 0) > 0).length;
+  }, [utilityBills]);
 
   // 2. Generate 7 Days for Timeline
   const weekDays = useMemo(() => {
@@ -290,17 +300,27 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           </div>
           <div className="text-3xl font-semibold tracking-tight text-white tabular-nums">
             {budgetCollected.toLocaleString('ru-RU')} ₽ 
-            <span className="text-sm font-normal text-zinc-400"> / {budgetTarget.toLocaleString('ru-RU')} ₽</span>
+            {budgetTarget > 0 ? (
+              <span className="text-sm font-normal text-zinc-400"> / {budgetTarget.toLocaleString('ru-RU')} ₽</span>
+            ) : (
+              <span className="text-sm font-normal text-zinc-500"> (цель не задана)</span>
+            )}
           </div>
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-1.5 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 transition-all duration-500"
-                style={{ width: `${budgetProgress}%` }}
-              />
+          {budgetTarget > 0 ? (
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-1.5 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 transition-all duration-500"
+                  style={{ width: `${budgetProgress}%` }}
+                />
+              </div>
+              <span className="text-xs text-zinc-400 tabular-nums font-medium">{budgetProgress}%</span>
             </div>
-            <span className="text-xs text-zinc-400 tabular-nums font-medium">{budgetProgress}%</span>
-          </div>
+          ) : (
+            <p className="text-xs text-zinc-500 mt-2">
+              Вклады: Егор {budget.egorContribution || 0} ₽ · Аня {budget.anyaContribution || 0} ₽ →
+            </p>
+          )}
         </div>
 
         {/* Card 4: Utilities */}
@@ -319,10 +339,12 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
             </div>
           </div>
           <div className="text-3xl font-semibold tracking-tight text-white tabular-nums">
-            1 685 ₽ <span className="text-sm font-normal text-zinc-400">к оплате</span>
+            {dueBillsAmount.toLocaleString('ru-RU')} ₽ <span className="text-sm font-normal text-zinc-400">к оплате</span>
           </div>
           <p className="text-xs text-zinc-400 mt-2">
-            Мосэнерго: передано · Домиленд: 1 685 ₽ →
+            {dueBillsCount > 0 
+              ? `Счетов к оплате: ${dueBillsCount} (на ${dueBillsAmount.toLocaleString('ru-RU')} ₽) →` 
+              : 'Все счета оплачены или не выставлены →'}
           </p>
         </div>
       </div>

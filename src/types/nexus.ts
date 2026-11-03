@@ -112,6 +112,7 @@ export interface CashbackCard {
   actionRequired?: string;
   specialFeature?: string;
   digits?: string;
+  expiry?: string;
   gradientPreset?: CardGradientPreset;
   cardHolder?: string;
 }

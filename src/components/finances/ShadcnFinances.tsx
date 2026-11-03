@@ -132,14 +132,9 @@ const getCardHolder = (card: CashbackCard): string => {
 const getCardDigits = (card: CashbackCard): string => {
   if (card.digits) {
     const clean = card.digits.replace(/\D/g, '');
-    return `•••• ${clean ? clean.slice(-4) : '0000'}`;
+    return clean ? `•••• ${clean.slice(-4)}` : '•••• ••••';
   }
-  if (card.id === 'cb-sber') return '•••• 7714';
-  if (card.id === 'cb-tbank') return '•••• 5529';
-  if (card.id === 'cb-wb') return '•••• 8831';
-  if (card.id === 'cb-alfa') return '•••• 1409';
-  if (card.id === 'cb-gpb') return '•••• 9276';
-  return '•••• 0000';
+  return '•••• ••••';
 };
 
 const getCardTag = (card: CashbackCard): string => {
@@ -168,6 +163,8 @@ export const ShadcnFinances: React.FC = () => {
   const { 
     budget, 
     cashbackCards,
+    utilityBills,
+    transactions,
     addCashbackCategory,
     removeCashbackCategory,
     addCashbackCard,
@@ -176,12 +173,14 @@ export const ShadcnFinances: React.FC = () => {
     claimCashbackForCard,
     updateBudgetBalance,
     updateBudgetContributions,
+    updateUtilityBill,
+    payUtilityBill,
     toggleTaskCompletion,
     tasks
   } = useNexusStore();
 
   const [activeCardId, setActiveCardId] = useState<string>('cb-sber');
-  const [cashbackDepositAmount, setCashbackDepositAmount] = useState('1500');
+  const [cashbackDepositAmount, setCashbackDepositAmount] = useState('');
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [customCategoryPercent, setCustomCategoryPercent] = useState('5');
   
@@ -200,24 +199,32 @@ export const ShadcnFinances: React.FC = () => {
   const [depositUser, setDepositUser] = useState<'egor' | 'anya'>('egor');
   const [depositAmount, setDepositAmount] = useState('10000');
 
-  const budgetCollected = budget.currentBalance;
-  const budgetTarget = budget.totalTarget || 80000;
+  const budgetCollected = budget.currentBalance || 0;
+  const budgetTarget = budget.totalTarget || 0;
 
-  const egorTarget = 40000;
-  const anyaTarget = 40000;
-  const egorProgress = Math.min(100, Math.round((budget.egorContribution / egorTarget) * 100));
-  const anyaProgress = Math.min(100, Math.round((budget.anyaContribution / anyaTarget) * 100));
+  const egorTarget = budgetTarget > 0 ? Math.round(budgetTarget / 2) : 0;
+  const anyaTarget = budgetTarget > 0 ? Math.round(budgetTarget / 2) : 0;
+  const egorProgress = egorTarget > 0 ? Math.min(100, Math.round((budget.egorContribution / egorTarget) * 100)) : 0;
+  const anyaProgress = anyaTarget > 0 ? Math.min(100, Math.round((budget.anyaContribution / anyaTarget) * 100)) : 0;
 
   const cardsList = (cashbackCards && cashbackCards.length > 0) ? cashbackCards : initialCashbackCards;
   const currentCard = cardsList.find(c => c.id === activeCardId) || cardsList[0] || initialCashbackCards[0];
 
-  // Recharts data for budget dynamics
+  const dueBillsAmount = useMemo(() => {
+    return (utilityBills || [])
+      .filter((b) => b.status === 'due')
+      .reduce((sum, b) => sum + (b.amount || 0), 0);
+  }, [utilityBills]);
+
+  const totalCreditedCashback = useMemo(() => {
+    return (transactions || [])
+      .filter((tx) => tx.type === 'income' && (tx.category === 'Кэшбэк' || tx.title.toLowerCase().includes('кэшбэк') || tx.title.toLowerCase().includes('кэшбек')))
+      .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+  }, [transactions]);
+
+  // Recharts data for budget dynamics (real data without fake numbers)
   const chartData = [
-    { name: 'Июл', balance: 52000, utilities: 2100 },
-    { name: 'Авг', balance: 64000, utilities: 1850 },
-    { name: 'Сен', balance: 78000, utilities: 2400 },
-    { name: 'Окт', balance: 80000, utilities: 1950 },
-    { name: 'Ноя', balance: budgetCollected, utilities: 1685 },
+    { name: 'Текущий баланс', balance: budgetCollected, utilities: dueBillsAmount },
   ];
 
   const matchingTasks = useMemo(() => {
@@ -354,14 +361,25 @@ export const ShadcnFinances: React.FC = () => {
                 Ноябрь 2026
               </span>
             </div>
-            <div className="text-4xl sm:text-5xl font-semibold tracking-tight text-white tabular-nums mt-2">
-              {budgetCollected.toLocaleString('ru-RU')} ₽
-              <span className="text-lg sm:text-xl font-normal text-zinc-400 ml-3">
-                / {budgetTarget.toLocaleString('ru-RU')} ₽ цель
-              </span>
+            <div className="text-4xl sm:text-5xl font-semibold tracking-tight text-white tabular-nums mt-2 flex flex-wrap items-baseline gap-2">
+              <span>{budgetCollected.toLocaleString('ru-RU')} ₽</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const newTargetStr = prompt('Укажите общую цель/лимит бюджета (₽):', budgetTarget > 0 ? String(budgetTarget) : '');
+                  if (newTargetStr !== null) {
+                    const val = parseFloat(newTargetStr) || 0;
+                    updateBudgetContributions(budget.egorContribution, budget.anyaContribution, val);
+                  }
+                }}
+                className="hover:underline text-zinc-400 hover:text-zinc-200 cursor-pointer text-lg sm:text-xl font-normal inline-flex items-center gap-1.5 transition-colors border-0 bg-transparent"
+                title="Нажмите, чтобы изменить цель бюджета"
+              >
+                / {budgetTarget > 0 ? `${budgetTarget.toLocaleString('ru-RU')} ₽ цель` : 'Задать цель'} ✎
+              </button>
             </div>
             <p className="text-xs text-zinc-400 mt-2">
-              Взносы: 10 и 25 числа каждого месяца. Аренда, супермаркеты, ЖКХ и быт.
+              {budget.depositDates ? `Взносы: ${budget.depositDates}. Общий баланс и операции пары.` : 'Общий баланс и история операций пары.'}
             </p>
           </div>
 
@@ -389,7 +407,7 @@ export const ShadcnFinances: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                const amount = prompt('Сумма расхода (₽):', '1500');
+                const amount = prompt('Сумма расхода (₽):', '');
                 if (amount) {
                   const val = parseFloat(amount);
                   if (val > 0) updateBudgetBalance(budgetCollected - val);
@@ -409,18 +427,20 @@ export const ShadcnFinances: React.FC = () => {
             <div className="flex justify-between items-center text-xs">
               <span className="text-zinc-300 font-medium">Вклад Егора</span>
               <span className="text-white font-medium tabular-nums">
-                {budget.egorContribution.toLocaleString('ru-RU')} ₽ / {egorTarget.toLocaleString('ru-RU')} ₽ ({egorProgress}%)
+                {budget.egorContribution.toLocaleString('ru-RU')} ₽
+                {egorTarget > 0 && ` / ${egorTarget.toLocaleString('ru-RU')} ₽ (${egorProgress}%)`}
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-500"
-                style={{ width: `${egorProgress}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-zinc-400">
-              Аренда, интернет, техника, сантехника, Леруа Мерлен
-            </p>
+            {egorTarget > 0 ? (
+              <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-500"
+                  style={{ width: `${egorProgress}%` }}
+                />
+              </div>
+            ) : (
+              <p className="text-[11px] text-zinc-500">Вклад зафиксирован</p>
+            )}
           </div>
 
           {/* Anya Contribution */}
@@ -428,18 +448,20 @@ export const ShadcnFinances: React.FC = () => {
             <div className="flex justify-between items-center text-xs">
               <span className="text-zinc-300 font-medium">Вклад Ани</span>
               <span className="text-white font-medium tabular-nums">
-                {budget.anyaContribution.toLocaleString('ru-RU')} ₽ / {anyaTarget.toLocaleString('ru-RU')} ₽ ({anyaProgress}%)
+                {budget.anyaContribution.toLocaleString('ru-RU')} ₽
+                {anyaTarget > 0 && ` / ${anyaTarget.toLocaleString('ru-RU')} ₽ (${anyaProgress}%)`}
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
-                style={{ width: `${anyaProgress}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-zinc-400">
-              Совместные продукты (ВкусВилл по Сберу 5%), уют, текстиль, посуда
-            </p>
+            {anyaTarget > 0 ? (
+              <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
+                  style={{ width: `${anyaProgress}%` }}
+                />
+              </div>
+            ) : (
+              <p className="text-[11px] text-zinc-500">Вклад зафиксирован</p>
+            )}
           </div>
         </div>
       </div>
@@ -472,7 +494,7 @@ export const ShadcnFinances: React.FC = () => {
             </button>
             <div className="flex items-center text-xs text-amber-300 bg-amber-500/10 gap-1.5 py-1.5 px-3 rounded-full">
               <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-              <span>Экономия: <strong className="font-semibold tabular-nums">~4 850 ₽/мес</strong></span>
+              <span>Зачислено кэшбэка: <strong className="font-semibold tabular-nums">{totalCreditedCashback.toLocaleString('ru-RU')} ₽</strong></span>
             </div>
           </div>
         </div>
@@ -543,10 +565,12 @@ export const ShadcnFinances: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="text-[8px] uppercase tracking-widest text-white/60">VALID</div>
-                      <div className="text-[10px] text-white/90 tabular-nums font-medium">12/28</div>
-                    </div>
+                    {card.expiry ? (
+                      <div className="text-right">
+                        <div className="text-[8px] uppercase tracking-widest text-white/60">VALID</div>
+                        <div className="text-[10px] text-white/90 tabular-nums font-medium">{card.expiry}</div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -655,8 +679,8 @@ export const ShadcnFinances: React.FC = () => {
                     type="number"
                     value={cashbackDepositAmount}
                     onChange={(e) => setCashbackDepositAmount(e.target.value)}
-                    className="w-24 rounded-full bg-white/[0.06] px-3 py-1.5 text-xs text-white text-center tabular-nums outline-none focus:ring-1 focus:ring-amber-400/50 border-0"
-                    placeholder="Сумма"
+                    className="w-36 rounded-full bg-white/[0.06] px-3.5 py-1.5 text-xs text-white text-center tabular-nums outline-none focus:ring-1 focus:ring-amber-400/50 border-0 placeholder:text-zinc-500"
+                    placeholder="Сумма кэшбэка..."
                   />
                 </div>
 
@@ -685,7 +709,7 @@ export const ShadcnFinances: React.FC = () => {
                       type="button"
                       onClick={() => {
                         const match = matchedTask.title.match(/(\d+[\s\d]*)\s*₽/);
-                        const amt = match ? parseInt(match[1].replace(/\s/g, ''), 10) : (parseFloat(cashbackDepositAmount) || 1500);
+                        const amt = match ? parseInt(match[1].replace(/\s/g, ''), 10) : (parseFloat(cashbackDepositAmount) || 0);
                         toggleTaskCompletion(matchedTask.id);
                         claimCashbackForCard(currentCard.id, amt, matchedTask.title);
                       }}
@@ -754,113 +778,81 @@ export const ShadcnFinances: React.FC = () => {
         </div>
 
         <div className="space-y-2 mt-4">
-          {/* Row 1: Mosenergosbyt */}
-          <div className="nexus-row flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-400 shrink-0">
-                <Zap className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-white">Мосэнергосбыт</div>
-                <div className="text-xs text-zinc-400">ЛС: 84392-104-55 · lk.mosenergosbyt.ru</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="rounded-full bg-emerald-500/10 text-emerald-400 px-3 py-1 text-xs font-medium">
-                Показания переданы (день: 1420 / ночь: 680)
-              </span>
-              <span className="text-sm font-medium text-zinc-300 tabular-nums">0 ₽</span>
-              <button
-                type="button"
-                onClick={() => alert('Показания за текущий месяц уже успешно переданы!')}
-                className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-zinc-300 hover:text-white px-3 py-1.5 transition-all cursor-pointer border-0"
-              >
-                Квитанция
-              </button>
-            </div>
-          </div>
+          {(utilityBills || []).map((bill) => {
+            const isPaid = bill.status === 'paid';
+            const billAmount = bill.amount || 0;
 
-          {/* Row 2: Domiland */}
-          <div className="nexus-row flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2.5 rounded-full bg-sky-500/10 text-sky-400 shrink-0">
-                <Droplet className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-white">Домиленд (УК)</div>
-                <div className="text-xs text-zinc-400">Вода гор, хол, отопление, комм. услуги</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="rounded-full bg-amber-500/10 text-amber-400 px-3 py-1 text-xs font-medium">
-                К оплате до 10-го числа
-              </span>
-              <span className="text-sm font-semibold text-amber-400 tabular-nums">1 685 ₽</span>
-              <button
-                type="button"
-                onClick={() => {
-                  alert('Открытие ЛК Домиленд для оплаты...');
-                  window.open('https://domiland.ru', '_blank');
-                }}
-                className="rounded-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-xs px-3.5 py-1.5 transition-all cursor-pointer border-0 shadow-xs"
-              >
-                Оплатить
-              </button>
-            </div>
-          </div>
+            return (
+              <div key={bill.id} className="nexus-row flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`p-2.5 rounded-full shrink-0 ${isPaid ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                    {bill.serviceName.toLowerCase().includes('электрич') || bill.serviceName.toLowerCase().includes('энерго') ? (
+                      <Zap className="h-4 w-4" />
+                    ) : bill.serviceName.toLowerCase().includes('вода') || bill.serviceName.toLowerCase().includes('домиленд') ? (
+                      <Droplet className="h-4 w-4" />
+                    ) : bill.serviceName.toLowerCase().includes('wi-fi') || bill.serviceName.toLowerCase().includes('интернет') ? (
+                      <Wifi className="h-4 w-4" />
+                    ) : (
+                      <Receipt className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-white">{bill.serviceName}</div>
+                    <div className="text-xs text-zinc-400">
+                      {bill.provider} · {bill.periodText || 'Период не указан'}
+                    </div>
+                  </div>
+                </div>
 
-          {/* Row 3: EPD mos.ru */}
-          <div className="nexus-row flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2.5 rounded-full bg-purple-500/10 text-purple-400 shrink-0">
-                <Receipt className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-white">ЕПД mos.ru</div>
-                <div className="text-xs text-zinc-400">Кап.ремонт, ТКО (вывоз мусора)</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="rounded-full bg-white/[0.06] text-zinc-300 px-3 py-1 text-xs font-medium">
-                Оплачено (сентябрь 779,86 ₽)
-              </span>
-              <span className="text-sm font-medium text-zinc-300 tabular-nums">0 ₽</span>
-              <button
-                type="button"
-                onClick={() => window.open('https://www.mos.ru', '_blank')}
-                className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-zinc-300 hover:text-white px-3 py-1.5 transition-all cursor-pointer border-0 flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                <span>mos.ru</span>
-              </button>
-            </div>
-          </div>
+                <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${isPaid ? 'bg-white/[0.06] text-zinc-300' : 'bg-amber-500/10 text-amber-400'}`}>
+                    {isPaid ? 'Оплачено' : `К оплате${bill.dueDate ? ` до ${bill.dueDate}` : ''}`}
+                  </span>
 
-          {/* Row 4: Wi-Fi */}
-          <div className="nexus-row flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
-                <Wifi className="h-4 w-4" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = prompt(`Сумма счета «${bill.serviceName}» (₽):`, billAmount > 0 ? String(billAmount) : '');
+                      if (input !== null) {
+                        const val = parseFloat(input) || 0;
+                        updateUtilityBill(bill.id, { amount: val, status: val > 0 ? 'due' : 'paid' });
+                      }
+                    }}
+                    className="text-sm font-semibold text-white hover:text-amber-400 tabular-nums transition-colors cursor-pointer bg-transparent border-0"
+                    title="Нажмите, чтобы ввести точную сумму счета из квитанции"
+                  >
+                    {billAmount.toLocaleString('ru-RU')} ₽ ✎
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    {bill.linkUrl && (
+                      <button
+                        type="button"
+                        onClick={() => window.open(bill.linkUrl, '_blank')}
+                        className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-zinc-300 hover:text-white px-3 py-1.5 transition-all cursor-pointer border-0 flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>ЛК</span>
+                      </button>
+                    )}
+
+                    {!isPaid && billAmount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          payUtilityBill(bill.id);
+                          if (bill.linkUrl) window.open(bill.linkUrl, '_blank');
+                        }}
+                        className="rounded-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-xs px-3.5 py-1.5 transition-all cursor-pointer border-0 shadow-xs"
+                      >
+                        Оплатить
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-white">Wi-Fi (Формула Связи)</div>
-                <div className="text-xs text-zinc-400">Личный кабинет lk.formula-start.ru</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="rounded-full bg-white/[0.06] text-zinc-300 px-3 py-1 text-xs font-medium">
-                Оплачено до 15 ноября
-              </span>
-              <span className="text-sm font-medium text-zinc-300 tabular-nums">550 ₽</span>
-              <button
-                type="button"
-                onClick={() => window.open('http://lk.formula-start.ru', '_blank')}
-                className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-zinc-300 hover:text-white px-3 py-1.5 transition-all cursor-pointer border-0"
-              >
-                ЛК Wi-Fi
-              </button>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
@@ -980,7 +972,7 @@ export const ShadcnFinances: React.FC = () => {
                 </label>
                 <Input
                   maxLength={4}
-                  placeholder="7714"
+                  placeholder="1234 (необязательно)"
                   value={cardFormDigits}
                   onChange={(e) => setCardFormDigits(e.target.value)}
                   className="h-9 text-xs tabular-nums rounded-full bg-white/[0.04] border-white/[0.08]"
