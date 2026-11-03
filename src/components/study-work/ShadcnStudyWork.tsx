@@ -65,7 +65,7 @@ const DEFAULT_STUDY_SPACES: StudySpaceColumn[] = [
     title: 'ВШЭ (Егор)',
     user: 'egor',
     color: 'text-sky-400',
-    badgeBg: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+    badgeBg: 'bg-sky-500/10 text-sky-400',
     borderAccent: 'border-l-sky-500',
   },
   {
@@ -73,7 +73,7 @@ const DEFAULT_STUDY_SPACES: StudySpaceColumn[] = [
     title: 'РУДН (Аня)',
     user: 'anya',
     color: 'text-purple-400',
-    badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    badgeBg: 'bg-purple-500/10 text-purple-400',
     borderAccent: 'border-l-purple-500',
   },
   {
@@ -81,7 +81,7 @@ const DEFAULT_STUDY_SPACES: StudySpaceColumn[] = [
     title: 'Я-Профессионал',
     user: 'together',
     color: 'text-amber-400',
-    badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    badgeBg: 'bg-amber-500/10 text-amber-400',
     borderAccent: 'border-l-amber-500',
   },
   {
@@ -89,20 +89,20 @@ const DEFAULT_STUDY_SPACES: StudySpaceColumn[] = [
     title: 'Работа & Личные проекты',
     user: 'together',
     color: 'text-emerald-400',
-    badgeBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    badgeBg: 'bg-emerald-500/10 text-emerald-400',
     borderAccent: 'border-l-emerald-500',
   },
 ];
 
 // Color palette choices for new custom directions
 const COLOR_OPTIONS = [
-  { key: 'sky', label: 'Голубой (ВШЭ)', text: 'text-sky-400', bg: 'bg-sky-500/10 text-sky-400 border-sky-500/20', border: 'border-l-sky-500' },
-  { key: 'purple', label: 'Фиолетовый (РУДН)', text: 'text-purple-400', bg: 'bg-purple-500/10 text-purple-400 border-purple-500/20', border: 'border-l-purple-500' },
-  { key: 'amber', label: 'Янтарный (Я-Профи)', text: 'text-amber-400', bg: 'bg-amber-500/10 text-amber-400 border-amber-500/20', border: 'border-l-amber-500' },
-  { key: 'emerald', label: 'Изумрудный (Проекты)', text: 'text-emerald-400', bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', border: 'border-l-emerald-500' },
-  { key: 'rose', label: 'Розовый / Коралл', text: 'text-rose-400', bg: 'bg-rose-500/10 text-rose-400 border-rose-500/20', border: 'border-l-rose-500' },
-  { key: 'indigo', label: 'Индиго', text: 'text-indigo-400', bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', border: 'border-l-indigo-500' },
-  { key: 'cyan', label: 'Бирюзовый', text: 'text-cyan-400', bg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', border: 'border-l-cyan-500' },
+  { key: 'sky', label: 'Голубой (ВШЭ)', text: 'text-sky-400', bg: 'bg-sky-500/10 text-sky-400', border: 'border-l-sky-500' },
+  { key: 'purple', label: 'Фиолетовый (РУДН)', text: 'text-purple-400', bg: 'bg-purple-500/10 text-purple-400', border: 'border-l-purple-500' },
+  { key: 'amber', label: 'Янтарный (Я-Профи)', text: 'text-amber-400', bg: 'bg-amber-500/10 text-amber-400', border: 'border-l-amber-500' },
+  { key: 'emerald', label: 'Изумрудный (Проекты)', text: 'text-emerald-400', bg: 'bg-emerald-500/10 text-emerald-400', border: 'border-l-emerald-500' },
+  { key: 'rose', label: 'Розовый / Коралл', text: 'text-rose-400', bg: 'bg-rose-500/10 text-rose-400', border: 'border-l-rose-500' },
+  { key: 'indigo', label: 'Индиго', text: 'text-indigo-400', bg: 'bg-indigo-500/10 text-indigo-400', border: 'border-l-indigo-500' },
+  { key: 'cyan', label: 'Бирюзовый', text: 'text-cyan-400', bg: 'bg-cyan-500/10 text-cyan-400', border: 'border-l-cyan-500' },
 ];
 
 export const ShadcnStudyWork: React.FC = () => {
@@ -348,10 +348,10 @@ export const ShadcnStudyWork: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col space-y-6 max-w-[1700px] mx-auto w-full pb-12 animate-fade-in">
       {/* ── 1. TOP NAV & SUB-TABS (No duplicate timer bar here!) ── */}
-      <div className="rounded-xl border border-white/10 bg-zinc-950/75 backdrop-blur-2xl text-card-foreground shadow-sm p-5">
+      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-sm p-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
               <GraduationCap className="h-5 w-5 text-sky-400" />
             </div>
             <div>
@@ -359,9 +359,9 @@ export const ShadcnStudyWork: React.FC = () => {
                 <h3 className="text-base font-semibold leading-tight text-zinc-100">
                   Учеба, Магистратура & «Я-Профессионал»
                 </h3>
-                <Badge variant="outline" className="text-[11px] font-normal border-white/10 bg-white/[0.04] text-zinc-400">
+                <span className="text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-white/[0.04] text-zinc-400">
                   Живой воркспейс
-                </Badge>
+                </span>
               </div>
               <p className="text-xs text-zinc-400 mt-0.5">
                 НИУ ВШЭ (Егор), РУДН (Аня) и Федеральная координация ДФО ⇄ ЦФО
@@ -374,7 +374,7 @@ export const ShadcnStudyWork: React.FC = () => {
             {pomodoroIsRunning && activeTab !== 'pomodoro' && (
               <div 
                 onClick={() => setActiveTab('pomodoro')}
-                className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-mono cursor-pointer hover:bg-amber-500/20 transition-colors"
+                className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 text-xs font-mono cursor-pointer hover:bg-amber-500/20 transition-colors"
                 title="Перейти к таймеру фокуса"
               >
                 <span className="relative flex h-2 w-2">
@@ -397,7 +397,7 @@ export const ShadcnStudyWork: React.FC = () => {
               className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'kanban'
                   ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
-                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] border border-white/[0.08]'
+                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
               }`}
             >
               Канбан дел
@@ -409,7 +409,7 @@ export const ShadcnStudyWork: React.FC = () => {
               className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'pomodoro'
                   ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
-                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] border border-white/[0.08]'
+                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
               }`}
             >
               <Clock className="h-3.5 w-3.5" />
@@ -422,7 +422,7 @@ export const ShadcnStudyWork: React.FC = () => {
               className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'brs'
                   ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
-                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] border border-white/[0.08]'
+                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
               }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-400" />
@@ -435,7 +435,7 @@ export const ShadcnStudyWork: React.FC = () => {
               className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'radar'
                   ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
-                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] border border-white/[0.08]'
+                  : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08]'
               }`}
             >
               <Radio className="h-3.5 w-3.5 text-purple-400" />
@@ -446,7 +446,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
         {/* Filters and Search toolbar (shown in Kanban) */}
         {activeTab === 'kanban' && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-4 border-t border-white/[0.07]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-4">
             <div className="flex items-center gap-2">
               <div className="relative w-64">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400" />
@@ -454,12 +454,12 @@ export const ShadcnStudyWork: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Поиск по задачам и тегам..."
-                  className="pl-8 h-8 text-xs bg-white/[0.03] border-white/10 text-zinc-200 placeholder:text-zinc-500 rounded-lg focus-visible:ring-1 focus-visible:ring-sky-500/50"
+                  className="pl-8 h-8 text-xs bg-white/[0.03] text-zinc-200 placeholder:text-zinc-500 rounded-lg focus-visible:ring-1 focus-visible:ring-sky-500/50"
                 />
               </div>
 
               {/* Assignee filter */}
-              <div className="flex items-center bg-white/[0.03] border border-white/10 rounded-lg p-0.5">
+              <div className="flex items-center bg-white/[0.03] rounded-lg p-0.5">
                 <button
                   onClick={() => setSelectedUserFilter('all')}
                   className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
@@ -494,15 +494,14 @@ export const ShadcnStudyWork: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
+              <button
+                type="button"
                 onClick={() => setIsNewSpaceDialogOpen(true)}
-                className="h-8 text-xs gap-1.5 bg-white/[0.04] text-zinc-200 border-white/10 hover:bg-white/[0.08]"
+                className="h-8 px-3 rounded-lg text-xs gap-1.5 bg-white/[0.04] text-zinc-200 hover:bg-white/[0.08] transition cursor-pointer flex items-center"
               >
                 <FolderPlus className="h-3.5 w-3.5 text-sky-400" />
                 <span>+ Новое направление</span>
-              </Button>
+              </button>
             </div>
           </div>
         )}
@@ -560,10 +559,10 @@ export const ShadcnStudyWork: React.FC = () => {
             return (
               <div
                 key={col.id}
-                className="rounded-xl border border-white/10 bg-zinc-950/65 backdrop-blur-2xl shadow-sm p-4 flex flex-col space-y-3 min-h-[500px]"
+                className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl shadow-sm p-4 flex flex-col space-y-3 min-h-[500px]"
               >
                 {/* Column Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <div className="flex items-center justify-between pb-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`p-1.5 rounded-md ${col.badgeBg} shrink-0`}>
                       {col.id === 'hse-egor' && <GraduationCap className="h-4 w-4" />}
@@ -583,9 +582,9 @@ export const ShadcnStudyWork: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge variant="outline" className="text-[11px] font-mono px-2 py-0 border-white/10 bg-white/[0.04] text-zinc-300">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-300">
                       {completedCount}/{combinedItems.length}
-                    </Badge>
+                    </span>
 
                     {/* Inline Quick Add Button */}
                     <button
@@ -594,7 +593,7 @@ export const ShadcnStudyWork: React.FC = () => {
                         setQuickAddTitle('');
                         soundEffects.playClick();
                       }}
-                      className="h-7 w-7 rounded-md bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white flex items-center justify-center transition-colors border border-white/[0.08] cursor-pointer"
+                      className="h-7 w-7 rounded-md bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                       title="Быстро добавить задачу"
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -604,7 +603,7 @@ export const ShadcnStudyWork: React.FC = () => {
                     {col.isCustom && (
                       <button
                         onClick={() => deleteStudySpace(col.id)}
-                        className="h-7 w-7 rounded-md bg-white/[0.05] hover:bg-red-500/20 text-zinc-400 hover:text-red-300 flex items-center justify-center transition-colors border border-white/[0.08] cursor-pointer"
+                        className="h-7 w-7 rounded-md bg-white/[0.05] hover:bg-red-500/20 text-zinc-400 hover:text-red-300 flex items-center justify-center transition-colors cursor-pointer"
                         title="Удалить направление"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -615,7 +614,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
                 {/* Inline Quick Add Input Box */}
                 {isAdding && (
-                  <div className="p-2 rounded-lg bg-zinc-900/90 border border-white/15 space-y-2 animate-fade-in">
+                  <div className="p-2 rounded-lg bg-zinc-900/90 space-y-2 animate-fade-in">
                     <Input
                       autoFocus
                       value={quickAddTitle}
@@ -625,7 +624,7 @@ export const ShadcnStudyWork: React.FC = () => {
                         if (e.key === 'Escape') setQuickAddSpaceId(null);
                       }}
                       placeholder="Название дела... (Enter)"
-                      className="h-8 text-xs bg-zinc-950/80 border-white/10 text-zinc-100 placeholder:text-zinc-500 rounded focus-visible:ring-1 focus-visible:ring-sky-500"
+                      className="h-8 text-xs bg-zinc-950/80 text-zinc-100 placeholder:text-zinc-500 rounded focus-visible:ring-1 focus-visible:ring-sky-500"
                     />
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
@@ -670,10 +669,10 @@ export const ShadcnStudyWork: React.FC = () => {
                         <div
                           key={it.id}
                           onClick={() => handleOpenDrawer(it)}
-                          className={`group relative p-3 rounded-lg border border-l-[3px] ${bracketBorder} transition-all cursor-pointer select-none space-y-2 ${
+                          className={`group relative p-3 rounded-lg border-l-[3px] ${bracketBorder} transition-all cursor-pointer select-none space-y-2 ${
                             isDone
-                              ? 'bg-zinc-900/30 border-white/5 opacity-55'
-                              : 'bg-zinc-900/70 hover:bg-zinc-900/95 border-white/10 hover:border-white/20 shadow-xs'
+                              ? 'bg-zinc-900/30 opacity-55'
+                              : 'bg-zinc-900/70 hover:bg-zinc-900/95 shadow-xs'
                           }`}
                         >
                           <div className="flex items-start gap-2.5">
@@ -684,7 +683,7 @@ export const ShadcnStudyWork: React.FC = () => {
                             >
                               <Checkbox
                                 checked={isDone}
-                                className="h-4 w-4 rounded border-white/20 data-[state=checked]:bg-zinc-100 data-[state=checked]:text-zinc-950"
+                                className="h-4 w-4 rounded data-[state=checked]:bg-zinc-100 data-[state=checked]:text-zinc-950"
                               />
                             </div>
 
@@ -717,11 +716,11 @@ export const ShadcnStudyWork: React.FC = () => {
                           </div>
 
                           {/* Footer Badges & Subtask Progress */}
-                          <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400 border-t border-white/[0.04]">
+                          <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {/* Subtasks pill */}
                               {subtasksTotal > 0 && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[10px] text-zinc-300">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] text-[10px] text-zinc-300">
                                   <CheckSquare className="h-3 w-3 text-emerald-400" />
                                   <span>{subtasksDone}/{subtasksTotal}</span>
                                 </span>
@@ -729,7 +728,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
                               {/* External link indicator */}
                               {it.linkUrl && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[10px] text-zinc-400">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] text-[10px] text-zinc-400">
                                   <ExternalLink className="h-2.5 w-2.5" />
                                   <span>Линк</span>
                                 </span>
@@ -737,7 +736,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
                               {/* DFO timezone badge */}
                               {it.timezoneNote && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-[10px] text-amber-300">
                                   <Globe2 className="h-2.5 w-2.5" />
                                   <span>+7ч ДФО</span>
                                 </span>
@@ -745,7 +744,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
                               {/* TickTick integration badge */}
                               {it.isTickTick && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 text-[10px] text-sky-400 font-medium">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-500/10 text-[10px] text-sky-400 font-medium">
                                   <Zap className="h-2.5 w-2.5" />
                                   <span>TickTick</span>
                                 </span>
@@ -769,7 +768,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
       {/* ── 3. POMODORO FOCUS VIEW (Dedicated Full Screen) ── */}
       {activeTab === 'pomodoro' && (
-        <div className="rounded-xl border border-white/10 bg-zinc-950/75 backdrop-blur-2xl text-card-foreground shadow-sm p-10 flex flex-col items-center justify-center space-y-8 text-center max-w-2xl mx-auto w-full animate-fade-in">
+        <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-sm p-10 flex flex-col items-center justify-center space-y-8 text-center max-w-2xl mx-auto w-full animate-fade-in">
           <div>
             <h3 className="text-lg font-semibold text-zinc-100">
               Фокус-таймер учебы и проектов
@@ -780,7 +779,7 @@ export const ShadcnStudyWork: React.FC = () => {
           </div>
 
           {/* Mode pills */}
-          <div className="flex items-center gap-2 bg-white/[0.04] p-1.5 rounded-xl border border-white/10">
+          <div className="flex items-center gap-2 bg-white/[0.04] p-1.5 rounded-xl">
             <button
               onClick={() => { setPomodoroMode('work'); soundEffects.playClick(); }}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
@@ -836,19 +835,18 @@ export const ShadcnStudyWork: React.FC = () => {
               <span>{pomodoroIsRunning ? 'Пауза' : 'Запустить фокус'}</span>
             </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
+            <button
+              type="button"
               onClick={() => { resetPomodoro(); soundEffects.playClick(); }}
-              className="h-12 px-5 bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] border-white/10"
+              className="h-12 px-5 rounded-md bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] transition flex items-center justify-center cursor-pointer"
               title="Сбросить время"
             >
               <RotateCcw className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
 
           {/* Stats Bar */}
-          <div className="flex items-center gap-6 pt-4 border-t border-white/10 text-xs text-zinc-400">
+          <div className="flex items-center gap-6 pt-4 text-xs text-zinc-400">
             <div>
               Завершено сессий сегодня:{' '}
               <span className="font-semibold text-zinc-200 font-mono">
@@ -868,8 +866,8 @@ export const ShadcnStudyWork: React.FC = () => {
 
       {/* ── 4. BRS CALCULATOR VIEW ── */}
       {activeTab === 'brs' && (
-        <div className="rounded-xl border border-white/10 bg-zinc-950/75 backdrop-blur-2xl text-card-foreground shadow-sm p-6 space-y-6 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+        <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-sm p-6 space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
             <div>
               <h3 className="text-base font-semibold text-zinc-100">
                 Балльно-рейтинговая система (БРС) РУДН & ВШЭ
@@ -882,20 +880,20 @@ export const ShadcnStudyWork: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setBrsSystem('rudn')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   brsSystem === 'rudn'
-                    ? 'bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30'
-                    : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200 border border-white/10'
+                    ? 'bg-purple-500/20 text-purple-300 font-semibold'
+                    : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 РУДН (100 баллов · Аня)
               </button>
               <button
                 onClick={() => setBrsSystem('hse')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   brsSystem === 'hse'
-                    ? 'bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30'
-                    : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200 border border-white/10'
+                    ? 'bg-sky-500/20 text-sky-300 font-semibold'
+                    : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 НИУ ВШЭ (10 баллов · Егор)
@@ -918,17 +916,17 @@ export const ShadcnStudyWork: React.FC = () => {
                     : 'Не зачтено (F)';
                 const gradeColor =
                   total >= 86
-                    ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                    ? 'text-emerald-400 bg-emerald-500/10'
                     : total >= 69
-                    ? 'text-sky-400 bg-sky-500/10 border-sky-500/20'
+                    ? 'text-sky-400 bg-sky-500/10'
                     : total >= 51
-                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                    : 'text-red-400 bg-red-500/10 border-red-500/20';
+                    ? 'text-amber-400 bg-amber-500/10'
+                    : 'text-red-400 bg-red-500/10';
 
                 return (
                   <div
                     key={subj.id}
-                    className="p-4 rounded-xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl space-y-4"
+                    className="p-4 rounded-xl bg-zinc-900/60 backdrop-blur-xl space-y-4"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div>
@@ -939,9 +937,9 @@ export const ShadcnStudyWork: React.FC = () => {
                           РУДН Онлайн · Модульная система БРС
                         </span>
                       </div>
-                      <Badge variant="outline" className={`font-mono text-xs ${gradeColor}`}>
+                      <span className={`font-mono text-xs px-2.5 py-0.5 rounded-full font-medium ${gradeColor}`}>
                         {total} / 100 · {gradeLabel}
-                      </Badge>
+                      </span>
                     </div>
 
                     <div className="space-y-3 text-xs">
@@ -1008,7 +1006,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 return (
                   <div
                     key={calc.id}
-                    className="p-4 rounded-xl border border-white/10 bg-zinc-900/60 backdrop-blur-xl space-y-4"
+                    className="p-4 rounded-xl bg-zinc-900/60 backdrop-blur-xl space-y-4"
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div>
@@ -1019,9 +1017,9 @@ export const ShadcnStudyWork: React.FC = () => {
                           Формула ВШЭ · Целевой балл: {calc.targetScore} / 10
                         </span>
                       </div>
-                      <Badge variant="outline" className="font-mono text-xs text-sky-400 bg-sky-500/10 border-sky-500/20">
+                      <span className="font-mono text-xs px-2.5 py-0.5 rounded-full font-medium text-sky-400 bg-sky-500/10">
                         Итог: {roundedScore} / 10 ({totalScore.toFixed(2)})
-                      </Badge>
+                      </span>
                     </div>
 
                     <div className="space-y-3 text-xs">
@@ -1062,16 +1060,16 @@ export const ShadcnStudyWork: React.FC = () => {
 
       {/* ── 6. RIGHT SHEET DRAWER (Full CRUD Card Editor) ── */}
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-zinc-950/95 backdrop-blur-3xl border-white/10 text-zinc-100 p-6 space-y-6 [scrollbar-width:thin]">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-zinc-950/95 backdrop-blur-3xl text-zinc-100 p-6 space-y-6 [scrollbar-width:thin]">
           <SheetHeader className="text-left space-y-1">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[11px] border-white/10 bg-white/[0.04] text-zinc-300">
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/[0.04] text-zinc-300">
                 Карточка воркспейса
-              </Badge>
+              </span>
               {selectedItem?.isTickTick && (
-                <Badge variant="outline" className="text-[11px] border-sky-500/30 bg-sky-500/10 text-sky-400">
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400">
                   Синхронизировано из TickTick
-                </Badge>
+                </span>
               )}
             </div>
             <SheetTitle className="text-base font-semibold text-zinc-100">
@@ -1091,7 +1089,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Что нужно сделать?"
-                className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500"
+                className="bg-white/[0.04] text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500"
               />
             </div>
 
@@ -1099,10 +1097,10 @@ export const ShadcnStudyWork: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-zinc-300 font-medium">Направление (колонка)</label>
               <Select value={editSpace} onValueChange={setEditSpace}>
-                <SelectTrigger className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs">
+                <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs">
                   <SelectValue placeholder="Выберите направление" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/15 text-zinc-100 text-xs">
+                <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
                   {allSpaces.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.title}
@@ -1117,10 +1115,10 @@ export const ShadcnStudyWork: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-zinc-300 font-medium">Ответственный</label>
                 <Select value={editUser} onValueChange={(val: any) => setEditUser(val)}>
-                  <SelectTrigger className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs">
+                  <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-white/15 text-zinc-100 text-xs">
+                  <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
                     <SelectItem value="egor">Егор</SelectItem>
                     <SelectItem value="anya">Аня</SelectItem>
                     <SelectItem value="together">Вместе (Пара)</SelectItem>
@@ -1131,10 +1129,10 @@ export const ShadcnStudyWork: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-zinc-300 font-medium">Приоритет</label>
                 <Select value={editPriority} onValueChange={(val: any) => setEditPriority(val)}>
-                  <SelectTrigger className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs">
+                  <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-white/15 text-zinc-100 text-xs">
+                  <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
                     <SelectItem value="high">Срочно (высокий)</SelectItem>
                     <SelectItem value="medium">Важно (средний)</SelectItem>
                     <SelectItem value="low">Обычный (плановый)</SelectItem>
@@ -1150,12 +1148,12 @@ export const ShadcnStudyWork: React.FC = () => {
                 type="date"
                 value={editDeadline}
                 onChange={(e) => setEditDeadline(e.target.value)}
-                className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500"
+                className="bg-white/[0.04] text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500"
               />
             </div>
 
             {/* Subtasks / Checklist */}
-            <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+            <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
                 <label className="text-zinc-300 font-medium flex items-center gap-1.5">
                   <CheckSquare className="h-3.5 w-3.5 text-emerald-400" />
@@ -1171,7 +1169,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 {selectedItem?.subtasks?.map((sub) => (
                   <div
                     key={sub.id}
-                    className="flex items-center justify-between gap-2 p-2 rounded bg-white/[0.03] border border-white/[0.06]"
+                    className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/[0.03]"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Checkbox
@@ -1206,7 +1204,7 @@ export const ShadcnStudyWork: React.FC = () => {
                     if (e.key === 'Enter') handleAddSubtaskInDrawer();
                   }}
                   placeholder="Добавить пункт чек-листа... (Enter)"
-                  className="h-8 text-xs bg-white/[0.04] border-white/10 text-zinc-100"
+                  className="h-8 text-xs bg-white/[0.04] text-zinc-100"
                 />
                 <Button
                   size="sm"
@@ -1219,7 +1217,7 @@ export const ShadcnStudyWork: React.FC = () => {
             </div>
 
             {/* Notes & Context */}
-            <div className="space-y-1.5 pt-2 border-t border-white/[0.08]">
+            <div className="space-y-1.5 pt-2">
               <label className="text-zinc-300 font-medium flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5 text-zinc-400" />
                 <span>Заметки и тезисы</span>
@@ -1229,7 +1227,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 value={editNotes}
                 onChange={(e) => setEditNotes(e.target.value)}
                 placeholder="Контекст, требования, детали сдачи..."
-                className="w-full p-2.5 rounded-lg bg-white/[0.04] border border-white/10 text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none leading-relaxed"
+                className="w-full p-2.5 rounded-lg bg-white/[0.04] text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none leading-relaxed"
               />
             </div>
 
@@ -1245,14 +1243,14 @@ export const ShadcnStudyWork: React.FC = () => {
                   value={editLinkUrl}
                   onChange={(e) => setEditLinkUrl(e.target.value)}
                   placeholder="https://..."
-                  className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500 flex-1"
+                  className="bg-white/[0.04] text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500 flex-1"
                 />
                 {editLinkUrl && (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => window.open(editLinkUrl, '_blank')}
-                    className="h-8 px-2.5 text-xs bg-white/[0.04] border-white/10 text-zinc-200"
+                    className="h-8 px-2.5 text-xs bg-white/[0.04] text-zinc-200"
                   >
                     Открыть
                   </Button>
@@ -1261,12 +1259,12 @@ export const ShadcnStudyWork: React.FC = () => {
             </div>
           </div>
 
-          <SheetFooter className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
+          <SheetFooter className="flex items-center justify-between pt-4">
             <Button
               variant="destructive"
               size="sm"
               onClick={handleDeleteItem}
-              className="text-xs gap-1.5 bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30"
+              className="text-xs gap-1.5 bg-red-500/20 text-red-300 hover:bg-red-500/30"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Удалить задачу</span>
@@ -1285,7 +1283,7 @@ export const ShadcnStudyWork: React.FC = () => {
 
       {/* ── 7. DIALOG: NEW DIRECTION COLUMN ── */}
       <Dialog open={isNewSpaceDialogOpen} onOpenChange={setIsNewSpaceDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-zinc-950/95 backdrop-blur-3xl border-white/10 text-zinc-100 p-6 space-y-5">
+        <DialogContent className="sm:max-w-md bg-zinc-950/95 backdrop-blur-3xl text-zinc-100 p-6 space-y-5">
           <DialogHeader className="text-left space-y-1">
             <DialogTitle className="text-base font-semibold text-zinc-100">
               Создать новое направление
@@ -1303,17 +1301,17 @@ export const ShadcnStudyWork: React.FC = () => {
                 value={newSpaceTitle}
                 onChange={(e) => setNewSpaceTitle(e.target.value)}
                 placeholder="Например: ВКР Диплом, Курс по ИИ, Стартап"
-                className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500"
+                className="bg-white/[0.04] text-zinc-100 text-xs focus-visible:ring-1 focus-visible:ring-sky-500"
               />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-zinc-300 font-medium">Ответственный</label>
               <Select value={newSpaceUser} onValueChange={(val: any) => setNewSpaceUser(val)}>
-                <SelectTrigger className="bg-white/[0.04] border-white/10 text-zinc-100 text-xs">
+                <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/15 text-zinc-100 text-xs">
+                <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
                   <SelectItem value="egor">Егор</SelectItem>
                   <SelectItem value="anya">Аня</SelectItem>
                   <SelectItem value="together">Вместе (Пара)</SelectItem>
@@ -1329,10 +1327,10 @@ export const ShadcnStudyWork: React.FC = () => {
                     key={c.key}
                     type="button"
                     onClick={() => setNewSpaceColorKey(c.key)}
-                    className={`p-2 rounded-lg border text-left text-xs transition-colors flex items-center gap-2 ${
+                    className={`p-2 rounded-lg text-left text-xs transition-colors flex items-center gap-2 cursor-pointer ${
                       newSpaceColorKey === c.key
-                        ? 'border-white/30 bg-white/[0.08]'
-                        : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]'
+                        ? 'bg-white/[0.12] text-white font-semibold'
+                        : 'bg-white/[0.03] text-zinc-300 hover:bg-white/[0.06]'
                     }`}
                   >
                     <span className={`h-2.5 w-2.5 rounded-full ${c.text.replace('text-', 'bg-')}`} />
@@ -1343,7 +1341,7 @@ export const ShadcnStudyWork: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
+          <DialogFooter className="flex items-center justify-end gap-2 pt-2">
             <Button
               variant="ghost"
               size="sm"
