@@ -1,27 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Heart, 
-  Check, 
-  X, 
   Plus, 
   Home, 
   ExternalLink,
   Trash2,
   Pencil,
-  ShoppingBag,
-  Sparkles
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+  ArrowUpRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
-} from '@/components/ui/table';
 import { 
   Dialog, 
   DialogContent, 
@@ -45,51 +36,20 @@ export const ShadcnWishlist: React.FC = () => {
     updatePinStatus
   } = useNexusStore();
 
+  const [selectedFilter, setSelectedFilter] = useState<string>('Все');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newCategory, setNewCategory] = useState('Дом');
 
-  // Inline price editing state
-  const [inlinePriceId, setInlinePriceId] = useState<string | null>(null);
-  const [inlinePriceVal, setInlinePriceVal] = useState('');
+  // Edit wish state for full dialog
+  const [editingWish, setEditingWish] = useState<any | null>(null);
+  const [editPrice, setEditPrice] = useState('');
+  const [editLink, setEditLink] = useState('');
+  const [editCategory, setEditCategory] = useState('Дом');
 
-  // Inline link editing state
-  const [inlineLinkId, setInlineLinkId] = useState<string | null>(null);
-  const [inlineLinkVal, setInlineLinkVal] = useState('');
-
-  const handleStartInlinePrice = (id: string, currentPrice: number) => {
-    setInlinePriceId(id);
-    setInlinePriceVal(currentPrice > 0 ? String(currentPrice) : '');
-  };
-
-  const handleSaveInlinePrice = (id: string) => {
-    const cleanStr = inlinePriceVal.replace(/\s+/g, '').replace('₽', '');
-    const num = parseFloat(cleanStr);
-    const validNum = isNaN(num) || num < 0 ? 0 : num;
-    updateWishlistItem(id, { estimatedPrice: validNum });
-    setInlinePriceId(null);
-    try {
-      soundEffects.playClick();
-    } catch {}
-  };
-
-  const handleStartInlineLink = (id: string, currentLink: string) => {
-    setInlineLinkId(id);
-    setInlineLinkVal(currentLink || '');
-  };
-
-  const handleSaveInlineLink = (id: string) => {
-    const cleanLink = inlineLinkVal.trim();
-    updateWishlistItem(id, { link: cleanLink || undefined });
-    setInlineLinkId(null);
-    try {
-      soundEffects.playClick();
-    } catch {}
-  };
-
-  // Filter out "Что делаем 4 ноября?" and any non-material plans
+  // Filter out non-material plans
   const displayWishlist = useMemo(() => {
     return wishlist.filter((item) => {
       const t = item.title.toLowerCase();
@@ -122,11 +82,60 @@ export const ShadcnWishlist: React.FC = () => {
     return displayWishlist.reduce((sum, it) => sum + (it.estimatedPrice || 0), 0);
   }, [displayWishlist]);
 
-  // Edit wish state for full dialog
-  const [editingWish, setEditingWish] = useState<any | null>(null);
-  const [editPrice, setEditPrice] = useState('');
-  const [editLink, setEditLink] = useState('');
-  const [editCategory, setEditCategory] = useState('Дом');
+  // Floating filter tabs
+  const filterTabs = [
+    { id: 'Все', label: 'Все', count: displayWishlist.length },
+    { id: 'Одобрено ✨', label: 'Одобрено ✨', count: totalApprovedCount },
+    { id: 'Кухня', label: 'Кухня', count: displayWishlist.filter(it => it.category?.toLowerCase().includes('кухн') || it.title.toLowerCase().includes('кухн')).length },
+    { id: 'Ванная', label: 'Ванная', count: displayWishlist.filter(it => it.category?.toLowerCase().includes('ванн') || it.title.toLowerCase().includes('ванн')).length },
+    { id: 'Комната', label: 'Комната', count: displayWishlist.filter(it => it.category?.toLowerCase().includes('комнат') || it.category?.toLowerCase().includes('спальн') || it.title.toLowerCase().includes('комнат')).length },
+    { id: 'Балкон', label: 'Балкон', count: displayWishlist.filter(it => it.category?.toLowerCase().includes('балкон') || it.title.toLowerCase().includes('балкон')).length },
+  ];
+
+  const filteredWishlist = useMemo(() => {
+    return displayWishlist.filter(item => {
+      if (selectedFilter === 'Одобрено ✨') {
+        return item.egorVote === 'yes' && item.anyaVote === 'yes';
+      }
+      if (selectedFilter === 'Кухня') {
+        return item.category?.toLowerCase().includes('кухн') || item.title.toLowerCase().includes('кухн');
+      }
+      if (selectedFilter === 'Ванная') {
+        return item.category?.toLowerCase().includes('ванн') || item.title.toLowerCase().includes('ванн');
+      }
+      if (selectedFilter === 'Комната') {
+        return item.category?.toLowerCase().includes('комнат') || item.category?.toLowerCase().includes('спальн') || item.title.toLowerCase().includes('комнат');
+      }
+      if (selectedFilter === 'Балкон') {
+        return item.category?.toLowerCase().includes('балкон') || item.title.toLowerCase().includes('балкон');
+      }
+      return true;
+    });
+  }, [displayWishlist, selectedFilter]);
+
+  const getCategoryBadgeClass = (category?: string) => {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('кухн')) return 'bg-amber-500/15 text-amber-300';
+    if (cat.includes('ванн')) return 'bg-cyan-500/15 text-cyan-300';
+    if (cat.includes('комнат') || cat.includes('спальн') || cat.includes('гостин')) return 'bg-indigo-500/15 text-indigo-300';
+    if (cat.includes('балкон')) return 'bg-emerald-500/15 text-emerald-300';
+    if (cat.includes('уют') || cat.includes('декор')) return 'bg-rose-500/15 text-rose-300';
+    return 'bg-white/[0.06] text-zinc-300';
+  };
+
+  const handleVote = (itemId: string, voter: 'egor' | 'anya', vote: 'yes' | 'no') => {
+    const currentItem = wishlist.find(w => w.id === itemId);
+    const currentVote = voter === 'egor' ? currentItem?.egorVote : currentItem?.anyaVote;
+    const newVote = currentVote === vote ? (null as any) : vote;
+    voteWishlist(itemId, voter, newVote);
+    try {
+      if (newVote === 'yes') {
+        soundEffects.playSuccess();
+      } else {
+        soundEffects.playClick();
+      }
+    } catch {}
+  };
 
   const handleStartEdit = (item: any) => {
     setEditingWish(item);
@@ -170,324 +179,254 @@ export const ShadcnWishlist: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col space-y-6 max-w-[1600px] mx-auto w-full pb-8 animate-fade-in">
-      {/* ── 1. WISHLIST SECTION ── */}
-      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs">
-        {/* Header Strip with Metrics */}
-        <div className="p-5 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06]">
+    <div className="flex-1 flex flex-col space-y-8 max-w-[1400px] mx-auto w-full pb-8">
+      {/* ── 1. WISHLIST HEADER & SHOWCASE (No Tables, Google/Family Bento Vitrine) ── */}
+      <div className="nexus-surface p-7 sm:p-8 space-y-6">
+        {/* Header Strip with Metrics and Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
           <div>
             <div className="flex items-center gap-2">
-              <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
-              <h3 className="text-base font-semibold leading-none text-zinc-100">
-                Вишлист пары («Берем или нет?»)
+              <Heart className="h-5 w-5 text-rose-400 fill-rose-500/20" />
+              <h3 className="text-xl font-semibold tracking-tight text-white">
+                Вишлист и обустройство дома
               </h3>
             </div>
             <p className="text-xs text-zinc-400 mt-1">
-              Совместные покупки: если оба нажали Check, вещь переходит в статус «Одобрено парой»
+              Совместные покупки: если оба проголосовали «За», вещь получает статус «Одобрено парой»
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Automatic Sum of Approved Purchases */}
-            <div className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 text-xs font-mono flex items-center gap-1.5 shadow-xs">
+            <div className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 text-xs flex items-center gap-1.5 shadow-xs">
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Одобрено: <b>{totalApprovedSum.toLocaleString('ru-RU')} ₽</b> ({totalApprovedCount} шт.)</span>
+              <span>Одобрено: <b className="tabular-nums font-semibold">{totalApprovedSum.toLocaleString('ru-RU')} ₽</b> ({totalApprovedCount} шт.)</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-lg bg-white/[0.04] text-zinc-300 text-xs font-mono flex items-center gap-1.5">
-              <span>Всего: <b>{totalWishlistSum.toLocaleString('ru-RU')} ₽</b> ({displayWishlist.length} шт.)</span>
+            <div className="px-3.5 py-1.5 rounded-full bg-white/[0.04] text-zinc-300 text-xs flex items-center gap-1.5">
+              <span>Всего: <b className="tabular-nums font-semibold">{totalWishlistSum.toLocaleString('ru-RU')} ₽</b> ({displayWishlist.length} шт.)</span>
             </div>
 
-            <Button 
-              size="sm" 
-              onClick={() => setIsAddModalOpen(true)} 
-              className="gap-1.5 text-xs bg-zinc-100 text-zinc-950 hover:bg-white font-medium cursor-pointer shadow-sm"
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="rounded-full bg-white text-zinc-950 hover:bg-zinc-100 font-medium px-5 py-2.5 text-xs shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all flex items-center gap-1.5 cursor-pointer border-0"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
               <span>Добавить желание</span>
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Table of Items (Zero Nested Borders) */}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-white/[0.06] hover:bg-transparent">
-                <TableHead className="w-[280px]">Желание / Покупка</TableHead>
-                <TableHead>Категория</TableHead>
-                <TableHead className="w-[200px]">Ссылка на товар</TableHead>
-                <TableHead className="w-[170px]">Ориентировочная цена</TableHead>
-                <TableHead>Голос Егора</TableHead>
-                <TableHead>Голос Ани</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="text-right">Действие</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayWishlist.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-xs text-zinc-500">
-                    Вишлист пуст. Нажмите «+ Добавить желание», чтобы начать список совместных покупок!
-                  </TableCell>
-                </TableRow>
-              ) : (
-                displayWishlist.map((item) => {
-                  const isApproved = item.egorVote === 'yes' && item.anyaVote === 'yes';
+        {/* Floating Zone Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          {filterTabs.map((tab) => {
+            const isActive = selectedFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedFilter(tab.id)}
+                className={`rounded-full px-4 py-2 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 border-0 ${
+                  isActive
+                    ? 'bg-white text-zinc-950 shadow-[0_0_20px_rgba(255,255,255,0.2)] font-semibold'
+                    : 'bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] hover:text-white'
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span className={`text-[11px] tabular-nums ${isActive ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-                  return (
-                    <TableRow key={item.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                      {/* Title & Notes */}
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span className="text-xs font-medium text-zinc-100 leading-snug">{item.title}</span>
-                          {item.notes && (
-                            <span className="text-[10px] text-zinc-500 line-clamp-1 mt-0.5">{item.notes}</span>
-                          )}
-                        </div>
-                      </TableCell>
+        {/* ── 2. MODULAR BENTO CARDS GRID (100% Zero <table>, Zero borders) ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+          {filteredWishlist.length === 0 ? (
+            <div className="col-span-full py-16 text-center text-sm text-zinc-500">
+              В этой категории желаний пока нет. Нажмите «+ Добавить желание», чтобы начать список!
+            </div>
+          ) : (
+            filteredWishlist.map((item) => {
+              const isApproved = item.egorVote === 'yes' && item.anyaVote === 'yes';
 
-                      {/* Category */}
-                      <TableCell>
-                        <Badge variant="outline" className="text-[10px] capitalize bg-white/[0.03] text-zinc-300 border-none">
-                          {item.category}
-                        </Badge>
-                      </TableCell>
+              return (
+                <div
+                  key={item.id}
+                  className={`group relative rounded-[22px] bg-[#10131F]/80 hover:bg-[#151929]/95 p-4 sm:px-5 sm:py-4 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.04)] transition-all duration-300 hover:-translate-y-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-0 ${
+                    isApproved 
+                      ? 'ring-1 ring-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.07] to-transparent' 
+                      : ''
+                  }`}
+                >
+                  {/* Left part: Title, Category Badge, Price pill, Link */}
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[15px] font-medium text-white tracking-tight leading-snug">
+                        {item.title}
+                      </span>
+                      {isApproved && (
+                        <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 font-medium shrink-0 flex items-center gap-1">
+                          <Sparkles className="h-2.5 w-2.5" />
+                          <span>Match</span>
+                        </span>
+                      )}
+                    </div>
 
-                      {/* Link (Interactive inline) */}
-                      <TableCell>
-                        {inlineLinkId === item.id ? (
-                          <div className="flex items-center gap-1">
-                            <Input
-                              type="url"
-                              autoFocus
-                              value={inlineLinkVal}
-                              onChange={(e) => setInlineLinkVal(e.target.value)}
-                              onBlur={() => handleSaveInlineLink(item.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveInlineLink(item.id);
-                                if (e.key === 'Escape') setInlineLinkId(null);
-                              }}
-                              placeholder="https://ozon.ru/..."
-                              className="h-7 w-40 text-xs bg-zinc-900 border-none px-2 font-mono text-zinc-200"
-                            />
-                          </div>
-                        ) : item.link ? (
-                          <div className="flex items-center gap-1.5 group/link">
-                            <a
-                              href={item.link}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 underline underline-offset-2 truncate max-w-[130px]"
-                              title={item.link}
-                            >
-                              <ExternalLink className="h-3 w-3 shrink-0" />
-                              <span className="truncate">
-                                {item.link.includes('ozon')
-                                  ? 'Ozon'
-                                  : item.link.includes('wildberries') || item.link.includes('wb.ru')
-                                  ? 'Wildberries'
-                                  : item.link.includes('market.yandex')
-                                  ? 'Маркет'
-                                  : 'Ссылка'}
-                              </span>
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => handleStartInlineLink(item.id, item.link || '')}
-                              className="opacity-0 group-hover/link:opacity-100 text-zinc-500 hover:text-zinc-300 transition-opacity p-0.5 cursor-pointer"
-                              title="Изменить ссылку"
-                            >
-                              <Pencil className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleStartInlineLink(item.id, '')}
-                            className="text-xs text-zinc-500 hover:text-zinc-300 py-1 px-2 rounded-md hover:bg-white/[0.04] transition cursor-pointer"
-                            title="Нажмите, чтобы ввести ссылку на WB / Ozon"
-                          >
-                            + Ссылка
-                          </button>
-                        )}
-                      </TableCell>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Room Category Pill */}
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${getCategoryBadgeClass(item.category)}`}>
+                        {item.category || 'Дом'}
+                      </span>
 
-                      {/* Price (Interactive inline) */}
-                      <TableCell className="font-mono-num text-xs">
-                        {inlinePriceId === item.id ? (
-                          <div className="flex items-center gap-1">
-                            <Input
-                              type="number"
-                              value={inlinePriceVal}
-                              onChange={(e) => setInlinePriceVal(e.target.value)}
-                              onBlur={() => handleSaveInlinePrice(item.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveInlinePrice(item.id);
-                                if (e.key === 'Escape') setInlinePriceId(null);
-                              }}
-                              autoFocus
-                              placeholder="0"
-                              className="h-7 w-24 text-xs bg-zinc-900 border-none px-2 font-mono text-zinc-100"
-                            />
-                            <span className="text-zinc-400 text-xs">₽</span>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleStartInlinePrice(item.id, item.estimatedPrice)}
-                            className="inline-flex items-center gap-1.5 py-1 px-2 rounded-md hover:bg-white/[0.06] text-zinc-300 hover:text-zinc-100 transition cursor-pointer group/price font-mono"
-                            title="Нажмите, чтобы ввести или изменить цену в ₽"
-                          >
-                            <span>{item.estimatedPrice > 0 ? `${item.estimatedPrice.toLocaleString('ru-RU')} ₽` : '—'}</span>
-                            <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/price:opacity-60 transition-opacity text-zinc-400" />
-                          </button>
-                        )}
-                      </TableCell>
+                      {/* Price Pill: ONLY when price > 0, NEVER a dash '—' */}
+                      {item.estimatedPrice && item.estimatedPrice > 0 ? (
+                        <span className="tabular-nums text-xs text-zinc-300 bg-white/[0.05] rounded-full px-2.5 py-0.5 font-medium">
+                          {item.estimatedPrice.toLocaleString('ru-RU')} ₽
+                        </span>
+                      ) : null}
 
-                      {/* Egor Vote (Flat capsule buttons with Check & X, Zero nested borders) */}
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              voteWishlist(item.id, 'egor', item.egorVote === 'yes' ? null as any : 'yes');
-                              try { soundEffects.playClick(); } catch {}
-                            }}
-                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                              item.egorVote === 'yes'
-                                ? 'bg-emerald-500/20 text-emerald-300 font-semibold shadow-xs'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-emerald-400 hover:bg-white/[0.08]'
-                            }`}
-                            title="Одобрить (Егор)"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              voteWishlist(item.id, 'egor', item.egorVote === 'no' ? null as any : 'no');
-                              try { soundEffects.playClick(); } catch {}
-                            }}
-                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                              item.egorVote === 'no'
-                                ? 'bg-rose-500/20 text-rose-300 font-semibold shadow-xs'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-rose-400 hover:bg-white/[0.08]'
-                            }`}
-                            title="Отклонить (Егор)"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </TableCell>
+                      {/* Item Store Link */}
+                      {item.link ? (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 rounded-full bg-sky-500/10 px-2.5 py-0.5 transition-all truncate max-w-[130px]"
+                          title={item.link}
+                        >
+                          <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                          <span className="truncate">
+                            {item.link.includes('ozon')
+                              ? 'Ozon'
+                              : item.link.includes('wildberries') || item.link.includes('wb.ru')
+                              ? 'Wildberries'
+                              : item.link.includes('market.yandex')
+                              ? 'Маркет'
+                              : 'Ссылка'}
+                          </span>
+                        </a>
+                      ) : null}
+                    </div>
 
-                      {/* Anya Vote (Flat capsule buttons with Check & X, Zero nested borders) */}
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              voteWishlist(item.id, 'anya', item.anyaVote === 'yes' ? null as any : 'yes');
-                              try { soundEffects.playClick(); } catch {}
-                            }}
-                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                              item.anyaVote === 'yes'
-                                ? 'bg-emerald-500/20 text-emerald-300 font-semibold shadow-xs'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-emerald-400 hover:bg-white/[0.08]'
-                            }`}
-                            title="Одобрить (Аня)"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              voteWishlist(item.id, 'anya', item.anyaVote === 'no' ? null as any : 'no');
-                              try { soundEffects.playClick(); } catch {}
-                            }}
-                            className={`h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                              item.anyaVote === 'no'
-                                ? 'bg-rose-500/20 text-rose-300 font-semibold shadow-xs'
-                                : 'bg-white/[0.04] text-zinc-400 hover:text-rose-400 hover:bg-white/[0.08]'
-                            }`}
-                            title="Отклонить (Аня)"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </TableCell>
+                    {item.notes && (
+                      <p className="text-[11px] text-zinc-400 line-clamp-1">
+                        {item.notes}
+                      </p>
+                    )}
+                  </div>
 
-                      {/* Status */}
-                      <TableCell>
-                        {isApproved ? (
-                          <Badge variant="default" className="bg-emerald-600/30 text-emerald-300 border-none text-xs">
-                            Одобрено парой
-                          </Badge>
-                        ) : item.egorVote === 'no' || item.anyaVote === 'no' ? (
-                          <Badge variant="destructive" className="bg-rose-600/20 text-rose-300 border-none text-xs">
-                            Отклонено
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="bg-white/[0.05] text-zinc-400 border-none text-xs">
-                            На обсуждении
-                          </Badge>
-                        )}
-                      </TableCell>
+                  {/* Right part: Couple Vote Pills + Actions */}
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+                    {/* Egor Vote Pill */}
+                    <div className="rounded-full bg-white/[0.04] p-1 flex items-center gap-1">
+                      <span className="text-[11px] px-1.5 text-zinc-400 font-medium select-none">Егор</span>
+                      <button
+                        type="button"
+                        onClick={() => handleVote(item.id, 'egor', 'yes')}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer border-0 ${
+                          item.egorVote === 'yes'
+                            ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/40 scale-105'
+                            : 'text-zinc-500 hover:text-emerald-400 hover:bg-white/[0.06]'
+                        }`}
+                        title="Егор: За"
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVote(item.id, 'egor', 'no')}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer border-0 ${
+                          item.egorVote === 'no'
+                            ? 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/40 scale-105'
+                            : 'text-zinc-500 hover:text-rose-400 hover:bg-white/[0.06]'
+                        }`}
+                        title="Егор: Против"
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </button>
+                    </div>
 
-                      {/* Action buttons */}
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStartEdit(item)}
-                            className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] cursor-pointer"
-                            title="Редактировать цену, ссылку и категорию"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              convertWishlistToTask(item.id);
-                              try { soundEffects.playSuccess(); } catch {}
-                            }}
-                            className="h-7 text-xs text-zinc-400 hover:text-zinc-100 bg-white/[0.03] border-none cursor-pointer"
-                            title="Создать задачу в еженедельнике"
-                          >
-                            В задачи
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              deleteWishlistItem(item.id);
-                              try { soundEffects.playClick(); } catch {}
-                            }}
-                            className="h-7 w-7 p-0 text-zinc-500 hover:text-red-400 hover:bg-white/[0.05] cursor-pointer"
-                            title="Удалить из вишлиста"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                    {/* Anya Vote Pill */}
+                    <div className="rounded-full bg-white/[0.04] p-1 flex items-center gap-1">
+                      <span className="text-[11px] px-1.5 text-zinc-400 font-medium select-none">Аня</span>
+                      <button
+                        type="button"
+                        onClick={() => handleVote(item.id, 'anya', 'yes')}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer border-0 ${
+                          item.anyaVote === 'yes'
+                            ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/40 scale-105'
+                            : 'text-zinc-500 hover:text-emerald-400 hover:bg-white/[0.06]'
+                        }`}
+                        title="Аня: За"
+                      >
+                        <ThumbsUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleVote(item.id, 'anya', 'no')}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer border-0 ${
+                          item.anyaVote === 'no'
+                            ? 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/40 scale-105'
+                            : 'text-zinc-500 hover:text-rose-400 hover:bg-white/[0.06]'
+                        }`}
+                        title="Аня: Против"
+                      >
+                        <ThumbsDown className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    {/* Quick Actions: В задачи, Pencil, Trash */}
+                    <div className="flex items-center gap-1 pl-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          convertWishlistToTask(item.id);
+                          try { soundEffects.playSuccess(); } catch {}
+                        }}
+                        className="rounded-full bg-white/[0.05] hover:bg-white/[0.12] text-xs px-3 py-1.5 text-zinc-300 hover:text-white transition-all flex items-center gap-1 cursor-pointer border-0"
+                        title="Создать задачу в еженедельнике"
+                      >
+                        <span>В задачи</span>
+                        <ArrowUpRight className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(item)}
+                        className="p-1.5 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06] transition-all cursor-pointer opacity-40 group-hover:opacity-100 border-0"
+                        title="Редактировать"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          deleteWishlistItem(item.id);
+                          try { soundEffects.playClick(); } catch {}
+                        }}
+                        className="p-1.5 rounded-full text-zinc-400 hover:text-rose-400 hover:bg-white/[0.06] transition-all cursor-pointer opacity-40 group-hover:opacity-100 border-0"
+                        title="Удалить"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* ── 2. APARTMENT BLUEPRINT PINS SECTION (Zero Nested Borders) ── */}
-      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs p-6">
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+      {/* ── 3. APARTMENT BLUEPRINT PINS SECTION (.nexus-surface, Zero Nested Borders) ── */}
+      <div className="nexus-surface p-6 sm:p-8 space-y-4">
+        <div className="flex items-center justify-between pb-2">
           <div>
             <div className="flex items-center gap-2">
-              <Home className="h-4 w-4 text-emerald-400" />
-              <h3 className="text-base font-semibold leading-none text-zinc-100">
+              <Home className="h-5 w-5 text-emerald-400" />
+              <h3 className="text-xl font-semibold tracking-tight text-white">
                 Обустройство и ремонт квартиры (Карта помещений)
               </h3>
             </div>
@@ -497,17 +436,17 @@ export const ShadcnWishlist: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
           {blueprintPins.map((pin) => {
             return (
               <div
                 key={pin.id}
-                className="p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] space-y-2 transition-colors"
+                className="p-4 rounded-2xl bg-white/[0.025] hover:bg-white/[0.045] space-y-2.5 transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-zinc-100">{pin.title}</span>
+                  <span className="text-sm font-semibold text-zinc-100">{pin.title}</span>
                   <span 
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${
                       pin.status === 'solved'
                         ? 'bg-emerald-500/15 text-emerald-400'
                         : pin.status === 'in_progress'
@@ -518,25 +457,24 @@ export const ShadcnWishlist: React.FC = () => {
                     {pin.status === 'solved' ? 'Готово' : pin.status === 'in_progress' ? 'В процессе' : 'Проблема'}
                   </span>
                 </div>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-xs text-zinc-400 line-clamp-2">
                   {pin.notes || 'Точка обустройства интерьера'}
                 </p>
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] font-mono text-zinc-500">
+                  <span className="text-xs text-zinc-500 font-medium">
                     {pin.room}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={() => {
                       const next = pin.status === 'solved' ? 'problem' : pin.status === 'in_progress' ? 'solved' : 'in_progress';
                       updatePinStatus(pin.id, next);
                       try { soundEffects.playClick(); } catch {}
                     }}
-                    className="h-6 px-2 text-[10px] hover:bg-white/[0.06] text-zinc-300"
+                    className="rounded-full bg-white/[0.05] hover:bg-white/[0.1] px-2.5 py-1 text-[11px] text-zinc-300 hover:text-white transition-all cursor-pointer border-0"
                   >
                     Сменить статус
-                  </Button>
+                  </button>
                 </div>
               </div>
             );
@@ -546,9 +484,9 @@ export const ShadcnWishlist: React.FC = () => {
 
       {/* ── ADD WISHLIST DIALOG ── */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-md bg-zinc-950/95 border-none text-zinc-100 backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-md bg-[#0D101A]/95 backdrop-blur-2xl border-white/[0.08] text-zinc-100 rounded-[28px]">
           <DialogHeader>
-            <DialogTitle>Добавить покупку в вишлист</DialogTitle>
+            <DialogTitle className="text-base font-bold text-white">Добавить покупку в вишлист</DialogTitle>
             <DialogDescription className="text-xs text-zinc-400">
               Добавьте идею для совместного голосования пары.
             </DialogDescription>
@@ -561,7 +499,7 @@ export const ShadcnWishlist: React.FC = () => {
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Например, робот-пылесос или турка для кофе..."
-                className="mt-1 bg-white/[0.04] border-none text-zinc-100 text-xs"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-zinc-100 text-xs rounded-full h-9"
               />
             </div>
             <div>
@@ -571,7 +509,7 @@ export const ShadcnWishlist: React.FC = () => {
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
                 placeholder="4500"
-                className="mt-1 font-mono bg-white/[0.04] border-none text-zinc-100 text-xs"
+                className="mt-1 tabular-nums bg-white/[0.04] border-white/[0.08] text-zinc-100 text-xs rounded-full h-9"
               />
             </div>
             <div>
@@ -581,7 +519,7 @@ export const ShadcnWishlist: React.FC = () => {
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
                 placeholder="https://ozon.ru/..."
-                className="mt-1 bg-white/[0.04] border-none text-zinc-100 text-xs"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-zinc-100 text-xs rounded-full h-9"
               />
             </div>
             <div>
@@ -590,16 +528,16 @@ export const ShadcnWishlist: React.FC = () => {
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="Кухня, Ванная, Спальня, Дом..."
-                className="mt-1 bg-white/[0.04] border-none text-zinc-100 text-xs"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-zinc-100 text-xs rounded-full h-9"
               />
             </div>
           </div>
 
-          <DialogFooter className="border-t border-white/[0.06] pt-3">
-            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)} className="text-xs text-zinc-400">
+          <DialogFooter className="pt-2">
+            <Button variant="ghost" onClick={() => setIsAddModalOpen(false)} className="text-xs rounded-full text-zinc-400">
               Отмена
             </Button>
-            <Button onClick={handleAddWish} className="text-xs bg-zinc-100 text-zinc-950 hover:bg-white font-medium">
+            <Button onClick={handleAddWish} className="text-xs rounded-full bg-white text-zinc-950 hover:bg-zinc-100 font-semibold">
               Добавить в вишлист
             </Button>
           </DialogFooter>
@@ -608,9 +546,9 @@ export const ShadcnWishlist: React.FC = () => {
 
       {/* ── EDIT WISH DIALOG ── */}
       <Dialog open={!!editingWish} onOpenChange={(open) => !open && setEditingWish(null)}>
-        <DialogContent className="sm:max-w-md bg-zinc-950/95 border-none text-zinc-100 backdrop-blur-2xl">
+        <DialogContent className="sm:max-w-md bg-[#0D101A]/95 backdrop-blur-2xl border-white/[0.08] text-zinc-100 rounded-[28px]">
           <DialogHeader>
-            <DialogTitle>Редактировать товар вишлиста</DialogTitle>
+            <DialogTitle className="text-base font-bold text-white">Редактировать товар вишлиста</DialogTitle>
             <DialogDescription className="text-xs text-zinc-400">
               {editingWish?.title}
             </DialogDescription>
@@ -624,7 +562,7 @@ export const ShadcnWishlist: React.FC = () => {
                 value={editPrice}
                 onChange={(e) => setEditPrice(e.target.value)}
                 placeholder="Цена в рублях"
-                className="mt-1 font-mono bg-white/[0.04] border-none text-zinc-100"
+                className="mt-1 tabular-nums bg-white/[0.04] border-white/[0.08] text-zinc-100 rounded-full h-9"
               />
             </div>
             <div>
@@ -634,7 +572,7 @@ export const ShadcnWishlist: React.FC = () => {
                 value={editLink}
                 onChange={(e) => setEditLink(e.target.value)}
                 placeholder="https://..."
-                className="mt-1 bg-white/[0.04] border-none text-zinc-100"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-zinc-100 rounded-full h-9"
               />
             </div>
             <div>
@@ -643,16 +581,16 @@ export const ShadcnWishlist: React.FC = () => {
                 value={editCategory}
                 onChange={(e) => setEditCategory(e.target.value)}
                 placeholder="Кухня, Ванная, Комната, Дом..."
-                className="mt-1 bg-white/[0.04] border-none text-zinc-100"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-zinc-100 rounded-full h-9"
               />
             </div>
           </div>
 
-          <DialogFooter className="border-t border-white/[0.06] pt-3">
-            <Button variant="ghost" onClick={() => setEditingWish(null)} className="text-xs text-zinc-400">
+          <DialogFooter className="pt-2">
+            <Button variant="ghost" onClick={() => setEditingWish(null)} className="text-xs rounded-full text-zinc-400">
               Отмена
             </Button>
-            <Button onClick={handleSaveEdit} className="text-xs bg-zinc-100 text-zinc-950 hover:bg-white font-medium">
+            <Button onClick={handleSaveEdit} className="text-xs rounded-full bg-white text-zinc-950 hover:bg-zinc-100 font-semibold">
               Сохранить
             </Button>
           </DialogFooter>
