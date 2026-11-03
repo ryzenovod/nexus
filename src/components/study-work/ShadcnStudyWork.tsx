@@ -19,13 +19,9 @@ import {
   Sparkles, 
   Search, 
   Globe2,
-  Zap,
-  Target,
-  Sliders,
-  Award
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
@@ -45,67 +41,68 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useNexusStore } from '@/store/useNexusStore';
-import { StudyWorkItem, NexusTask } from '@/types/nexus';
+import { StudyWorkItem } from '@/types/nexus';
 import { soundEffects } from '@/utils/soundEffects';
-import { YaProfiMapRadar } from './YaProfiMapRadar';
 import confetti from 'canvas-confetti';
 
 // 4 Master Direction Columns for Egor & Anya
 interface MasterColumn {
-  id: string; // primary space ID
+  id: string;
   acceptedSpaces: string[];
   title: string;
   subtitle: string;
   user: 'egor' | 'anya' | 'together';
+  accentGlow: string;
   accentText: string;
   badgeBg: string;
-  bracketBorder: string;
   icon: any;
+  extraBadge?: string;
 }
 
 const MASTER_COLUMNS: MasterColumn[] = [
   {
     id: 'hse-egor',
     acceptedSpaces: ['hse-egor', 'hse'],
-    title: 'ВШЭ Магистратура (Егор)',
+    title: 'ВШЭ (Егор)',
     subtitle: 'Распределенные системы · CS',
     user: 'egor',
+    accentGlow: 'bg-sky-500',
     accentText: 'text-sky-400',
     badgeBg: 'bg-sky-500/10 text-sky-400',
-    bracketBorder: 'border-l-sky-500',
     icon: GraduationCap,
   },
   {
     id: 'rudn-anya',
     acceptedSpaces: ['rudn-anya', 'rudn'],
-    title: 'РУДН Онлайн (Аня)',
+    title: 'РУДН (Аня)',
     subtitle: 'Клиническая психология · БРС',
     user: 'anya',
+    accentGlow: 'bg-purple-500',
     accentText: 'text-purple-400',
     badgeBg: 'bg-purple-500/10 text-purple-400',
-    bracketBorder: 'border-l-purple-500',
     icon: BookOpen,
   },
   {
     id: 'yaprofi-dfo',
     acceptedSpaces: ['yaprofi-dfo', 'yaprofi-cfo', 'yaprofi'],
-    title: 'Я-Профессионал (ДФО и ЦФО)',
-    subtitle: 'Федеральная олимпиада · 2 таймзоны',
+    title: 'Я-Профессионал',
+    subtitle: 'Федеральная олимпиада',
     user: 'together',
+    accentGlow: 'bg-amber-500',
     accentText: 'text-amber-400',
     badgeBg: 'bg-amber-500/10 text-amber-400',
-    bracketBorder: 'border-l-amber-500',
     icon: Radio,
+    extraBadge: '+7ч ДФО',
   },
   {
     id: 'work-projects',
     acceptedSpaces: ['work-egor', 'projects-anya', 'work-projects', 'work'],
-    title: 'Работа и Проекты',
+    title: 'Работа & Личные проекты',
     subtitle: 'Продакшн, стартапы и деплой',
     user: 'together',
+    accentGlow: 'bg-emerald-500',
     accentText: 'text-emerald-400',
     badgeBg: 'bg-emerald-500/10 text-emerald-400',
-    bracketBorder: 'border-l-emerald-500',
     icon: Briefcase,
   },
 ];
@@ -139,7 +136,7 @@ export const ShadcnStudyWork: React.FC = () => {
     setPomodoroMode,
   } = useNexusStore();
 
-  // Exactly 3 clean top-level tabs: Kanban | Focus Timer | Schedule & BRS
+  // Exactly 3 clean modes: Kanban | Focus Timer | Schedule & BRS (No DFO radar tab)
   const [activeTab, setActiveTab] = useState<'kanban' | 'pomodoro' | 'brs'>('kanban');
 
   // Kanban view state
@@ -151,8 +148,8 @@ export const ShadcnStudyWork: React.FC = () => {
   const [quickAddTitle, setQuickAddTitle] = useState('');
   const [quickAddDeadline, setQuickAddDeadline] = useState('');
 
-  // BRS Sub-tab selection: RUDN (Anya) vs HSE (Egor) vs Ya-Profi Radar
-  const [brsActiveSubTab, setBrsActiveSubTab] = useState<'rudn' | 'hse' | 'radar'>('rudn');
+  // BRS Sub-tab selection: RUDN (Anya) vs HSE (Egor) only
+  const [brsActiveSubTab, setBrsActiveSubTab] = useState<'rudn' | 'hse'>('rudn');
 
   // Sheet Drawer (Card Detail Editor) state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -285,23 +282,6 @@ export const ShadcnStudyWork: React.FC = () => {
     }
   };
 
-  // Direct fast status switch on card hover (Бэклог / В работу / Сдано)
-  const handleQuickSetStatus = (item: StudyWorkItem, status: StudyWorkItem['status']) => {
-    if (status === 'done' && item.status !== 'done') {
-      updateStudyWorkStatus(item.id, 'done');
-      addXp(30);
-      try {
-        confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } });
-        soundEffects.playSuccess();
-      } catch {}
-    } else {
-      updateStudyWorkStatus(item.id, status);
-      try {
-        soundEffects.playClick();
-      } catch {}
-    }
-  };
-
   // Add checklist item inside Drawer
   const handleAddSubtaskInDrawer = () => {
     if (!selectedItem || !newSubtaskInput.trim()) return;
@@ -356,36 +336,32 @@ export const ShadcnStudyWork: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col space-y-6 max-w-[1700px] mx-auto w-full pb-12 animate-fade-in">
-      {/* ── 1. CLEAN TOP NAVIGATION HEADER ── */}
-      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-sm p-5">
+    <div className="flex-1 flex flex-col space-y-8 max-w-[1400px] mx-auto w-full pb-12">
+      {/* ── 1. OPEN AIRY HEADER (No Outer Box, Pure Linear Aesthetics) ── */}
+      <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
-              <GraduationCap className="h-5 w-5 text-sky-400" />
+          <div className="flex items-center gap-3.5">
+            <div className="rounded-2xl bg-indigo-500/10 ring-1 ring-indigo-400/20 p-3 shrink-0 flex items-center justify-center">
+              <GraduationCap className="h-6 w-6 text-indigo-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold leading-tight text-zinc-100">
-                  Учеба, Проекты & БРС
-                </h3>
-                <span className="text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-white/[0.04] text-zinc-400">
-                  Воркспейс пары
-                </span>
-              </div>
+              <h2 className="text-2xl font-semibold tracking-tight text-white">
+                Учеба, Магистратура & «Я-Профессионал»
+              </h2>
               <p className="text-xs text-zinc-400 mt-0.5">
-                НИУ ВШЭ (Егор), РУДН (Аня) и Федеральная координация ДФО ⇄ ЦФО
+                НИУ ВШЭ (Егор), РУДН (Аня) и лидерство ДФО ⇄ ЦФО
               </p>
             </div>
           </div>
 
-          {/* EXACTLY 3 CLEAN TABS: Канбан дел | Фокус-таймер | Расписание и БРС */}
-          <div className="flex items-center gap-1.5 bg-white/[0.04] p-1 rounded-xl">
+          {/* Floating Mode Switcher Capsule (Exactly 3 Tabs) */}
+          <div className="rounded-full bg-white/[0.04] p-1 flex items-center gap-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <button
+              type="button"
               onClick={() => { setActiveTab('kanban'); soundEffects.playClick(); }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer border-0 ${
                 activeTab === 'kanban'
-                  ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
+                  ? 'bg-white text-zinc-950 font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -393,10 +369,11 @@ export const ShadcnStudyWork: React.FC = () => {
             </button>
 
             <button
+              type="button"
               onClick={() => { setActiveTab('pomodoro'); soundEffects.playClick(); }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 border-0 ${
                 activeTab === 'pomodoro'
-                  ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
+                  ? 'bg-white text-zinc-950 font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -408,60 +385,66 @@ export const ShadcnStudyWork: React.FC = () => {
             </button>
 
             <button
+              type="button"
               onClick={() => { setActiveTab('brs'); soundEffects.playClick(); }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 border-0 ${
                 activeTab === 'brs'
-                  ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-xs'
+                  ? 'bg-white text-zinc-950 font-semibold shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-              <span>Расписание и БРС</span>
+              <span>БРС & Оценки</span>
             </button>
           </div>
         </div>
 
-        {/* Search & Assignee filter (shown only in Kanban mode) */}
+        {/* Search, Assignee filter & Add action in one clean line */}
         {activeTab === 'kanban' && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-4 border-t border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400" />
-                <Input
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+            <div className="flex items-center gap-3 flex-wrap flex-1">
+              {/* Search Input Capsule */}
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3.5 top-2.5 h-3.5 w-3.5 text-zinc-400" />
+                <input
+                  type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Поиск по задачам, курсам и тегам..."
-                  className="pl-8 h-8 text-xs bg-white/[0.03] text-zinc-200 placeholder:text-zinc-500 rounded-lg border-none focus-visible:ring-1 focus-visible:ring-sky-500/50"
+                  className="w-full pl-9 pr-4 py-2 text-sm bg-white/[0.04] text-zinc-200 placeholder:text-zinc-500 rounded-full border-0 outline-none focus:ring-1 focus:ring-white/20 transition-all"
                 />
               </div>
 
               {/* Assignee Filter Pills */}
-              <div className="flex items-center bg-white/[0.03] rounded-lg p-0.5">
+              <div className="flex items-center rounded-full bg-white/[0.04] p-1">
                 <button
+                  type="button"
                   onClick={() => setSelectedUserFilter('all')}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer border-0 ${
                     selectedUserFilter === 'all'
-                      ? 'bg-white/[0.1] text-zinc-100 font-semibold'
+                      ? 'bg-white text-zinc-950 font-semibold shadow-xs'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   Все
                 </button>
                 <button
+                  type="button"
                   onClick={() => setSelectedUserFilter('egor')}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer border-0 ${
                     selectedUserFilter === 'egor'
-                      ? 'bg-sky-500/20 text-sky-300 font-semibold'
+                      ? 'bg-sky-500/25 text-sky-200 font-semibold'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   Егор
                 </button>
                 <button
+                  type="button"
                   onClick={() => setSelectedUserFilter('anya')}
-                  className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer border-0 ${
                     selectedUserFilter === 'anya'
-                      ? 'bg-purple-500/20 text-purple-300 font-semibold'
+                      ? 'bg-purple-500/25 text-purple-200 font-semibold'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -470,14 +453,25 @@ export const ShadcnStudyWork: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <span>💡 Клик по карточке открывает детали сдачи и чек-лист</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickAddSpaceId(MASTER_COLUMNS[0].id);
+                  setQuickAddTitle('');
+                  setQuickAddDeadline('');
+                }}
+                className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white px-4 py-2 transition-all flex items-center gap-1.5 cursor-pointer border-0"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>+ Новое направление</span>
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── 2. TAB 1: 4 MASTER KANBAN COLUMNS (Zero Nested Borders) ── */}
+      {/* ── 2. TAB 1: 4 MASTER KANBAN COLUMNS (Zero Hard Borders) ── */}
       {activeTab === 'kanban' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {MASTER_COLUMNS.map((col) => {
@@ -519,30 +513,37 @@ export const ShadcnStudyWork: React.FC = () => {
             return (
               <div
                 key={col.id}
-                className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl shadow-sm p-4 flex flex-col space-y-3 min-h-[520px]"
+                className="rounded-[26px] bg-white/[0.02] p-4 flex flex-col gap-3 min-h-[440px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] border-0"
               >
-                {/* Column Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                {/* Column Header: Soft icon, name, counter, plus button */}
+                <div className="flex items-center justify-between pb-2">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={`p-1.5 rounded-lg ${col.badgeBg} shrink-0`}>
+                    <span className={`p-2 rounded-2xl ${col.badgeBg} shrink-0`}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <h4 className="text-xs font-semibold text-zinc-100 truncate leading-tight">
-                        {col.title}
-                      </h4>
-                      <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-semibold text-[15px] text-white truncate leading-tight">
+                          {col.title}
+                        </h4>
+                        {col.extraBadge && (
+                          <span className="rounded-full bg-amber-500/15 text-amber-300 px-2 py-0.2 text-[10px] font-medium shrink-0">
+                            {col.extraBadge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
                         {col.subtitle}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-300">
+                    <span className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-xs tabular-nums text-zinc-400 font-medium">
                       {completedCount}/{columnItems.length}
                     </span>
 
-                    {/* Inline Quick Add Toggle Button (+) */}
+                    {/* Circular Add Button */}
                     <button
                       type="button"
                       onClick={() => {
@@ -551,7 +552,7 @@ export const ShadcnStudyWork: React.FC = () => {
                         setQuickAddDeadline('');
                         soundEffects.playClick();
                       }}
-                      className="h-7 w-7 rounded-md bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                      className="rounded-full w-7 h-7 bg-white/[0.05] hover:bg-white/[0.12] text-zinc-300 hover:text-white flex items-center justify-center transition-all border-0 cursor-pointer"
                       title="Быстро добавить задачу в эту колонку"
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -559,10 +560,10 @@ export const ShadcnStudyWork: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Inline Quick Add Form Right Under Column Header */}
+                {/* Inline Quick Add Form Under Header */}
                 {isAdding && (
-                  <div className="p-3 rounded-xl bg-white/[0.05] space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <Input
+                  <div className="p-3.5 rounded-2xl bg-white/[0.04] space-y-2.5">
+                    <input
                       autoFocus
                       placeholder="Название задачи или работы..."
                       value={quickAddTitle}
@@ -571,20 +572,20 @@ export const ShadcnStudyWork: React.FC = () => {
                         if (e.key === 'Enter') handleQuickAddSubmit(col);
                         if (e.key === 'Escape') setQuickAddSpaceId(null);
                       }}
-                      className="h-8 text-xs bg-zinc-900/90 text-zinc-100 placeholder:text-zinc-500 rounded-lg border-none focus-visible:ring-1 focus-visible:ring-sky-500/50"
+                      className="w-full h-8 text-xs bg-white/[0.06] text-zinc-100 placeholder:text-zinc-500 rounded-full px-3 border-0 outline-none focus:ring-1 focus:ring-sky-500/50"
                     />
                     <div className="flex items-center justify-between gap-2">
-                      <Input
+                      <input
                         type="date"
                         value={quickAddDeadline}
                         onChange={(e) => setQuickAddDeadline(e.target.value)}
-                        className="h-7 text-[11px] bg-zinc-900/70 text-zinc-300 rounded-lg border-none w-36 px-2"
+                        className="h-7 text-[11px] bg-white/[0.06] text-zinc-300 rounded-full border-0 px-3 w-36 outline-none"
                       />
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => setQuickAddSpaceId(null)}
-                          className="px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                          className="px-2.5 py-1 text-xs text-zinc-400 hover:text-zinc-200 transition cursor-pointer border-0"
                         >
                           Отмена
                         </button>
@@ -592,7 +593,7 @@ export const ShadcnStudyWork: React.FC = () => {
                           type="button"
                           onClick={() => handleQuickAddSubmit(col)}
                           disabled={!quickAddTitle.trim()}
-                          className="px-3 py-1 text-xs rounded-lg bg-zinc-100 text-zinc-950 font-medium hover:bg-white disabled:opacity-40 transition cursor-pointer"
+                          className="px-3.5 py-1 text-xs rounded-full bg-white text-zinc-950 font-semibold hover:bg-zinc-100 disabled:opacity-40 transition cursor-pointer border-0"
                         >
                           Создать
                         </button>
@@ -601,7 +602,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   </div>
                 )}
 
-                {/* Cards List in Column (Zero nested borders!) */}
+                {/* Cards List in Column (Linear style, ZERO border-l-4) */}
                 <div className="flex-1 space-y-2.5 overflow-y-auto pr-0.5 [scrollbar-width:thin]">
                   {columnItems.length === 0 ? (
                     <div className="py-12 flex flex-col items-center justify-center text-center p-4">
@@ -614,7 +615,7 @@ export const ShadcnStudyWork: React.FC = () => {
                           setQuickAddTitle('');
                           setQuickAddDeadline('');
                         }}
-                        className="mt-2 text-[11px] text-sky-400 hover:text-sky-300 underline cursor-pointer"
+                        className="mt-2 text-[11px] text-sky-400 hover:text-sky-300 underline cursor-pointer border-0 bg-transparent"
                       >
                         + Создать первую задачу
                       </button>
@@ -625,176 +626,129 @@ export const ShadcnStudyWork: React.FC = () => {
                       const subtasksTotal = it.subtasks?.length || 0;
                       const subtasksDone = it.subtasks?.filter((s) => s.completed).length || 0;
 
-                      // Priority bracket color indicator (strictly 3px left border)
-                      const bracketBorder = it.priority === 'high'
-                        ? 'border-l-rose-500'
-                        : it.priority === 'medium'
-                        ? 'border-l-amber-500'
-                        : col.bracketBorder;
-
                       return (
                         <div
                           key={it.id}
                           onClick={() => handleOpenDrawer(it)}
-                          className={`group relative p-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] transition-all cursor-pointer select-none space-y-2 border-l-[3px] ${bracketBorder} ${
-                            isDone ? 'opacity-50' : 'shadow-xs'
+                          className={`group relative rounded-[20px] bg-[#111420]/90 hover:bg-[#161A29] p-4 shadow-[0_12px_28px_-8px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.09),0_0_0_1px_rgba(255,255,255,0.04)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 cursor-pointer select-none space-y-2.5 border-0 ${
+                            isDone ? 'opacity-40' : ''
                           }`}
                         >
-                          {/* Row 1: Checkbox + Title + Fast Action Icons */}
+                          {/* Priority / Space Top Corner Glow */}
+                          <div 
+                            className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl opacity-10 pointer-events-none transition-opacity group-hover:opacity-20 ${
+                              it.priority === 'high' ? 'bg-rose-500' : it.priority === 'medium' ? 'bg-amber-500' : 'bg-indigo-500'
+                            }`} 
+                          />
+
+                          {/* Row 1: Rounded Checkbox + Priority Dot + Title + Fast Action Icons */}
                           <div className="flex items-start gap-2.5">
-                            {/* Custom round checkbox */}
-                            <button
-                              type="button"
+                            {/* Rounded Checkbox */}
+                            <div 
+                              className="pt-0.5 shrink-0" 
                               onClick={(e) => handleToggleStatus(it, e)}
-                              className={`h-4.5 w-4.5 rounded-full mt-0.5 flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                                isDone
-                                  ? 'bg-emerald-500 text-zinc-950 font-bold'
-                                  : 'bg-white/[0.08] hover:bg-white/[0.15] text-transparent hover:text-zinc-400'
-                              }`}
-                              title={isDone ? 'Вернуть в работу' : 'Отметить сданным (+30 XP)'}
                             >
-                              <Check className="h-3 w-3 stroke-[3]" />
-                            </button>
+                              <div className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
+                                isDone
+                                  ? 'bg-emerald-500 text-zinc-950 shadow-xs'
+                                  : 'ring-1 ring-white/20 group-hover:ring-sky-400 bg-white/[0.04]'
+                              }`}>
+                                {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              </div>
+                            </div>
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-1.5">
-                                <span
-                                  className={`text-xs font-medium leading-snug break-words ${
-                                    isDone ? 'line-through text-zinc-400' : 'text-zinc-100'
-                                  }`}
-                                >
-                                  {it.title}
-                                </span>
+                                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                  {/* Priority indicator dot */}
+                                  <span 
+                                    className={`w-2 h-2 rounded-full shrink-0 ${
+                                      it.priority === 'high' 
+                                        ? 'bg-rose-400 shadow-[0_0_8px_#f43f5e]' 
+                                        : it.priority === 'medium' 
+                                        ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' 
+                                        : 'bg-zinc-500'
+                                    }`} 
+                                    title={it.priority === 'high' ? 'Высокий приоритет' : it.priority === 'medium' ? 'Средний приоритет' : 'Обычный'}
+                                  />
+                                  <span className={`text-[14px] font-medium leading-snug break-words ${
+                                    isDone ? 'line-through text-zinc-500' : 'text-zinc-100'
+                                  }`}>
+                                    {it.title}
+                                  </span>
+                                </div>
 
-                                {/* Quick Hover Action Icons: Status Switcher & Delete */}
-                                <div
-                                  onClick={(e) => e.stopPropagation()}
+                                {/* Hover Action icons */}
+                                <div 
+                                  onClick={(e) => e.stopPropagation()} 
                                   className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1"
                                 >
-                                  <div className="flex items-center bg-zinc-900/90 rounded-md p-0.5 text-[9px]">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuickSetStatus(it, 'backlog')}
-                                      className={`px-1 py-0.5 rounded transition ${
-                                        it.status === 'backlog' ? 'bg-white/20 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'
-                                      }`}
-                                      title="В бэклог"
-                                    >
-                                      Бэклог
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuickSetStatus(it, 'in_progress')}
-                                      className={`px-1 py-0.5 rounded transition ${
-                                        it.status === 'in_progress' ? 'bg-sky-500/30 text-sky-200 font-medium' : 'text-zinc-400 hover:text-zinc-200'
-                                      }`}
-                                      title="В работу"
-                                    >
-                                      В работе
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuickSetStatus(it, 'done')}
-                                      className={`px-1 py-0.5 rounded transition ${
-                                        it.status === 'done' ? 'bg-emerald-500/30 text-emerald-200 font-medium' : 'text-zinc-400 hover:text-zinc-200'
-                                      }`}
-                                      title="Сдано"
-                                    >
-                                      Сдано
-                                    </button>
-                                  </div>
-
                                   <button
                                     type="button"
                                     onClick={(e) => handleDeleteDirect(it, e)}
-                                    className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-white/[0.08] transition cursor-pointer"
+                                    className="p-1 rounded-full text-zinc-400 hover:text-rose-400 hover:bg-white/[0.08] transition-all cursor-pointer border-0"
                                     title="Удалить задачу"
                                   >
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                               </div>
 
-                              {/* Course or Project snippet */}
+                              {/* Course or Project subtitle */}
                               {it.courseOrProject && (
-                                <span className="text-[10px] text-zinc-400 block mt-0.5 truncate">
-                                  📚 {it.courseOrProject}
+                                <span className="text-[11px] text-zinc-400 block mt-1 truncate">
+                                  {it.courseOrProject}
                                 </span>
                               )}
 
-                              {/* Notes snippet */}
+                              {/* Description / Notes snippet */}
                               {(it.notes || it.description) && (
-                                <p className="text-[11px] text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
+                                <p className="text-xs text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
                                   {it.notes || it.description}
                                 </p>
                               )}
                             </div>
                           </div>
 
-                          {/* Footer Badges & Subtask Progress */}
+                          {/* Clean Footer (ZERO border-t, pure layout) */}
                           <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              {/* Subtasks pill */}
+                              {/* Subtasks progress pill */}
                               {subtasksTotal > 0 && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] text-[10px] text-zinc-300">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.04] text-[10px] text-zinc-300 tabular-nums">
                                   <CheckSquare className="h-2.5 w-2.5 text-emerald-400" />
                                   <span>{subtasksDone}/{subtasksTotal}</span>
                                 </span>
                               )}
 
-                              {/* Priority pill */}
-                              {it.priority === 'high' && (
-                                <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-[10px] text-rose-300 font-medium">
-                                  Срочно
-                                </span>
-                              )}
-                              {it.priority === 'medium' && (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-300 font-medium">
-                                  Важно
-                                </span>
-                              )}
-
-                              {/* Deadline */}
+                              {/* Deadline pill */}
                               {it.deadline && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-zinc-400">
-                                  <Calendar className="h-2.5 w-2.5" />
-                                  {it.deadline.replace('2026-', '')}
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.04] text-[10px] text-zinc-300 tabular-nums">
+                                  <Calendar className="h-2.5 w-2.5 text-zinc-400" />
+                                  <span>{it.deadline.replace('2026-', '')}</span>
                                 </span>
                               )}
 
-                              {/* DFO timezone coordination badge */}
+                              {/* Timezone Note (e.g. +7ч ДФО) */}
                               {it.timezoneNote && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-[10px] text-amber-300">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-[10px] font-medium">
                                   <Globe2 className="h-2.5 w-2.5" />
                                   <span>{it.timezoneNote}</span>
                                 </span>
                               )}
 
-                              {/* External link */}
-                              {it.linkUrl && (
-                                <a
-                                  href={it.linkUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center gap-1 text-[10px] text-sky-400 hover:text-sky-300"
-                                >
-                                  <ExternalLink className="h-2.5 w-2.5" />
-                                  <span>Линк</span>
-                                </a>
-                              )}
-
-                              {/* TickTick synced badge */}
+                              {/* TickTick synced */}
                               {it.isTickTick && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-500/10 text-[10px] text-sky-400">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 text-[10px]">
                                   <Zap className="h-2.5 w-2.5" />
                                   <span>TickTick</span>
                                 </span>
                               )}
                             </div>
 
-                            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
-                              {it.user === 'egor' ? 'Егор' : it.user === 'anya' ? 'Аня' : 'Пара'}
+                            {/* Assignee Badge */}
+                            <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider rounded-full bg-white/[0.04] px-2 py-0.5">
+                              {it.user === 'egor' ? 'ЕГОР' : it.user === 'anya' ? 'АНЯ' : 'ПАРА'}
                             </span>
                           </div>
                         </div>
@@ -812,7 +766,7 @@ export const ShadcnStudyWork: React.FC = () => {
                         setQuickAddDeadline('');
                         soundEffects.playClick();
                       }}
-                      className="w-full py-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] text-xs text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                      className="w-full py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] text-xs text-zinc-400 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1 border-0"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>+ Добавить задачу</span>
@@ -825,11 +779,11 @@ export const ShadcnStudyWork: React.FC = () => {
         </div>
       )}
 
-      {/* ── 3. TAB 2: POMODORO FOCUS TIMER ── */}
+      {/* ── 3. TAB 2: POMODORO FOCUS TIMER (.nexus-surface) ── */}
       {activeTab === 'pomodoro' && (
-        <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-sm p-10 flex flex-col items-center justify-center space-y-8 text-center max-w-2xl mx-auto w-full animate-fade-in">
+        <div className="nexus-surface p-10 flex flex-col items-center justify-center space-y-8 text-center max-w-2xl mx-auto w-full">
           <div>
-            <h3 className="text-lg font-semibold text-zinc-100">
+            <h3 className="text-xl font-semibold text-white">
               Фокус-таймер учебы и проектов
             </h3>
             <p className="text-xs text-zinc-400 mt-1">
@@ -838,32 +792,35 @@ export const ShadcnStudyWork: React.FC = () => {
           </div>
 
           {/* Mode pills */}
-          <div className="flex items-center gap-2 bg-white/[0.04] p-1.5 rounded-xl">
+          <div className="flex items-center gap-2 bg-white/[0.04] p-1.5 rounded-full">
             <button
+              type="button"
               onClick={() => { setPomodoroMode('work'); soundEffects.playClick(); }}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-0 ${
                 pomodoroMode === 'work'
-                  ? 'bg-zinc-100 text-zinc-950 shadow-xs'
+                  ? 'bg-white text-zinc-950 shadow-xs'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               Фокус (25 мин)
             </button>
             <button
+              type="button"
               onClick={() => { setPomodoroMode('shortBreak'); soundEffects.playClick(); }}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-0 ${
                 pomodoroMode === 'shortBreak'
-                  ? 'bg-zinc-100 text-zinc-950 shadow-xs'
+                  ? 'bg-white text-zinc-950 shadow-xs'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               Короткий отдых (5 мин)
             </button>
             <button
+              type="button"
               onClick={() => { setPomodoroMode('longBreak'); soundEffects.playClick(); }}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-0 ${
                 pomodoroMode === 'longBreak'
-                  ? 'bg-zinc-100 text-zinc-950 shadow-xs'
+                  ? 'bg-white text-zinc-950 shadow-xs'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -871,9 +828,9 @@ export const ShadcnStudyWork: React.FC = () => {
             </button>
           </div>
 
-          {/* Giant Time Display */}
+          {/* Giant Time Display with tabular-nums */}
           <div className="py-6">
-            <span className="font-mono text-7xl font-bold tracking-tight text-zinc-100 tabular-nums">
+            <span className="text-7xl font-bold tracking-tight text-white tabular-nums">
               {timeFormatted}
             </span>
           </div>
@@ -882,16 +839,18 @@ export const ShadcnStudyWork: React.FC = () => {
           <div className="flex items-center gap-3">
             {pomodoroIsRunning ? (
               <button
+                type="button"
                 onClick={pausePomodoro}
-                className="h-12 px-8 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/20"
+                className="h-12 px-8 rounded-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/20 border-0"
               >
                 <Pause className="h-4 w-4" />
                 <span>Пауза</span>
               </button>
             ) : (
               <button
+                type="button"
                 onClick={startPomodoro}
-                className="h-12 px-8 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-white/10"
+                className="h-12 px-8 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 font-semibold text-sm flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-white/10 border-0"
               >
                 <Play className="h-4 w-4 fill-zinc-950" />
                 <span>Начать фокус</span>
@@ -899,8 +858,9 @@ export const ShadcnStudyWork: React.FC = () => {
             )}
 
             <button
+              type="button"
               onClick={resetPomodoro}
-              className="h-12 w-12 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 flex items-center justify-center transition-colors cursor-pointer"
+              className="h-12 w-12 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 flex items-center justify-center transition-all cursor-pointer border-0"
               title="Сбросить таймер"
             >
               <RotateCcw className="h-4 w-4" />
@@ -910,70 +870,61 @@ export const ShadcnStudyWork: React.FC = () => {
           {/* Sessions Counter */}
           <div className="pt-4 border-t border-white/[0.06] w-full flex items-center justify-around text-xs text-zinc-400">
             <div>
-              Завершено сессий: <span className="font-mono font-semibold text-zinc-200">{pomodoroCompletedSessions}</span>
+              Завершено сессий: <span className="font-semibold text-zinc-200 tabular-nums">{pomodoroCompletedSessions}</span>
             </div>
             <div>
-              Заработано XP: <span className="font-mono font-semibold text-amber-300">+{pomodoroCompletedSessions * 50} XP</span>
+              Заработано XP: <span className="font-semibold text-amber-300 tabular-nums">+{pomodoroCompletedSessions * 50} XP</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── 4. TAB 3: SCHEDULE & 100% INTERACTIVE BRS CALCULATORS ── */}
+      {/* ── 4. TAB 3: BRS & CALCULATORS (.nexus-surface, Only RUDN and HSE) ── */}
       {activeTab === 'brs' && (
-        <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-sm p-6 space-y-6 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
+        <div className="nexus-surface p-7 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <h3 className="text-base font-semibold text-zinc-100">
+              <h3 className="text-xl font-semibold tracking-tight text-white">
                 Калькуляторы оценивания: РУДН (БРС) & НИУ ВШЭ (10 баллов)
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
-                Интерактивный расчет оценок в реальном времени · Данные автоматически сохраняются в Supabase
+                Интерактивный расчет оценок в реальном времени · Данные автоматически сохраняются в облаке
               </p>
             </div>
 
-            {/* Sub-tab selection */}
-            <div className="flex items-center gap-2 bg-white/[0.04] p-1 rounded-xl">
+            {/* Exactly 2 Clean Sub-tabs: RUDN and HSE */}
+            <div className="flex items-center gap-1.5 bg-white/[0.04] p-1 rounded-full">
               <button
+                type="button"
                 onClick={() => { setBrsActiveSubTab('rudn'); soundEffects.playClick(); }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border-0 ${
                   brsActiveSubTab === 'rudn'
-                    ? 'bg-purple-500/25 text-purple-200 font-semibold'
+                    ? 'bg-purple-500/30 text-purple-200 font-semibold shadow-xs'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 РУДН (100 баллов · Аня)
               </button>
               <button
+                type="button"
                 onClick={() => { setBrsActiveSubTab('hse'); soundEffects.playClick(); }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border-0 ${
                   brsActiveSubTab === 'hse'
-                    ? 'bg-sky-500/25 text-sky-200 font-semibold'
+                    ? 'bg-sky-500/30 text-sky-200 font-semibold shadow-xs'
                     : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 НИУ ВШЭ (10 баллов · Егор)
-              </button>
-              <button
-                onClick={() => { setBrsActiveSubTab('radar'); soundEffects.playClick(); }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-                  brsActiveSubTab === 'radar'
-                    ? 'bg-amber-500/25 text-amber-200 font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Radio className="h-3 w-3 text-amber-400" />
-                <span>ДФО Радар Я-Профи</span>
               </button>
             </div>
           </div>
 
           {/* 4.1. RUDN 100-Point BRS System (Anya) */}
           {brsActiveSubTab === 'rudn' && (
-            <div className="space-y-4">
-              <div className="p-3.5 rounded-xl bg-purple-500/10 text-purple-200 text-xs flex items-center justify-between">
+            <div className="space-y-4 pt-2">
+              <div className="p-4 rounded-2xl bg-purple-500/10 text-purple-200 text-xs flex items-center justify-between">
                 <span>📚 <b>Шкала ECTS РУДН</b>: 95–100 (A, 5+), 86–94 (B, 5), 69–85 (C, 4), 61–68 (D, 3+), 51–60 (E, 3)</span>
-                <span className="font-mono">Макс: 60 + 20 + 20 = 100</span>
+                <span className="tabular-nums font-medium">Макс: 60 + 20 + 20 = 100</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1003,7 +954,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   return (
                     <div
                       key={subj.id}
-                      className="p-4 rounded-xl bg-white/[0.04] space-y-4 shadow-xs"
+                      className="p-5 rounded-2xl bg-white/[0.025] space-y-4"
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
@@ -1014,7 +965,7 @@ export const ShadcnStudyWork: React.FC = () => {
                             РУДН Онлайн · Психология
                           </span>
                         </div>
-                        <span className={`font-mono text-xs px-2.5 py-0.5 rounded-full font-medium ${gradeColor}`}>
+                        <span className={`tabular-nums text-xs px-2.5 py-0.5 rounded-full font-medium ${gradeColor}`}>
                           {total} / 100 · {gradeLabel}
                         </span>
                       </div>
@@ -1026,13 +977,13 @@ export const ShadcnStudyWork: React.FC = () => {
                           <div className="flex justify-between items-center text-zinc-400">
                             <span>Текущий контроль (лекции/кейсы, 0-60)</span>
                             <div className="flex items-center gap-1">
-                              <Input
+                              <input
                                 type="number"
                                 min={0}
                                 max={60}
                                 value={subj.currentControl}
                                 onChange={(e) => updateRUDNSubjectScore(subj.id, 'currentControl', Math.min(60, Math.max(0, Number(e.target.value))))}
-                                className="h-6 w-14 text-center font-mono text-xs bg-zinc-900 border-none p-0 text-zinc-100"
+                                className="h-6 w-14 text-center tabular-nums text-xs bg-white/[0.06] rounded-full border-0 p-0 text-zinc-100 outline-none"
                               />
                               <span className="text-[10px] text-zinc-500">/ 60</span>
                             </div>
@@ -1052,13 +1003,13 @@ export const ShadcnStudyWork: React.FC = () => {
                           <div className="flex justify-between items-center text-zinc-400">
                             <span>Рубежный контроль (тесты, 0-20)</span>
                             <div className="flex items-center gap-1">
-                              <Input
+                              <input
                                 type="number"
                                 min={0}
                                 max={20}
                                 value={subj.milestoneControl}
                                 onChange={(e) => updateRUDNSubjectScore(subj.id, 'milestoneControl', Math.min(20, Math.max(0, Number(e.target.value))))}
-                                className="h-6 w-14 text-center font-mono text-xs bg-zinc-900 border-none p-0 text-zinc-100"
+                                className="h-6 w-14 text-center tabular-nums text-xs bg-white/[0.06] rounded-full border-0 p-0 text-zinc-100 outline-none"
                               />
                               <span className="text-[10px] text-zinc-500">/ 20</span>
                             </div>
@@ -1078,13 +1029,13 @@ export const ShadcnStudyWork: React.FC = () => {
                           <div className="flex justify-between items-center text-zinc-400">
                             <span>Экзамен / Зачет (сессия, 0-20)</span>
                             <div className="flex items-center gap-1">
-                              <Input
+                              <input
                                 type="number"
                                 min={0}
                                 max={20}
                                 value={subj.finalExam}
                                 onChange={(e) => updateRUDNSubjectScore(subj.id, 'finalExam', Math.min(20, Math.max(0, Number(e.target.value))))}
-                                className="h-6 w-14 text-center font-mono text-xs bg-zinc-900 border-none p-0 text-zinc-100"
+                                className="h-6 w-14 text-center tabular-nums text-xs bg-white/[0.06] rounded-full border-0 p-0 text-zinc-100 outline-none"
                               />
                               <span className="text-[10px] text-zinc-500">/ 20</span>
                             </div>
@@ -1100,7 +1051,12 @@ export const ShadcnStudyWork: React.FC = () => {
                         </div>
                       </div>
 
-                      <Progress value={total} className="h-2 bg-white/5" />
+                      <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-400 transition-all duration-300"
+                          style={{ width: `${Math.min(100, total)}%` }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -1110,10 +1066,10 @@ export const ShadcnStudyWork: React.FC = () => {
 
           {/* 4.2. HSE 10-Point Cumulative System (Egor) */}
           {brsActiveSubTab === 'hse' && (
-            <div className="space-y-4">
-              <div className="p-3.5 rounded-xl bg-sky-500/10 text-sky-200 text-xs flex items-center justify-between">
+            <div className="space-y-4 pt-2">
+              <div className="p-4 rounded-2xl bg-sky-500/10 text-sky-200 text-xs flex items-center justify-between">
                 <span>🎓 <b>Формула НИУ ВШЭ</b>: О_итог = Округление(Σ(О_компонент × Вес)). Оценка от 1 до 10 (8-10 Отлично, 6-7 Хорошо)</span>
-                <span className="font-mono">Шкала: 10 баллов</span>
+                <span className="tabular-nums font-medium">Шкала: 10 баллов</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1125,7 +1081,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   return (
                     <div
                       key={calc.id}
-                      className="p-5 rounded-xl bg-white/[0.04] space-y-4 shadow-xs"
+                      className="p-5 rounded-2xl bg-white/[0.025] space-y-4"
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
@@ -1136,7 +1092,7 @@ export const ShadcnStudyWork: React.FC = () => {
                             Целевая оценка: {calc.targetScore} / 10 · {isGoalAchieved ? '🎯 Цель достигнута!' : 'В процессе'}
                           </span>
                         </div>
-                        <span className={`font-mono text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                        <span className={`tabular-nums text-xs px-2.5 py-0.5 rounded-full font-medium ${
                           roundedScore >= 8 ? 'text-emerald-400 bg-emerald-500/15' : 'text-sky-400 bg-sky-500/15'
                         }`}>
                           Итог: {roundedScore} / 10 ({totalScore.toFixed(2)})
@@ -1151,29 +1107,29 @@ export const ShadcnStudyWork: React.FC = () => {
                               <span className="truncate pr-2">{comp.name}</span>
                               <div className="flex items-center gap-2 shrink-0">
                                 {/* Editable Weight */}
-                                <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-mono">
+                                <div className="flex items-center gap-1 text-[11px] text-zinc-400 tabular-nums">
                                   <span>вес:</span>
-                                  <Input
+                                  <input
                                     type="number"
                                     step="0.05"
                                     min="0"
                                     max="1"
                                     value={comp.weight}
                                     onChange={(e) => updateHSEComponentWeight(calc.id, comp.id, Number(e.target.value))}
-                                    className="h-5 w-12 text-center font-mono text-[11px] bg-zinc-900 border-none p-0 text-zinc-200"
+                                    className="h-5 w-12 text-center tabular-nums text-[11px] bg-white/[0.06] rounded-full border-0 p-0 text-zinc-200 outline-none"
                                   />
                                 </div>
 
                                 {/* Editable Score (0 to 10) */}
-                                <div className="flex items-center gap-1 text-zinc-200 font-mono font-medium">
-                                  <Input
+                                <div className="flex items-center gap-1 text-zinc-200 tabular-nums font-medium">
+                                  <input
                                     type="number"
                                     step="0.5"
                                     min="0"
                                     max="10"
                                     value={comp.score}
                                     onChange={(e) => updateHSEComponentScore(calc.id, comp.id, Number(e.target.value))}
-                                    className="h-6 w-12 text-center font-mono text-xs bg-zinc-900 border-none p-0 text-zinc-100"
+                                    className="h-6 w-12 text-center tabular-nums text-xs bg-white/[0.06] rounded-full border-0 p-0 text-zinc-100 outline-none"
                                   />
                                   <span className="text-[10px] text-zinc-500">/ 10</span>
                                 </div>
@@ -1193,26 +1149,24 @@ export const ShadcnStudyWork: React.FC = () => {
                         ))}
                       </div>
 
-                      <Progress value={roundedScore * 10} className="h-2 bg-white/5" />
+                      <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                        <div 
+                          className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-400 transition-all duration-300"
+                          style={{ width: `${Math.min(100, roundedScore * 10)}%` }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
           )}
-
-          {/* 4.3. Ya-Profi Radar DFO / CFO */}
-          {brsActiveSubTab === 'radar' && (
-            <div className="animate-fade-in">
-              <YaProfiMapRadar />
-            </div>
-          )}
         </div>
       )}
 
-      {/* ── 5. RIGHT SHEET DRAWER (Full CRUD Card Editor) ── */}
+      {/* ── 5. RIGHT SHEET DRAWER (Full CRUD Card Editor, Zero Nested Borders) ── */}
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-zinc-950/95 backdrop-blur-3xl text-zinc-100 p-6 space-y-6 [scrollbar-width:thin]">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-[#0D101A]/95 backdrop-blur-3xl text-zinc-100 p-6 space-y-6 border-l border-white/[0.08] [scrollbar-width:thin]">
           <SheetHeader className="text-left space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/[0.04] text-zinc-300">
@@ -1241,7 +1195,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Что нужно сдать или сделать?"
-                className="bg-white/[0.04] text-zinc-100 text-xs border-none focus-visible:ring-1 focus-visible:ring-sky-500"
+                className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9 focus-visible:ring-1 focus-visible:ring-sky-500"
               />
             </div>
 
@@ -1252,7 +1206,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 value={editCourseOrProject}
                 onChange={(e) => setEditCourseOrProject(e.target.value)}
                 placeholder="Например: Распределенные системы, Клиническая психология, Nexus Web"
-                className="bg-white/[0.04] text-zinc-100 text-xs border-none focus-visible:ring-1 focus-visible:ring-sky-500"
+                className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9 focus-visible:ring-1 focus-visible:ring-sky-500"
               />
             </div>
 
@@ -1260,10 +1214,10 @@ export const ShadcnStudyWork: React.FC = () => {
             <div className="space-y-1.5">
               <label className="text-zinc-300 font-medium">Направление (колонка)</label>
               <Select value={editSpace} onValueChange={setEditSpace}>
-                <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs border-none">
+                <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9">
                   <SelectValue placeholder="Выберите направление" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
+                <SelectContent className="bg-[#0D101A] border-white/[0.08] text-zinc-100 text-xs rounded-2xl">
                   {MASTER_COLUMNS.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.title}
@@ -1278,10 +1232,10 @@ export const ShadcnStudyWork: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-zinc-300 font-medium">Ответственный</label>
                 <Select value={editUser} onValueChange={(val: any) => setEditUser(val)}>
-                  <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs border-none">
+                  <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
+                  <SelectContent className="bg-[#0D101A] border-white/[0.08] text-zinc-100 text-xs rounded-2xl">
                     <SelectItem value="egor">Егор</SelectItem>
                     <SelectItem value="anya">Аня</SelectItem>
                     <SelectItem value="together">Вместе (Пара)</SelectItem>
@@ -1292,10 +1246,10 @@ export const ShadcnStudyWork: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-zinc-300 font-medium">Приоритет</label>
                 <Select value={editPriority} onValueChange={(val: any) => setEditPriority(val)}>
-                  <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs border-none">
+                  <SelectTrigger className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-none text-zinc-100 text-xs">
+                  <SelectContent className="bg-[#0D101A] border-white/[0.08] text-zinc-100 text-xs rounded-2xl">
                     <SelectItem value="high">Срочно (высокий)</SelectItem>
                     <SelectItem value="medium">Важно (средний)</SelectItem>
                     <SelectItem value="low">Обычный (плановый)</SelectItem>
@@ -1312,7 +1266,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   type="date"
                   value={editDeadline}
                   onChange={(e) => setEditDeadline(e.target.value)}
-                  className="bg-white/[0.04] text-zinc-100 text-xs border-none focus-visible:ring-1 focus-visible:ring-sky-500"
+                  className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9 focus-visible:ring-1 focus-visible:ring-sky-500"
                 />
               </div>
 
@@ -1322,7 +1276,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   value={editTimezoneNote}
                   onChange={(e) => setEditTimezoneNote(e.target.value)}
                   placeholder="напр. +7ч ДФО / МСК"
-                  className="bg-white/[0.04] text-zinc-100 text-xs border-none focus-visible:ring-1 focus-visible:ring-sky-500"
+                  className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9 focus-visible:ring-1 focus-visible:ring-sky-500"
                 />
               </div>
             </div>
@@ -1334,7 +1288,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   <CheckSquare className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Чек-лист сдачи / подзадач</span>
                 </label>
-                <span className="text-[11px] text-zinc-400 font-mono">
+                <span className="text-[11px] text-zinc-400 tabular-nums">
                   {selectedItem?.subtasks?.filter((s) => s.completed).length || 0} / {selectedItem?.subtasks?.length || 0}
                 </span>
               </div>
@@ -1344,7 +1298,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 {selectedItem?.subtasks?.map((sub) => (
                   <div
                     key={sub.id}
-                    className="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/[0.03]"
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white/[0.03]"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Checkbox
@@ -1363,7 +1317,7 @@ export const ShadcnStudyWork: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => selectedItem && deleteStudyWorkSubtask(selectedItem.id, sub.id)}
-                      className="text-zinc-500 hover:text-red-400 p-0.5"
+                      className="text-zinc-500 hover:text-red-400 p-0.5 border-0 bg-transparent cursor-pointer"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -1380,12 +1334,12 @@ export const ShadcnStudyWork: React.FC = () => {
                     if (e.key === 'Enter') handleAddSubtaskInDrawer();
                   }}
                   placeholder="Добавить пункт чек-листа... (Enter)"
-                  className="h-8 text-xs bg-white/[0.04] text-zinc-100 border-none"
+                  className="h-9 text-xs bg-white/[0.04] text-zinc-100 border-0 rounded-full"
                 />
                 <Button
                   size="sm"
                   onClick={handleAddSubtaskInDrawer}
-                  className="h-8 px-3 text-xs bg-white/[0.08] hover:bg-white/[0.15] text-zinc-200"
+                  className="h-9 px-3 text-xs bg-white/[0.08] hover:bg-white/[0.15] text-zinc-200 rounded-full"
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
@@ -1403,7 +1357,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 value={editNotes}
                 onChange={(e) => setEditNotes(e.target.value)}
                 placeholder="Требования к сдаче, репозиторий, темы доклада..."
-                className="w-full p-2.5 rounded-lg bg-white/[0.04] text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none leading-relaxed border-none"
+                className="w-full p-3 rounded-2xl bg-white/[0.04] text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none leading-relaxed border-0"
               />
             </div>
 
@@ -1419,14 +1373,14 @@ export const ShadcnStudyWork: React.FC = () => {
                   value={editLinkUrl}
                   onChange={(e) => setEditLinkUrl(e.target.value)}
                   placeholder="https://..."
-                  className="bg-white/[0.04] text-zinc-100 text-xs border-none focus-visible:ring-1 focus-visible:ring-sky-500 flex-1"
+                  className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9 focus-visible:ring-1 focus-visible:ring-sky-500 flex-1"
                 />
                 {editLinkUrl && (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => window.open(editLinkUrl, '_blank')}
-                    className="h-8 px-2.5 text-xs bg-white/[0.04] text-zinc-200 border-none"
+                    className="h-9 px-3 text-xs bg-white/[0.06] text-zinc-200 border-0 rounded-full"
                   >
                     Открыть
                   </Button>
@@ -1440,7 +1394,7 @@ export const ShadcnStudyWork: React.FC = () => {
               variant="destructive"
               size="sm"
               onClick={handleDeleteFromDrawer}
-              className="text-xs gap-1.5 bg-red-500/20 text-red-300 hover:bg-red-500/30 border-none cursor-pointer"
+              className="text-xs gap-1.5 bg-red-500/20 text-red-300 hover:bg-red-500/30 border-0 rounded-full cursor-pointer"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Удалить задачу</span>
@@ -1449,7 +1403,7 @@ export const ShadcnStudyWork: React.FC = () => {
             <Button
               size="sm"
               onClick={handleSaveDrawer}
-              className="text-xs bg-zinc-100 text-zinc-950 hover:bg-white font-medium shadow-sm px-5 cursor-pointer"
+              className="text-xs bg-white text-zinc-950 hover:bg-zinc-100 font-semibold shadow-sm px-5 rounded-full cursor-pointer"
             >
               Сохранить изменения
             </Button>

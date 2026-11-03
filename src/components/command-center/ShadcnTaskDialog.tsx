@@ -92,52 +92,52 @@ export const ShadcnTaskDialog: React.FC<ShadcnTaskDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#0D101A]/95 border-white/[0.08] shadow-[0_25px_60px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl rounded-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base font-semibold text-white tracking-tight">
               {taskToEdit ? 'Редактировать задачу' : 'Новая задача в NEXUS'}
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
+            <DialogDescription className="text-xs text-zinc-400">
               Задача сохранится локально и будет отправлена в очередь синхронизации.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Название задачи</label>
+              <label className="text-[11px] font-medium text-zinc-400">Название задачи</label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Что нужно сделать..."
-                className="mt-1"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-white placeholder-zinc-500 focus-visible:ring-1 focus-visible:ring-white/20 rounded-xl"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Заметки / Описание</label>
+              <label className="text-[11px] font-medium text-zinc-400">Заметки / Описание</label>
               <Input
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Дополнительные детали..."
-                className="mt-1"
+                className="mt-1 bg-white/[0.04] border-white/[0.08] text-white placeholder-zinc-500 focus-visible:ring-1 focus-visible:ring-white/20 rounded-xl"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Исполнитель</label>
-                <div className="flex rounded-md border p-1 gap-1 mt-1">
+                <label className="text-[11px] font-medium text-zinc-400">Исполнитель</label>
+                <div className="flex rounded-xl bg-white/[0.04] p-1 gap-1 mt-1">
                   {(['together', 'egor', 'anya'] as const).map((a) => (
                     <button
                       key={a}
                       type="button"
                       onClick={() => setAssignee(a)}
-                      className={`flex-1 py-1 text-xs rounded transition-colors ${
+                      className={`flex-1 py-1 text-xs rounded-lg transition-all ${
                         assignee === a
-                          ? 'bg-secondary font-semibold text-secondary-foreground shadow-xs'
-                          : 'text-muted-foreground hover:text-foreground'
+                          ? 'bg-white/10 font-medium text-white shadow-sm'
+                          : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
                       {a === 'together' ? 'Вместе' : a === 'egor' ? 'Егор' : 'Аня'}
@@ -147,28 +147,28 @@ export const ShadcnTaskDialog: React.FC<ShadcnTaskDialogProps> = ({
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Дата (ГГГГ-ММ-ДД)</label>
+                <label className="text-[11px] font-medium text-zinc-400">Дата (ГГГГ-ММ-ДД)</label>
                 <Input
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   placeholder="2026-11-02 или inbox"
-                  className="mt-1 font-mono text-xs"
+                  className="mt-1 tabular-nums text-xs bg-white/[0.04] border-white/[0.08] text-white placeholder-zinc-500 focus-visible:ring-1 focus-visible:ring-white/20 rounded-xl"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Помещение</label>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <label className="text-[11px] font-medium text-zinc-400">Помещение</label>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {roomsList.map((r) => (
                   <button
                     key={r}
                     type="button"
                     onClick={() => setRoom(r)}
-                    className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+                    className={`px-2.5 py-1 text-xs rounded-lg transition-all ${
                       room === r
-                        ? 'bg-secondary font-semibold text-secondary-foreground border-foreground/20'
-                        : 'border-transparent text-muted-foreground hover:bg-muted/40'
+                        ? 'bg-white/10 font-medium text-white shadow-sm'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]'
                     }`}
                   >
                     {r}
@@ -178,23 +178,34 @@ export const ShadcnTaskDialog: React.FC<ShadcnTaskDialogProps> = ({
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
+          <DialogFooter className="flex items-center justify-between sm:justify-between w-full pt-2">
             {taskToEdit ? (
               <Button
                 type="button"
                 variant="destructive"
                 size="sm"
                 onClick={() => onDelete(taskToEdit.id)}
+                className="rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
               >
                 Удалить
               </Button>
             ) : <div />}
 
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={onClose}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={onClose}
+                className="rounded-xl bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.08] text-zinc-300"
+              >
                 Отмена
               </Button>
-              <Button type="submit" size="sm">
+              <Button 
+                type="submit" 
+                size="sm"
+                className="rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 font-medium shadow-sm"
+              >
                 {taskToEdit ? 'Сохранить' : 'Создать задачу'}
               </Button>
             </div>
