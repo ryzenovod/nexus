@@ -23,6 +23,7 @@ import {
   SheetDescription 
 } from '@/components/ui/sheet';
 import { NexusTask, Assignee } from '@/types/nexus';
+import { InlineNumber } from '@/components/ui/inline-edit';
 import { useNexusStore } from '@/store/useNexusStore';
 
 interface ShadcnOverviewProps {
@@ -50,7 +51,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
   onAssigneeChange,
   onNavigateTab,
 }) => {
-  const { gcalEvents, budget, utilityBills, addTask } = useNexusStore();
+  const { gcalEvents, budget, utilityBills, addTask, updateBudgetBalance, updateBudgetContributions } = useNexusStore();
   const [selectedRoom, setSelectedRoom] = useState<string>('Все');
   const [taskSearch, setTaskSearch] = useState<string>('');
   const [activeHubTask, setActiveHubTask] = useState<NexusTask | null>(null);
@@ -298,12 +299,32 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
               <CreditCard className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-3xl font-semibold tracking-tight text-white tabular-nums">
-            {budgetCollected.toLocaleString('ru-RU')} ₽ 
+          <div className="text-3xl font-semibold tracking-tight text-white tabular-nums flex items-baseline gap-2">
+            <InlineNumber
+              value={budgetCollected}
+              onChange={(val) => updateBudgetBalance(val)}
+              suffix=" ₽"
+              className="text-3xl font-semibold tracking-tight text-white tabular-nums"
+            />
             {budgetTarget > 0 ? (
-              <span className="text-sm font-normal text-zinc-400"> / {budgetTarget.toLocaleString('ru-RU')} ₽</span>
+              <span className="text-sm font-normal text-zinc-400">
+                / <InlineNumber
+                  value={budgetTarget}
+                  onChange={(val) => updateBudgetContributions(budget.egorContribution, budget.anyaContribution, val)}
+                  suffix=" ₽"
+                  className="text-sm font-normal text-zinc-400 hover:text-zinc-200"
+                />
+              </span>
             ) : (
-              <span className="text-sm font-normal text-zinc-500"> (цель не задана)</span>
+              <span className="text-sm font-normal text-zinc-500">
+                / <InlineNumber
+                  value={0}
+                  placeholder="Задать цель"
+                  onChange={(val) => updateBudgetContributions(budget.egorContribution, budget.anyaContribution, val)}
+                  suffix=" ₽"
+                  className="text-sm font-normal text-zinc-500 hover:text-zinc-300"
+                />
+              </span>
             )}
           </div>
           {budgetTarget > 0 ? (

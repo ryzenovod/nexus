@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { 
   CreditCard, 
   ArrowDownRight, 
+  ArrowUpRight,
   Plus, 
   Receipt, 
   Zap, 
@@ -10,10 +11,13 @@ import {
   ExternalLink,
   Sparkles,
   Trash2,
-  Edit3
+  Edit3,
+  History,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InlineText, InlineNumber } from '@/components/ui/inline-edit';
 import { 
   Dialog, 
   DialogContent, 
@@ -165,14 +169,22 @@ export const ShadcnFinances: React.FC = () => {
     cashbackCards,
     utilityBills,
     transactions,
+    addTransaction,
+    deleteTransaction,
+    updateTransaction,
+    updateBudget,
     addCashbackCategory,
     removeCashbackCategory,
+    updateCashbackCategory,
     addCashbackCard,
     updateCashbackCard,
     deleteCashbackCard,
     claimCashbackForCard,
     updateBudgetBalance,
     updateBudgetContributions,
+    addUtilityBill,
+    deleteUtilityBill,
+    resetUtilityBillsMonth,
     updateUtilityBill,
     payUtilityBill,
     toggleTaskCompletion,
@@ -202,8 +214,8 @@ export const ShadcnFinances: React.FC = () => {
   const budgetCollected = budget.currentBalance || 0;
   const budgetTarget = budget.totalTarget || 0;
 
-  const egorTarget = budgetTarget > 0 ? Math.round(budgetTarget / 2) : 0;
-  const anyaTarget = budgetTarget > 0 ? Math.round(budgetTarget / 2) : 0;
+  const egorTarget = budget.egorTarget ?? (budgetTarget > 0 ? Math.round(budgetTarget / 2) : 0);
+  const anyaTarget = budget.anyaTarget ?? (budgetTarget > 0 ? Math.round(budgetTarget / 2) : 0);
   const egorProgress = egorTarget > 0 ? Math.min(100, Math.round((budget.egorContribution / egorTarget) * 100)) : 0;
   const anyaProgress = anyaTarget > 0 ? Math.min(100, Math.round((budget.anyaContribution / anyaTarget) * 100)) : 0;
 
@@ -217,10 +229,11 @@ export const ShadcnFinances: React.FC = () => {
   }, [utilityBills]);
 
   const totalCreditedCashback = useMemo(() => {
+    if (budget.customSavingsAmount !== undefined) return budget.customSavingsAmount;
     return (transactions || [])
       .filter((tx) => tx.type === 'income' && (tx.category === 'Кэшбэк' || tx.title.toLowerCase().includes('кэшбэк') || tx.title.toLowerCase().includes('кэшбек')))
       .reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  }, [transactions]);
+  }, [transactions, budget.customSavingsAmount]);
 
   // Recharts data for budget dynamics (real data without fake numbers)
   const chartData = [
@@ -339,12 +352,48 @@ export const ShadcnFinances: React.FC = () => {
 
   const handleConfirmDeposit = () => {
     const val = parseFloat(depositAmount) || 0;
+    if (val <= 0) return;
     if (depositUser === 'egor') {
       updateBudgetContributions(budget.egorContribution + val, budget.anyaContribution, budgetTarget);
+      addTransaction({
+        title: 'Вклад в бюджет: Егор',
+        amount: val,
+        type: 'income',
+        category: 'Вклад',
+        paidBy: 'egor',
+        splitRatio: '50/50',
+        date: new Date().toISOString().slice(0, 10),
+      });
     } else {
       updateBudgetContributions(budget.egorContribution, budget.anyaContribution + val, budgetTarget);
+      addTransaction({
+        title: 'Вклад в бюджет: Аня',
+        amount: val,
+        type: 'income',
+        category: 'Вклад',
+        paidBy: 'anya',
+        splitRatio: '50/50',
+        date: new Date().toISOString().slice(0, 10),
+      });
     }
     setIsDepositModalOpen(false);
+  };
+
+  const handleQuickAddExpense = () => {
+    const amountStr = prompt('Сумма расхода (₽):', '');
+    if (!amountStr) return;
+    const val = parseFloat(amountStr);
+    if (!val || val <= 0) return;
+    const title = prompt('Описание расхода (напр. Продукты, Быт):', 'Бытовые расходы') || 'Бытовые расходы';
+    addTransaction({
+      title,
+      amount: val,
+      type: 'expense',
+      category: 'Быт',
+      paidBy: 'joint',
+      splitRatio: '50/50',
+      date: new Date().toISOString().slice(0, 10),
+    });
   };
 
   return (
@@ -362,25 +411,37 @@ export const ShadcnFinances: React.FC = () => {
               </span>
             </div>
             <div className="text-4xl sm:text-5xl font-semibold tracking-tight text-white tabular-nums mt-2 flex flex-wrap items-baseline gap-2">
-              <span>{budgetCollected.toLocaleString('ru-RU')} ₽</span>
-              <button
-                type="button"
-                onClick={() => {
-                  const newTargetStr = prompt('Укажите общую цель/лимит бюджета (₽):', budgetTarget > 0 ? String(budgetTarget) : '');
-                  if (newTargetStr !== null) {
-                    const val = parseFloat(newTargetStr) || 0;
-                    updateBudgetContributions(budget.egorContribution, budget.anyaContribution, val);
-                  }
-                }}
-                className="hover:underline text-zinc-400 hover:text-zinc-200 cursor-pointer text-lg sm:text-xl font-normal inline-flex items-center gap-1.5 transition-colors border-0 bg-transparent"
-                title="Нажмите, чтобы изменить цель бюджета"
-              >
-                / {budgetTarget > 0 ? `${budgetTarget.toLocaleString('ru-RU')} ₽ цель` : 'Задать цель'} ✎
-              </button>
+              <InlineNumber
+                value={budgetCollected}
+                onChange={(val) => updateBudgetBalance(val)}
+                suffix=" ₽"
+                className="text-4xl sm:text-5xl font-semibold tracking-tight text-white tabular-nums"
+              />
+              <span className="text-zinc-500 font-normal text-2xl sm:text-3xl">/</span>
+              <InlineNumber
+                value={budgetTarget}
+                onChange={(val) => updateBudgetContributions(budget.egorContribution, budget.anyaContribution, val)}
+                placeholder="Задать цель"
+                suffix=" ₽ цель"
+                className="text-lg sm:text-xl font-normal text-zinc-400 hover:text-zinc-200"
+              />
             </div>
-            <p className="text-xs text-zinc-400 mt-2">
-              {budget.depositDates ? `Взносы: ${budget.depositDates}. Общий баланс и операции пары.` : 'Общий баланс и история операций пары.'}
-            </p>
+            <div className="text-xs text-zinc-400 mt-2 flex flex-wrap items-center gap-1.5">
+              <span>Взносы:</span>
+              <InlineText
+                value={budget.depositDates || '10 и 25 числа каждого месяца'}
+                onChange={(val) => updateBudget({ depositDates: val })}
+                placeholder="Указать даты взносов"
+                className="text-zinc-300 font-medium"
+              />
+              <span className="text-zinc-600">·</span>
+              <InlineText
+                value={budget.notes || 'Общий баланс и операции пары'}
+                onChange={(val) => updateBudget({ notes: val })}
+                placeholder="Заметка к бюджету..."
+                className="text-zinc-400"
+              />
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -406,13 +467,7 @@ export const ShadcnFinances: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                const amount = prompt('Сумма расхода (₽):', '');
-                if (amount) {
-                  const val = parseFloat(amount);
-                  if (val > 0) updateBudgetBalance(budgetCollected - val);
-                }
-              }}
+              onClick={handleQuickAddExpense}
               className="rounded-full bg-white text-zinc-950 hover:bg-zinc-100 px-5 py-2.5 text-xs font-semibold shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all cursor-pointer border-0"
             >
               Записать операцию
@@ -426,10 +481,25 @@ export const ShadcnFinances: React.FC = () => {
           <div className="rounded-2xl bg-white/[0.025] p-5 space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="text-zinc-300 font-medium">Вклад Егора</span>
-              <span className="text-white font-medium tabular-nums">
-                {budget.egorContribution.toLocaleString('ru-RU')} ₽
-                {egorTarget > 0 && ` / ${egorTarget.toLocaleString('ru-RU')} ₽ (${egorProgress}%)`}
-              </span>
+              <div className="flex items-center gap-1 text-white font-medium tabular-nums">
+                <InlineNumber
+                  value={budget.egorContribution}
+                  onChange={(val) => updateBudgetContributions(val, budget.anyaContribution, budgetTarget)}
+                  suffix=" ₽"
+                  className="text-white font-medium tabular-nums"
+                />
+                <span className="text-zinc-500">/</span>
+                <InlineNumber
+                  value={egorTarget}
+                  onChange={(val) => updateBudget({ egorTarget: val })}
+                  placeholder="Цель"
+                  suffix=" ₽"
+                  className="text-zinc-400 hover:text-zinc-200 tabular-nums"
+                />
+                {egorTarget > 0 && (
+                  <span className="text-zinc-500 text-[11px] ml-1">({egorProgress}%)</span>
+                )}
+              </div>
             </div>
             {egorTarget > 0 ? (
               <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
@@ -438,19 +508,40 @@ export const ShadcnFinances: React.FC = () => {
                   style={{ width: `${egorProgress}%` }}
                 />
               </div>
-            ) : (
-              <p className="text-[11px] text-zinc-500">Вклад зафиксирован</p>
-            )}
+            ) : null}
+            <div className="text-[11px] text-zinc-500">
+              <InlineText
+                value={budget.egorNote || 'Вклад зафиксирован'}
+                onChange={(val) => updateBudget({ egorNote: val })}
+                placeholder="Заметка к вкладу..."
+                className="text-zinc-500 hover:text-zinc-300"
+              />
+            </div>
           </div>
 
           {/* Anya Contribution */}
           <div className="rounded-2xl bg-white/[0.025] p-5 space-y-3">
             <div className="flex justify-between items-center text-xs">
               <span className="text-zinc-300 font-medium">Вклад Ани</span>
-              <span className="text-white font-medium tabular-nums">
-                {budget.anyaContribution.toLocaleString('ru-RU')} ₽
-                {anyaTarget > 0 && ` / ${anyaTarget.toLocaleString('ru-RU')} ₽ (${anyaProgress}%)`}
-              </span>
+              <div className="flex items-center gap-1 text-white font-medium tabular-nums">
+                <InlineNumber
+                  value={budget.anyaContribution}
+                  onChange={(val) => updateBudgetContributions(budget.egorContribution, val, budgetTarget)}
+                  suffix=" ₽"
+                  className="text-white font-medium tabular-nums"
+                />
+                <span className="text-zinc-500">/</span>
+                <InlineNumber
+                  value={anyaTarget}
+                  onChange={(val) => updateBudget({ anyaTarget: val })}
+                  placeholder="Цель"
+                  suffix=" ₽"
+                  className="text-zinc-400 hover:text-zinc-200 tabular-nums"
+                />
+                {anyaTarget > 0 && (
+                  <span className="text-zinc-500 text-[11px] ml-1">({anyaProgress}%)</span>
+                )}
+              </div>
             </div>
             {anyaTarget > 0 ? (
               <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
@@ -459,9 +550,15 @@ export const ShadcnFinances: React.FC = () => {
                   style={{ width: `${anyaProgress}%` }}
                 />
               </div>
-            ) : (
-              <p className="text-[11px] text-zinc-500">Вклад зафиксирован</p>
-            )}
+            ) : null}
+            <div className="text-[11px] text-zinc-500">
+              <InlineText
+                value={budget.anyaNote || 'Вклад зафиксирован'}
+                onChange={(val) => updateBudget({ anyaNote: val })}
+                placeholder="Заметка к вкладу..."
+                className="text-zinc-500 hover:text-zinc-300"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -493,8 +590,8 @@ export const ShadcnFinances: React.FC = () => {
               <span>+ Добавить карту</span>
             </button>
             <div className="flex items-center text-xs text-amber-300 bg-amber-500/10 gap-1.5 py-1.5 px-3 rounded-full">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-              <span>Зачислено кэшбэка: <strong className="font-semibold tabular-nums">{totalCreditedCashback.toLocaleString('ru-RU')} ₽</strong></span>
+              <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              <span>Зачислено кэшбэка: <InlineNumber value={totalCreditedCashback} onChange={(val) => updateBudget({ customSavingsAmount: val })} suffix=" ₽" className="font-semibold tabular-nums text-amber-300" /></span>
             </div>
           </div>
         </div>
@@ -558,19 +655,34 @@ export const ShadcnFinances: React.FC = () => {
                   <div className="relative z-10 flex items-end justify-between text-white drop-shadow-sm">
                     <div>
                       <div className="text-xs tracking-wider text-white/90 tabular-nums font-medium">
-                        {digits}
+                        <InlineText
+                          value={digits}
+                          onChange={(val) => updateCashbackCard(card.id, { digits: val.replace(/\D/g, '').slice(-4) })}
+                          placeholder="•••• 0000"
+                          className="text-white/90 font-medium tracking-wider"
+                        />
                       </div>
                       <div className="text-[10px] uppercase tracking-wider text-white/90 font-semibold truncate max-w-[120px] mt-0.5">
-                        {holder}
+                        <InlineText
+                          value={holder}
+                          onChange={(val) => updateCashbackCard(card.id, { cardHolder: val.toUpperCase() })}
+                          placeholder="HOLDER"
+                          className="text-white/90 font-semibold uppercase tracking-wider"
+                        />
                       </div>
                     </div>
 
-                    {card.expiry ? (
-                      <div className="text-right">
-                        <div className="text-[8px] uppercase tracking-widest text-white/60">VALID</div>
-                        <div className="text-[10px] text-white/90 tabular-nums font-medium">{card.expiry}</div>
+                    <div className="text-right">
+                      <div className="text-[8px] uppercase tracking-widest text-white/60">VALID</div>
+                      <div className="text-[10px] text-white/90 tabular-nums font-medium">
+                        <InlineText
+                          value={card.expiry || '12/28'}
+                          onChange={(val) => updateCashbackCard(card.id, { expiry: val })}
+                          placeholder="MM/YY"
+                          className="text-white/90 tabular-nums font-medium"
+                        />
                       </div>
-                    ) : null}
+                    </div>
                   </div>
                 </div>
 
@@ -615,10 +727,22 @@ export const ShadcnFinances: React.FC = () => {
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="text-lg font-semibold text-white tracking-tight">{currentCard.bankName}</h4>
-                    <span className="text-xs text-zinc-400">· {getCardTag(currentCard)}</span>
+                    <InlineText
+                      value={currentCard.bankName}
+                      onChange={(val) => updateCashbackCard(currentCard.id, { bankName: val })}
+                      className="text-lg font-semibold text-white tracking-tight"
+                    />
+                    <span className="text-xs text-zinc-400">·</span>
+                    <InlineText
+                      value={getCardTag(currentCard)}
+                      onChange={(val) => updateCashbackCard(currentCard.id, { specialFeature: val })}
+                      placeholder="Подпись карты..."
+                      className="text-xs text-zinc-400"
+                    />
                   </div>
-                  <p className="text-xs text-zinc-400 mt-0.5">Владелец: {getCardHolder(currentCard)} · {getCardDigits(currentCard)}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Владелец: {getCardHolder(currentCard)} · {getCardDigits(currentCard)}
+                  </p>
                 </div>
               </div>
 
@@ -743,14 +867,23 @@ export const ShadcnFinances: React.FC = () => {
                   currentCard.categories.map((cat, idx) => (
                     <span
                       key={idx}
-                      className="rounded-full bg-white/[0.05] hover:bg-white/[0.09] px-4 py-2 text-sm flex items-center gap-2.5 border-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] text-zinc-200"
+                      className="rounded-full bg-white/[0.05] hover:bg-white/[0.09] px-3.5 py-1.5 text-xs sm:text-sm flex items-center gap-2 border-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] text-zinc-200"
                     >
-                      <span>{cat.category}</span>
-                      <span className="text-emerald-400 font-semibold tabular-nums">{cat.percent}%</span>
+                      <InlineText
+                        value={cat.category}
+                        onChange={(val) => updateCashbackCategory(currentCard.id, idx, { category: val })}
+                        className="text-zinc-200"
+                      />
+                      <InlineNumber
+                        value={cat.percent}
+                        onChange={(val) => updateCashbackCategory(currentCard.id, idx, { percent: val })}
+                        suffix="%"
+                        className="text-emerald-400 font-semibold tabular-nums"
+                      />
                       <button
                         type="button"
                         onClick={() => removeCashbackCategory(currentCard.id, idx)}
-                        className="text-zinc-500 hover:text-zinc-200 ml-1 p-0.5 cursor-pointer leading-none text-base"
+                        className="text-zinc-500 hover:text-zinc-200 ml-1 p-0.5 cursor-pointer leading-none text-base border-0 bg-transparent"
                         title="Удалить категорию"
                       >
                         ×
@@ -768,13 +901,58 @@ export const ShadcnFinances: React.FC = () => {
 
       {/* ── 4. ЖКХ МОСКВЫ И СЧЕТА (.nexus-surface & .nexus-row, Zero Table Borders) ── */}
       <div id="utilities-section" className="nexus-surface p-6 sm:p-8 space-y-4">
-        <div>
-          <h3 className="text-xl font-semibold tracking-tight text-white">
-            ЖКХ Москвы и регулярные счета квартиры
-          </h3>
-          <p className="text-xs text-zinc-400 mt-1">
-            Мосэнергосбыт, управляющая компания Домиленд, ЕПД mos.ru и интернет
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-xl font-semibold tracking-tight text-white">
+                ЖКХ Москвы и регулярные счета квартиры
+              </h3>
+              <span className="rounded-full bg-white/[0.08] text-zinc-300 text-xs px-2.5 py-0.5 tabular-nums">
+                {utilityBills?.length || 0}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-1">
+              Кликните на сумму или название для быстрого редактирования. Клик на статус переключает «К оплате / Оплачено».
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                const name = prompt('Название услуги (напр. Вода Домиленд, Электричество, Интернет):', 'Новый счет');
+                if (!name) return;
+                const provider = prompt('Провайдер / Сервис (напр. Домиленд, Мосэнергосбыт, МГТС):', name) || name;
+                const amountStr = prompt('Сумма счета (₽):', '0');
+                const amount = parseFloat(amountStr || '0') || 0;
+                addUtilityBill({
+                  serviceName: name,
+                  provider,
+                  amount,
+                  status: amount > 0 ? 'due' : 'paid',
+                  dueDate: '10-е число',
+                  periodText: 'Текущий месяц',
+                });
+              }}
+              className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] px-3.5 py-1.5 text-xs text-zinc-200 transition-all flex items-center gap-1.5 border-0 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Добавить счет</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm('Сбросить все счета на новый месяц? Статусы станут «К оплате» для заполнения новых квитанций.')) {
+                  resetUtilityBillsMonth();
+                }
+              }}
+              className="rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-400 hover:text-zinc-200 px-3 py-1.5 transition-all flex items-center gap-1.5 border-0 cursor-pointer"
+              title="Сбросить все счета на новый расчетный месяц"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span>Новый месяц</span>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2 mt-4">
@@ -797,32 +975,49 @@ export const ShadcnFinances: React.FC = () => {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-white">{bill.serviceName}</div>
-                    <div className="text-xs text-zinc-400">
-                      {bill.provider} · {bill.periodText || 'Период не указан'}
+                    <div className="text-sm font-medium text-white">
+                      <InlineText
+                        value={bill.serviceName}
+                        onChange={(val) => updateUtilityBill(bill.id, { serviceName: val })}
+                        className="text-sm font-medium text-white"
+                      />
+                    </div>
+                    <div className="text-xs text-zinc-400 flex items-center gap-1 mt-0.5">
+                      <InlineText
+                        value={bill.provider}
+                        onChange={(val) => updateUtilityBill(bill.id, { provider: val })}
+                        className="text-xs text-zinc-400"
+                      />
+                      <span>·</span>
+                      <InlineText
+                        value={bill.periodText || 'Текущий месяц'}
+                        onChange={(val) => updateUtilityBill(bill.id, { periodText: val })}
+                        className="text-xs text-zinc-500"
+                      />
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${isPaid ? 'bg-white/[0.06] text-zinc-300' : 'bg-amber-500/10 text-amber-400'}`}>
-                    {isPaid ? 'Оплачено' : `К оплате${bill.dueDate ? ` до ${bill.dueDate}` : ''}`}
-                  </span>
-
+                  {/* Status clickable badge */}
                   <button
                     type="button"
-                    onClick={() => {
-                      const input = prompt(`Сумма счета «${bill.serviceName}» (₽):`, billAmount > 0 ? String(billAmount) : '');
-                      if (input !== null) {
-                        const val = parseFloat(input) || 0;
-                        updateUtilityBill(bill.id, { amount: val, status: val > 0 ? 'due' : 'paid' });
-                      }
-                    }}
-                    className="text-sm font-semibold text-white hover:text-amber-400 tabular-nums transition-colors cursor-pointer bg-transparent border-0"
-                    title="Нажмите, чтобы ввести точную сумму счета из квитанции"
+                    onClick={() => updateUtilityBill(bill.id, { status: isPaid ? 'due' : 'paid' })}
+                    className={`rounded-full px-3 py-1 text-xs font-medium transition-all cursor-pointer border-0 ${
+                      isPaid ? 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.1]' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                    }`}
+                    title="Нажмите, чтобы переключить статус (Оплачено / К оплате)"
                   >
-                    {billAmount.toLocaleString('ru-RU')} ₽ ✎
+                    {isPaid ? 'Оплачено ✓' : `К оплате${bill.dueDate ? ` до ${bill.dueDate}` : ''}`}
                   </button>
+
+                  {/* Inline editable bill amount */}
+                  <InlineNumber
+                    value={billAmount}
+                    onChange={(val) => updateUtilityBill(bill.id, { amount: val, status: val > 0 ? bill.status : 'paid' })}
+                    suffix=" ₽"
+                    className="text-sm font-semibold text-white hover:text-amber-400 tabular-nums cursor-pointer"
+                  />
 
                   <div className="flex items-center gap-1.5">
                     {bill.linkUrl && (
@@ -848,11 +1043,125 @@ export const ShadcnFinances: React.FC = () => {
                         Оплатить
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Удалить счет «${bill.serviceName}»?`)) {
+                          deleteUtilityBill(bill.id);
+                        }
+                      }}
+                      className="p-1.5 rounded-full text-zinc-500 hover:text-rose-400 hover:bg-white/[0.06] transition-all cursor-pointer border-0"
+                      title="Удалить счет"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* ── 5. ИСТОРИЯ ОПЕРАЦИЙ И ВЗНОСОВ (.nexus-surface, Zero Table Borders) ── */}
+      <div className="nexus-surface p-6 sm:p-8 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <History className="h-4 w-4 text-emerald-400" />
+              <h3 className="text-xl font-semibold tracking-tight text-white">
+                История операций и взносов
+              </h3>
+              <span className="rounded-full bg-white/[0.08] text-zinc-300 text-xs px-2.5 py-0.5 tabular-nums">
+                {transactions?.length || 0}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-1">
+              Все реальные операции пары: пополнения бюджета, расходы и зачисленный кэшбэк. Суммы и названия кликабельны для редактирования.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleQuickAddExpense}
+              className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] px-3.5 py-1.5 text-xs text-zinc-200 transition-all flex items-center gap-1.5 border-0 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5 text-rose-400" />
+              <span>+ Записать расход</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2 mt-4">
+          {transactions && transactions.length > 0 ? (
+            transactions.slice(0, 15).map((tx) => {
+              const isIncome = tx.type === 'income';
+              const userLabel = tx.paidBy === 'egor' ? 'Егор' : tx.paidBy === 'anya' ? 'Аня' : 'Общий счет';
+
+              return (
+                <div key={tx.id} className="nexus-row flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`p-2.5 rounded-full shrink-0 ${isIncome ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                      {isIncome ? <ArrowDownRight className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-white">
+                        <InlineText
+                          value={tx.title}
+                          onChange={(val) => updateTransaction(tx.id, { title: val })}
+                          className="text-sm font-medium text-white"
+                        />
+                      </div>
+                      <div className="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
+                        <span className="text-zinc-500 tabular-nums">{tx.date}</span>
+                        <span>·</span>
+                        <span className="rounded-full bg-white/[0.05] px-2 py-0.2 text-[10px] text-zinc-300">
+                          {userLabel}
+                        </span>
+                        {tx.category && (
+                          <>
+                            <span>·</span>
+                            <span className="text-zinc-400">{tx.category}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={`text-base font-semibold tabular-nums ${isIncome ? 'text-emerald-400' : 'text-zinc-200'}`}>
+                      {isIncome ? '+' : '-'}
+                      <InlineNumber
+                        value={tx.amount}
+                        onChange={(val) => updateTransaction(tx.id, { amount: val })}
+                        suffix=" ₽"
+                        className={`text-base font-semibold tabular-nums ${isIncome ? 'text-emerald-400' : 'text-zinc-200'}`}
+                      />
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Удалить операцию «${tx.title}» (${tx.amount} ₽)? Баланс будет скорректирован.`)) {
+                          deleteTransaction(tx.id);
+                        }
+                      }}
+                      className="p-1.5 rounded-full text-zinc-500 hover:text-rose-400 hover:bg-white/[0.06] transition-all cursor-pointer border-0"
+                      title="Удалить операцию"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-8 text-center text-xs text-zinc-500">
+              Операций пока нет. Внесите вклад Егора или Ани, либо нажмите «+ Записать расход».
+            </div>
+          )}
         </div>
       </div>
 
