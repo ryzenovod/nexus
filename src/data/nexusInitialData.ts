@@ -1065,19 +1065,6 @@ export const initialWishlist: WishlistItem[] = [
     "createdAt": "2026-10-07T14:34:37.000+0000"
   },
   {
-    "id": "wish-6ad8d043bf00032b8b10cc14",
-    "title": "Что делаем 4 ноября?",
-    "category": "Кухня",
-    "estimatedPrice": 0,
-    "link": "",
-    "notes": "Автоматически подтянуто из TickTick",
-    "egorVote": null,
-    "anyaVote": null,
-    "status": "pending",
-    "addedBy": "together",
-    "createdAt": "2026-10-21T14:46:27.000+0000"
-  },
-  {
     "id": "wish-6ad8cc8fbf00032b8b10c9f7",
     "title": "Перестановка?",
     "category": "Комната",

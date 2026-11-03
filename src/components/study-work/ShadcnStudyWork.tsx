@@ -120,6 +120,7 @@ export const ShadcnStudyWork: React.FC = () => {
     deleteStudySpace,
     tasks,
     toggleTaskCompletion,
+    deleteTask,
     pomodoroMode,
     pomodoroTimeLeft,
     pomodoroIsRunning,
@@ -317,6 +318,19 @@ export const ShadcnStudyWork: React.FC = () => {
 
     const nextStatus = item.status === 'done' ? 'in_progress' : 'done';
     updateStudyWorkStatus(item.id, nextStatus);
+  };
+
+  // Delete item directly from card trash icon
+  const handleDeleteDirect = (item: StudyWorkItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (item.isTickTick && item.tickTickTaskId) {
+      deleteTask(item.tickTickTaskId);
+    } else {
+      deleteStudyWorkItem(item.id);
+    }
+    try {
+      soundEffects.playClick();
+    } catch {}
   };
 
   // Add new Custom Direction Column
@@ -698,12 +712,22 @@ export const ShadcnStudyWork: React.FC = () => {
                                   {it.title}
                                 </span>
 
-                                {it.deadline && (
-                                  <span className="text-[10px] font-mono text-zinc-400 shrink-0 flex items-center gap-1">
-                                    <Calendar className="h-3 w-3 text-zinc-400" />
-                                    {it.deadline.replace('2026-', '')}
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {it.deadline && (
+                                    <span className="text-[10px] font-mono text-zinc-400 flex items-center gap-1">
+                                      <Calendar className="h-3 w-3 text-zinc-400" />
+                                      {it.deadline.replace('2026-', '')}
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDeleteDirect(it, e)}
+                                    className="p-1 rounded text-zinc-500 hover:text-red-400 hover:bg-white/[0.06] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                    title="Удалить задачу"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
                               </div>
 
                               {/* Description / Notes snippet */}
@@ -758,6 +782,22 @@ export const ShadcnStudyWork: React.FC = () => {
                         </div>
                       );
                     })
+                  )}
+
+                  {/* Explicit "+ Добавить задачу" button at bottom of column */}
+                  {!isAdding && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickAddSpaceId(col.id);
+                        setQuickAddTitle('');
+                        soundEffects.playClick();
+                      }}
+                      className="w-full py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.07] text-xs text-zinc-400 hover:text-zinc-200 transition flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>+ Добавить задачу</span>
+                    </button>
                   )}
                 </div>
               </div>
