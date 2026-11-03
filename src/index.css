@@ -1,14 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 230 30% 3.5%; /* #06070B */
+    --background: 232 35% 3%; /* #05060A */
     --foreground: 220 14% 96%; /* #F3F4F6 */
-    --card: 228 27% 7%; /* #0D0F17 */
+    --card: 230 25% 7%; /* #0D0F18 */
     --card-foreground: 220 14% 96%;
-    --popover: 228 27% 7%;
+    --popover: 230 25% 7%;
     --popover-foreground: 220 14% 96%;
     --primary: 0 0% 98%;
     --primary-foreground: 240 5.9% 10%;
@@ -20,10 +22,10 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 14% 14%;
-    --input: 220 14% 14%;
+    --border: 220 14% 12%;
+    --input: 220 14% 12%;
     --ring: 220 14% 80%;
-    --radius: 0.75rem;
+    --radius: 0.875rem;
   }
 
   * {
@@ -31,56 +33,144 @@
   }
 
   body {
-    background-color: #06070B;
+    background-color: #05060A;
     color: #F3F4F6;
-    @apply antialiased selection:bg-indigo-500/30 selection:text-indigo-200;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    @apply selection:bg-indigo-500/30 selection:text-indigo-200;
   }
 }
 
+/* Global Font Override: Stop terminal monospaced look for amounts and numbers */
+.font-mono,
+.font-mono-num,
+[class*="font-mono"] {
+  font-family: inherit !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -0.025em !important;
+}
+
+/* Soften crude table dividing lines and borders across existing components */
+.divide-y > :not([hidden]) ~ :not([hidden]),
+.divide-zinc-800 > :not([hidden]) ~ :not([hidden]),
+.divide-zinc-700 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
 @layer components {
-  /* Canvas Background: Twilight starry obsidian */
-  .nexus-canvas {
-    background-color: #06070B;
+  /* Living Ambient Background (Google AI space / Linear 2026) */
+  .nexus-ambient-bg {
+    background-color: #05060A;
     background-image: 
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(18, 12, 36, 0.6), transparent 70%),
-      radial-gradient(circle at 85% 90%, rgba(31, 22, 10, 0.4), transparent 60%),
-      radial-gradient(circle at 15% 45%, rgba(18, 12, 36, 0.35), transparent 65%);
+      radial-gradient(ellipse 70% 45% at 50% -10%, rgba(99, 102, 241, 0.16), rgba(168, 85, 247, 0.06) 50%, transparent 80%),
+      radial-gradient(circle 800px at 90% 85%, rgba(245, 158, 11, 0.08), transparent 60%),
+      radial-gradient(circle 700px at 10% 45%, rgba(99, 102, 241, 0.08), transparent 60%);
     background-attachment: fixed;
   }
 
-  /* Level-1 Specular Matte Card (Zero rough borders) */
-  .nexus-card {
-    @apply bg-[#0D0F17]/75 backdrop-blur-2xl rounded-[24px] ring-1 ring-white/[0.07] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7),inset_0_1px_0_0_rgba(255,255,255,0.1)] transition-all duration-300;
+  .nexus-canvas {
+    @apply nexus-ambient-bg;
   }
 
-  /* Interactive Row (No Borders) */
+  /* Level-1 Surface (Zero harsh borders, Google Expressive / Linear 2026) */
+  .nexus-surface {
+    background: linear-gradient(180deg, rgba(22, 25, 38, 0.72) 0%, rgba(13, 15, 24, 0.82) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 28px;
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.75), inset 0 1px 0 0 rgba(255, 255, 255, 0.11), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Card alias for full backward compatibility */
+  .nexus-card {
+    background: linear-gradient(180deg, rgba(22, 25, 38, 0.72) 0%, rgba(13, 15, 24, 0.82) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 28px;
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.75), inset 0 1px 0 0 rgba(255, 255, 255, 0.11), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Interactive card with spring physics hover */
+  .nexus-interactive-card {
+    background: linear-gradient(180deg, rgba(22, 25, 38, 0.72) 0%, rgba(13, 15, 24, 0.82) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 28px;
+    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.75), inset 0 1px 0 0 rgba(255, 255, 255, 0.11), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nexus-interactive-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 70px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  /* Row item without borders or divide-y lines */
   .nexus-row {
-    @apply rounded-2xl px-3.5 py-2.5 transition-colors duration-200 hover:bg-white/[0.035] active:scale-[0.995];
+    border-radius: 18px;
+    padding: 12px 16px;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nexus-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+    transform: scale(1.003);
+  }
+
+  /* Micro-Pill without rough borders */
+  .nexus-pill {
+    background: rgba(255, 255, 255, 0.055);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #d4d4d8;
   }
 
   /* Inner Subsurface grouping */
   .nexus-subsurface {
-    @apply bg-white/[0.025] rounded-2xl p-4;
-  }
-
-  /* Calm Micro-Pill */
-  .nexus-pill {
-    @apply inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-1 text-xs font-medium text-zinc-300 ring-1 ring-inset ring-white/[0.06];
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 20px;
+    padding: 1rem;
   }
 
   /* Numeric tabular formatting */
   .nexus-num {
     font-variant-numeric: tabular-nums;
-    @apply tracking-tight font-medium;
+    letter-spacing: -0.025em;
+    font-weight: 500;
   }
 }
 
-/* Backward-compatible mono numeric font */
-.font-mono-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-variant-numeric: tabular-nums;
+/* Tab switch and component entrance animation */
+@keyframes nexusFadeInSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: nexusFadeInSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.slide-in-from-bottom-2 {
+  transform: translateY(0);
 }
 
 /* 4px custom delicate scrollbar */
