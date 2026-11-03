@@ -65,7 +65,7 @@ const CARD_METALLIC_THEMES: Record<string, {
 }> = {
   'cb-sber': {
     name: 'СБЕР',
-    holder: 'ANNA KOSYUK',
+    holder: 'ANYA',
     number: '•••• 7714',
     exp: '10/28',
     tag: 'Аня · СберСпасибо',
@@ -768,30 +768,6 @@ export const FinancesModule: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Dedicated Action Button UNDER Gazprombank card (Zero overlap with bank title or MIR!) */}
-                {isGpb && (
-                  <div className="w-full">
-                    {isGpbClaimed ? (
-                      <div className="w-full py-1.5 px-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold flex items-center justify-center gap-1.5 shadow-xs">
-                        <CheckCircle2 size={13} className="text-emerald-400" />
-                        <span>Кэшбэк ГПБ получен ✓</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowGpbModal(true);
-                        }}
-                        className="w-full py-1.5 px-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-[11.5px] flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer animate-pulse"
-                        title="Нажмите, чтобы забрать кэшбэк и зачислить на общий счет"
-                      >
-                        <span>⚡ Забрать кэшбэк ГПБ</span>
-                        <span className="text-[9.5px] font-normal opacity-90">(до 25-го)</span>
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
