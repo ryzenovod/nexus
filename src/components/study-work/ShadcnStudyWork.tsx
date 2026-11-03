@@ -65,7 +65,7 @@ const MASTER_COLUMNS: MasterColumn[] = [
     id: 'hse-egor',
     acceptedSpaces: ['hse-egor', 'hse'],
     title: 'ВШЭ (Егор)',
-    subtitle: 'Распределенные системы · CS',
+    subtitle: 'Магистратура НИУ ВШЭ',
     user: 'egor',
     accentGlow: 'bg-sky-500',
     accentText: 'text-sky-400',
@@ -76,7 +76,7 @@ const MASTER_COLUMNS: MasterColumn[] = [
     id: 'rudn-anya',
     acceptedSpaces: ['rudn-anya', 'rudn'],
     title: 'РУДН (Аня)',
-    subtitle: 'Клиническая психология · БРС',
+    subtitle: 'Управление продуктом · РУДН',
     user: 'anya',
     accentGlow: 'bg-purple-500',
     accentText: 'text-purple-400',
@@ -87,13 +87,12 @@ const MASTER_COLUMNS: MasterColumn[] = [
     id: 'yaprofi-dfo',
     acceptedSpaces: ['yaprofi-dfo', 'yaprofi-cfo', 'yaprofi'],
     title: 'Я-Профессионал',
-    subtitle: 'Федеральная олимпиада',
+    subtitle: 'Федеральная олимпиада · ДФО ⇄ ЦФО',
     user: 'together',
     accentGlow: 'bg-amber-500',
     accentText: 'text-amber-400',
     badgeBg: 'bg-amber-500/10 text-amber-400',
     icon: Radio,
-    extraBadge: '+7ч ДФО',
   },
   {
     id: 'work-projects',
@@ -469,7 +468,7 @@ export const ShadcnStudyWork: React.FC = () => {
                 className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs font-medium text-white px-4 py-2 transition-all flex items-center gap-1.5 cursor-pointer border-0"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>+ Новое направление</span>
+                <span>Новое направление</span>
               </button>
             </div>
           </div>
@@ -521,29 +520,24 @@ export const ShadcnStudyWork: React.FC = () => {
                 className="rounded-[26px] bg-white/[0.02] p-4 flex flex-col gap-3 min-h-[440px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] border-0"
               >
                 {/* Column Header: Soft icon, name, counter, plus button */}
-                <div className="flex items-center justify-between pb-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center justify-between pb-2 gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <span className={`p-2 rounded-2xl ${col.badgeBg} shrink-0`}>
                       <Icon className="h-4 w-4" />
                     </span>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <InlineText
                           value={customColumnMeta?.[col.id]?.title || col.title}
                           onChange={(val) => updateColumnMeta(col.id, { title: val })}
-                          className="font-semibold text-[15px] text-white leading-tight"
+                          className="font-semibold text-[15px] text-white leading-tight whitespace-nowrap"
                         />
-                        {col.extraBadge && (
-                          <span className="rounded-full bg-amber-500/15 text-amber-300 px-2 py-0.2 text-[10px] font-medium shrink-0">
-                            {col.extraBadge}
-                          </span>
-                        )}
                       </div>
-                      <div className="text-[11px] text-zinc-400 mt-0.5">
+                      <div className="text-[11px] text-zinc-400 mt-0.5 truncate">
                         <InlineText
                           value={customColumnMeta?.[col.id]?.subtitle || col.subtitle}
                           onChange={(val) => updateColumnMeta(col.id, { subtitle: val })}
-                          className="text-[11px] text-zinc-400"
+                          className="text-[11px] text-zinc-400 truncate"
                         />
                       </div>
                     </div>
@@ -617,19 +611,22 @@ export const ShadcnStudyWork: React.FC = () => {
                 <div className="flex-1 space-y-2.5 overflow-y-auto pr-0.5 [scrollbar-width:thin]">
                   {columnItems.length === 0 ? (
                     <div className="py-12 flex flex-col items-center justify-center text-center p-4">
-                      <span className="text-zinc-600 text-2xl mb-1">📖</span>
-                      <p className="text-xs text-zinc-500 font-medium">Нет активных задач</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setQuickAddSpaceId(col.id);
-                          setQuickAddTitle('');
-                          setQuickAddDeadline('');
-                        }}
-                        className="mt-2 text-[11px] text-sky-400 hover:text-sky-300 underline cursor-pointer border-0 bg-transparent"
-                      >
-                        + Создать первую задачу
-                      </button>
+                      <p className="text-xs text-zinc-500 font-medium mb-3">Нет активных задач</p>
+                      {!isAdding && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuickAddSpaceId(col.id);
+                            setQuickAddTitle('');
+                            setQuickAddDeadline('');
+                            soundEffects.playClick();
+                          }}
+                          className="px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium text-zinc-300 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer border-0"
+                        >
+                          <Plus className="h-3.5 w-3.5 text-zinc-400" />
+                          <span>Добавить задачу</span>
+                        </button>
+                      )}
                     </div>
                   ) : (
                     columnItems.map((it) => {
@@ -768,7 +765,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   )}
 
                   {/* Explicit Bottom "+ Добавить задачу" button */}
-                  {!isAdding && (
+                  {columnItems.length > 0 && !isAdding && (
                     <button
                       type="button"
                       onClick={() => {
@@ -780,7 +777,7 @@ export const ShadcnStudyWork: React.FC = () => {
                       className="w-full py-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] text-xs text-zinc-400 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1 border-0"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      <span>+ Добавить задачу</span>
+                      <span>Добавить задачу</span>
                     </button>
                   )}
                 </div>
@@ -975,7 +972,7 @@ export const ShadcnStudyWork: React.FC = () => {
                             className="font-semibold text-sm text-zinc-100"
                           />
                           <p className="text-[11px] text-zinc-400 mt-0.5">
-                            РУДН Онлайн · Психология
+                            РУДН Онлайн · Управление продуктом
                           </p>
                         </div>
                         <span className={`tabular-nums text-xs px-2.5 py-0.5 rounded-full font-medium ${gradeColor}`}>
@@ -1220,7 +1217,7 @@ export const ShadcnStudyWork: React.FC = () => {
               <Input
                 value={editCourseOrProject}
                 onChange={(e) => setEditCourseOrProject(e.target.value)}
-                placeholder="Например: Распределенные системы, Клиническая психология, Nexus Web"
+                placeholder="Например: Распределенные системы, Управление продуктом, Nexus Web"
                 className="bg-white/[0.04] text-zinc-100 text-xs border-0 rounded-full h-9 focus-visible:ring-1 focus-visible:ring-sky-500"
               />
             </div>

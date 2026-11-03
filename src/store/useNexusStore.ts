@@ -226,9 +226,12 @@ export interface NexusState {
 // LocalStorage Migration: Clean out sticky fake mock data from legacy cache
 if (typeof window !== 'undefined') {
   try {
-    const v3Raw = localStorage.getItem('nexus-real-sync-v3');
-    if (!v3Raw) {
-      const sourceRaw = localStorage.getItem('nexus-real-sync-v2') || localStorage.getItem('nexus-real-sync-v1');
+    const v4Raw = localStorage.getItem('nexus-real-sync-v4');
+    if (!v4Raw) {
+      const sourceRaw =
+        localStorage.getItem('nexus-real-sync-v3') ||
+        localStorage.getItem('nexus-real-sync-v2') ||
+        localStorage.getItem('nexus-real-sync-v1');
       if (sourceRaw) {
         try {
           const parsed = JSON.parse(sourceRaw);
@@ -242,11 +245,19 @@ if (typeof window !== 'undefined') {
               if (s.budget.depositDates === '10 и 25 числа каждого месяца') s.budget.depositDates = '';
             }
             if (Array.isArray(s.utilityBills)) {
-              s.utilityBills = s.utilityBills.map((b: any) =>
-                b.amount === 1685.41 || b.amount === 1685 || b.id === 'util-domiland'
-                  ? { ...b, amount: 0, commission: 0 }
-                  : b
-              );
+              s.utilityBills = s.utilityBills.map((b: any) => {
+                let periodText = b.periodText;
+                if (periodText && (periodText.includes('Сентябрь') || periodText.includes('Октябрь-Ноябрь'))) {
+                  periodText = 'Ноябрь 2026';
+                }
+                const isFakeAmount = b.amount === 1685.41 || b.amount === 1685 || b.id === 'util-domiland';
+                return {
+                  ...b,
+                  periodText,
+                  amount: isFakeAmount ? 0 : b.amount,
+                  commission: isFakeAmount ? 0 : b.commission,
+                };
+              });
             }
             if (Array.isArray(s.studyWorkItems)) {
               s.studyWorkItems = s.studyWorkItems.filter((it: any) => {
@@ -270,12 +281,39 @@ if (typeof window !== 'undefined') {
                 digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
               }));
             }
-            localStorage.setItem('nexus-real-sync-v3', JSON.stringify(parsed));
+            if (!s.customColumnMeta) s.customColumnMeta = {};
+            s.customColumnMeta['hse-egor'] = { title: 'ВШЭ (Егор)', subtitle: 'Магистратура НИУ ВШЭ' };
+            s.customColumnMeta['rudn-anya'] = { title: 'РУДН (Аня)', subtitle: 'Управление продуктом · РУДН' };
+            s.customColumnMeta['yaprofi-dfo'] = { title: 'Я-Профессионал', subtitle: 'Федеральная олимпиада · ДФО ⇄ ЦФО' };
+            s.customColumnMeta['work-projects'] = { title: 'Работа & Личные проекты', subtitle: 'Продакшн, стартапы и деплой' };
+
+            if (Array.isArray(s.wishlist)) {
+              s.wishlist = s.wishlist.map((w: any) => {
+                const notesLower = (w.notes || '').toLowerCase();
+                const isFake = notesLower.includes('автоматически подтянуто') ||
+                               notesLower.includes('боулы') ||
+                               notesLower.includes('силиконов') ||
+                               notesLower.includes('шеф или') ||
+                               notesLower.includes('уточнить диаметр') ||
+                               notesLower.includes('в ванную или коридор');
+                return isFake ? { ...w, notes: '' } : w;
+              });
+            }
+            if (Array.isArray(s.rudnSubjects)) {
+              s.rudnSubjects = s.rudnSubjects.map((sub: any) => {
+                if (sub.subjectName && sub.subjectName.includes('Клиническая психология')) {
+                  return { ...sub, subjectName: 'Управление продуктом (РУДН Онлайн)' };
+                }
+                return sub;
+              });
+            }
+            localStorage.setItem('nexus-real-sync-v4', JSON.stringify(parsed));
           }
         } catch {}
       }
       localStorage.removeItem('nexus-real-sync-v1');
       localStorage.removeItem('nexus-real-sync-v2');
+      localStorage.removeItem('nexus-real-sync-v3');
     }
   } catch {}
 }
@@ -312,7 +350,12 @@ export const useNexusStore = create<NexusState>()(
       // Academic Calculators
       hseCalculators: initialHSECalculators,
       rudnSubjects: initialRUDNSubjects,
-      customColumnMeta: {},
+      customColumnMeta: {
+        'hse-egor': { title: 'ВШЭ (Егор)', subtitle: 'Магистратура НИУ ВШЭ' },
+        'rudn-anya': { title: 'РУДН (Аня)', subtitle: 'Управление продуктом · РУДН' },
+        'yaprofi-dfo': { title: 'Я-Профессионал', subtitle: 'Федеральная олимпиада · ДФО ⇄ ЦФО' },
+        'work-projects': { title: 'Работа & Личные проекты', subtitle: 'Продакшн, стартапы и деплой' },
+      },
 
       // Telegram Bridge
       telegramConfig: {
@@ -1577,6 +1620,46 @@ export const useNexusStore = create<NexusState>()(
                       digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
                     }));
                   }
+                  if (Array.isArray(ss.wishlist)) {
+                    ss.wishlist = ss.wishlist.map((w: any) => {
+                      const notesLower = (w.notes || '').toLowerCase();
+                      const isFake = notesLower.includes('автоматически подтянуто') ||
+                                     notesLower.includes('боулы') ||
+                                     notesLower.includes('силиконов') ||
+                                     notesLower.includes('шеф или') ||
+                                     notesLower.includes('уточнить диаметр') ||
+                                     notesLower.includes('в ванную или коридор');
+                      return isFake ? { ...w, notes: '' } : w;
+                    });
+                  }
+                  if (ss.customColumnMeta) {
+                    if (ss.customColumnMeta['hse-egor']?.subtitle?.includes('Распределенные системы')) {
+                      ss.customColumnMeta['hse-egor'].subtitle = 'Магистратура НИУ ВШЭ';
+                    }
+                    if (ss.customColumnMeta['rudn-anya']?.subtitle?.includes('Клиническая психология')) {
+                      ss.customColumnMeta['rudn-anya'].subtitle = 'Управление продуктом · РУДН';
+                    }
+                    if (ss.customColumnMeta['yaprofi-dfo']) {
+                      ss.customColumnMeta['yaprofi-dfo'].subtitle = 'Федеральная олимпиада · ДФО ⇄ ЦФО';
+                    }
+                  }
+                  if (Array.isArray(ss.utilityBills)) {
+                    ss.utilityBills = ss.utilityBills.map((b: any) => {
+                      let periodText = b.periodText;
+                      if (periodText && (periodText.includes('Сентябрь') || periodText.includes('Октябрь-Ноябрь'))) {
+                        periodText = 'Ноябрь 2026';
+                      }
+                      return { ...b, periodText };
+                    });
+                  }
+                  if (Array.isArray(ss.rudnSubjects)) {
+                    ss.rudnSubjects = ss.rudnSubjects.map((sub: any) => {
+                      if (sub.subjectName && sub.subjectName.includes('Клиническая психология')) {
+                        return { ...sub, subjectName: 'Управление продуктом (РУДН Онлайн)' };
+                      }
+                      return sub;
+                    });
+                  }
 
                   set((state) => {
                     const mergedCompleted = Array.from(new Set([...(state.completedTaskIds || []), ...(ss.completedTaskIds || [])]));
@@ -1672,7 +1755,7 @@ export const useNexusStore = create<NexusState>()(
                 category: cat,
                 estimatedPrice: 0,
                 link: '',
-                notes: 'Автоматически подтянуто из TickTick',
+                notes: '',
                 egorVote: null,
                 anyaVote: null,
                 status: 'pending',
@@ -1870,7 +1953,7 @@ export const useNexusStore = create<NexusState>()(
       },
     }),
     {
-      name: 'nexus-real-sync-v3',
+      name: 'nexus-real-sync-v4',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
@@ -1878,6 +1961,37 @@ export const useNexusStore = create<NexusState>()(
         if (!state.completedTaskIds) state.completedTaskIds = [];
         if (!state.deletedTaskIds) state.deletedTaskIds = [];
         if (!state.customStudySpaces) state.customStudySpaces = [];
+
+        // Ensure custom column meta has up-to-date defaults
+        if (!state.customColumnMeta) {
+          state.customColumnMeta = {
+            'hse-egor': { title: 'ВШЭ (Егор)', subtitle: 'Магистратура НИУ ВШЭ' },
+            'rudn-anya': { title: 'РУДН (Аня)', subtitle: 'Управление продуктом · РУДН' },
+            'yaprofi-dfo': { title: 'Я-Профессионал', subtitle: 'Федеральная олимпиада · ДФО ⇄ ЦФО' },
+            'work-projects': { title: 'Работа & Личные проекты', subtitle: 'Продакшн, стартапы и деплой' },
+          };
+        } else {
+          state.customColumnMeta['hse-egor'] = {
+            title: state.customColumnMeta['hse-egor']?.title || 'ВШЭ (Егор)',
+            subtitle:
+              !state.customColumnMeta['hse-egor']?.subtitle ||
+              state.customColumnMeta['hse-egor']?.subtitle?.includes('Распределенные системы')
+                ? 'Магистратура НИУ ВШЭ'
+                : state.customColumnMeta['hse-egor']?.subtitle,
+          };
+          state.customColumnMeta['rudn-anya'] = {
+            title: state.customColumnMeta['rudn-anya']?.title || 'РУДН (Аня)',
+            subtitle:
+              !state.customColumnMeta['rudn-anya']?.subtitle ||
+              state.customColumnMeta['rudn-anya']?.subtitle?.includes('Клиническая психология')
+                ? 'Управление продуктом · РУДН'
+                : state.customColumnMeta['rudn-anya']?.subtitle,
+          };
+          state.customColumnMeta['yaprofi-dfo'] = {
+            title: state.customColumnMeta['yaprofi-dfo']?.title || 'Я-Профессионал',
+            subtitle: 'Федеральная олимпиада · ДФО ⇄ ЦФО',
+          };
+        }
 
         // Clean out any mock study work tasks completely (zero fake items)
         state.studyWorkItems = (state.studyWorkItems || []).filter((it) => {
@@ -1903,13 +2017,27 @@ export const useNexusStore = create<NexusState>()(
           if (state.budget.depositDates === '10 и 25 числа каждого месяца') state.budget.depositDates = '';
         }
 
-        // Clean out fake utility amounts (1 685 ₽)
+        // Clean out fake utility amounts and update periods to November 2026
         if (state.utilityBills && state.utilityBills.length > 0) {
           state.utilityBills = state.utilityBills.map((bill) => {
-            if (bill.amount === 1685.41 || bill.amount === 1685 || (bill.id === 'util-domiland' && bill.amount === 1685.41)) {
-              return { ...bill, amount: 0, commission: 0 };
+            let periodText = bill.periodText;
+            if (periodText && (periodText.includes('Сентябрь') || periodText.includes('Октябрь-Ноябрь'))) {
+              periodText = 'Ноябрь 2026';
             }
-            return bill;
+            if (bill.amount === 1685.41 || bill.amount === 1685 || (bill.id === 'util-domiland' && bill.amount === 1685.41)) {
+              return { ...bill, amount: 0, commission: 0, periodText };
+            }
+            return { ...bill, periodText };
+          });
+        }
+
+        // Clean RUDN course name
+        if (state.rudnSubjects && state.rudnSubjects.length > 0) {
+          state.rudnSubjects = state.rudnSubjects.map((sub) => {
+            if (sub.subjectName && sub.subjectName.includes('Клиническая психология')) {
+              return { ...sub, subjectName: 'Управление продуктом (РУДН Онлайн)' };
+            }
+            return sub;
           });
         }
 
@@ -1955,11 +2083,22 @@ export const useNexusStore = create<NexusState>()(
           });
         }
 
-        // Clean out questions that aren't purchases like "Что делаем 4 ноября?" from wishlist
-        state.wishlist = (state.wishlist || []).filter((w) => {
-          const t = (w.title || '').toLowerCase();
-          return !t.includes('ноябр') && !t.includes('делаем') && !t.includes('когда') && !t.includes('куда');
-        });
+        // Clean out questions that aren't purchases like "Что делаем 4 ноября?" and strip fake notes from wishlist
+        state.wishlist = (state.wishlist || [])
+          .filter((w) => {
+            const t = (w.title || '').toLowerCase();
+            return !t.includes('ноябр') && !t.includes('делаем') && !t.includes('когда') && !t.includes('куда');
+          })
+          .map((w) => {
+            const notesLower = (w.notes || '').toLowerCase();
+            const isFake = notesLower.includes('автоматически подтянуто') ||
+                           notesLower.includes('боулы') ||
+                           notesLower.includes('силиконов') ||
+                           notesLower.includes('шеф или') ||
+                           notesLower.includes('уточнить диаметр') ||
+                           notesLower.includes('в ванную или коридор');
+            return isFake ? { ...w, notes: '' } : w;
+          });
         // Purge any legacy fake demo events
         state.gcalEvents = (state.gcalEvents || []).filter((e) => {
           if (!e || !e.id || e.id.startsWith('gcal-')) return false;

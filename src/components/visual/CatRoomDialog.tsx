@@ -6,18 +6,14 @@ import {
   CircleDot, 
   Volume2, 
   VolumeX, 
-  Heart,
   Fish
 } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader, 
   DialogTitle, 
   DialogDescription 
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useNexusStore } from '@/store/useNexusStore';
 import { CyberCatMascot } from './CyberCatMascot';
 import { CoupleGamification } from '@/types/nexus';
@@ -69,36 +65,38 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-card border-border">
-        {/* Header Strip */}
-        <div className="flex items-center justify-between p-4 px-6 border-b bg-muted/20">
-          <div className="flex items-center gap-2.5">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-[#0B0D16]/95 backdrop-blur-2xl rounded-[32px] ring-1 ring-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.85)] border-0 text-zinc-100">
+        <DialogTitle className="sr-only">Комната Котика Нексуса</DialogTitle>
+        <DialogDescription className="sr-only">Маскот пары Егора & Ани</DialogDescription>
+
+        {/* Header Strip: Zero bottom border, clean typography */}
+        <div className="flex items-center justify-between p-5 px-6 border-0 bg-transparent">
+          <div className="flex items-center gap-3">
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">Комната Котика Нексуса</h3>
-                <Badge variant="outline" className="text-amber-400 border-amber-400/30 text-[10px] font-mono">
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-base font-semibold text-white tracking-tight">Комната Котика Нексуса</h3>
+                <span className="rounded-full bg-amber-500/10 text-amber-300 ring-1 ring-amber-400/30 text-xs px-2.5 py-0.5 tabular-nums font-medium">
                   Уровень {gamification.level} · {gamification.xp} XP
-                </Badge>
+                </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Маскот пары Егора & Ани · уют и совместные достижения
               </p>
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
             onClick={() => setSoundMuted(!soundMuted)}
-            className="h-8 w-8 p-0 mr-12 text-muted-foreground hover:text-foreground cursor-pointer"
+            className="h-8 w-8 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer border-0"
             title={soundMuted ? 'Включить звук' : 'Выключить звук'}
           >
             {soundMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </Button>
+          </button>
         </div>
 
         {/* Room Illustration Viewport */}
-        <div className="relative p-6 pt-4 flex flex-col items-center justify-center bg-black/40">
+        <div className="relative px-6 py-2 flex flex-col items-center justify-center bg-transparent">
           {/* Floating Hearts Container */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
             {hearts.map((h) => (
@@ -120,38 +118,40 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
         </div>
 
         {/* Stats & Actions */}
-        <div className="p-5 space-y-4 bg-card">
-          {/* Treats & Feeding */}
-          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🐟</span>
+        <div className="p-6 pt-3 space-y-4">
+          {/* Treats & Feeding: Seamless capsule WITHOUT crude borders */}
+          <div className="rounded-2xl bg-white/[0.035] p-4 flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border-0">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-full bg-amber-500/10 text-amber-400 shrink-0">
+                <Fish className="h-4 w-4" />
+              </div>
               <div>
-                <span className="text-xs font-semibold">Угощения котика</span>
-                <p className="text-[10px] text-muted-foreground">
+                <div className="text-xs font-semibold text-zinc-200">Угощения котика</div>
+                <p className="text-[11px] text-zinc-400">
                   За каждую выполненную задачу дается 1 рыбка
                 </p>
               </div>
             </div>
 
-            <Button
-              size="sm"
+            <button
+              type="button"
               onClick={handleFeed}
               disabled={treatsCount <= 0}
-              className="h-8 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold"
+              className="rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 font-semibold px-5 py-2.5 shadow-[0_0_25px_rgba(251,191,36,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <span>Покормить</span>
-              <Badge variant="secondary" className="h-4 px-1.5 text-[10px] bg-zinc-900/40 text-zinc-100">
+              <span className="text-xs">Покормить</span>
+              <span className="rounded-full bg-black/30 text-white px-2 py-0.5 text-[10px] font-bold tabular-nums">
                 {treatsCount}
-              </Badge>
-            </Button>
+              </span>
+            </button>
           </div>
 
-          {/* Wardrobe Cosmetics */}
-          <div className="space-y-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {/* Wardrobe Cosmetics: 4 tactile glass cards without crude white borders */}
+          <div className="space-y-2.5">
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">
               Гардероб Котика
             </span>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2.5">
               {cosmetics.map((item) => {
                 const Icon = item.icon;
                 const isEquipped = gamification.equippedCosmetic === item.id;
@@ -159,15 +159,19 @@ export const CatRoomDialog: React.FC<CatRoomDialogProps> = ({
                 return (
                   <button
                     key={item.id}
-                    onClick={() => equipCosmetic(item.id)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border text-xs gap-1.5 transition-all cursor-pointer ${
+                    type="button"
+                    onClick={() => {
+                      equipCosmetic(item.id);
+                      try { soundEffects.playClick(); } catch {}
+                    }}
+                    className={`p-3.5 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer border-0 ${
                       isEquipped
-                        ? 'border-primary bg-primary/10 text-primary font-semibold shadow-xs'
-                        : 'border-border bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                        ? 'bg-indigo-500/15 text-white ring-1 ring-indigo-400/40 shadow-[0_0_25px_rgba(99,102,241,0.2)] font-semibold'
+                        : 'bg-white/[0.03] hover:bg-white/[0.07] text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-[10px]">{item.label}</span>
+                    <Icon className={`h-4 w-4 ${isEquipped ? 'text-indigo-400' : 'text-zinc-400'}`} />
+                    <span className="text-xs leading-none">{item.label}</span>
                   </button>
                 );
               })}
