@@ -102,12 +102,12 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
             initial={{ opacity: 0, y: 6, scale: 0.95 }}
             animate={{ opacity: 1, y: -8, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute top-2 z-30 rounded-xl border border-white/10 bg-zinc-950/90 px-3.5 py-1.5 shadow-xl backdrop-blur-md"
+            className="absolute top-2 z-30 rounded-2xl border border-white/10 bg-[#0B0D16]/90 px-3.5 py-1.5 shadow-xl backdrop-blur-xl"
           >
-            <p className="font-mono text-xs font-medium text-zinc-100 tracking-tight whitespace-nowrap">
+            <p className="text-xs font-medium text-zinc-100 tracking-tight whitespace-nowrap">
               {speechQuote}
             </p>
-            <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-zinc-950" />
+            <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#0B0D16]" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -231,7 +231,9 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
               opacity="0.95"
             />
             {/* Ostankino blinking red beacon */}
-            <circle cx="65.5" cy="58" r="1.5" fill="#ef4444" filter="drop-shadow(0 0 4px #ef4444)" />
+            <circle cx="65.5" cy="58" r="1.5" fill="#ef4444" filter="drop-shadow(0 0 5px #ef4444)">
+              <animate attributeName="opacity" values="1;0.2;1" dur="1.6s" repeatCount="indefinite" />
+            </circle>
             {/* Tiny City Window Lights */}
             <circle cx="28" cy="134" r="1" fill="#fef08a" opacity="0.6" />
             <circle cx="120" cy="142" r="1" fill="#fef08a" opacity="0.75" />
@@ -243,14 +245,24 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
             <path d="M 0,105 Q 200,126 400,110" stroke="#25163a" strokeWidth="1" opacity="0.6" fill="none" />
             <path d="M 0,117 Q 200,138 400,122" stroke="#25163a" strokeWidth="0.8" opacity="0.5" fill="none" />
 
-            {/* Stars & Constellations */}
-            <circle cx="50" cy="26" r="1.2" fill="#ffffff" opacity="0.9" />
-            <circle cx="120" cy="38" r="1" fill="#fef08a" opacity="0.85" />
+            {/* Stars & Constellations with gentle twinkling */}
+            <circle cx="50" cy="26" r="1.2" fill="#ffffff" opacity="0.9">
+              <animate attributeName="opacity" values="0.9;0.35;0.9" dur="3.2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="120" cy="38" r="1" fill="#fef08a" opacity="0.85">
+              <animate attributeName="opacity" values="0.4;0.95;0.4" dur="2.6s" repeatCount="indefinite" />
+            </circle>
             <circle cx="170" cy="18" r="1.4" fill="#ffffff" opacity="0.75" />
-            <circle cx="230" cy="30" r="1.1" fill="#fef08a" opacity="0.9" />
+            <circle cx="230" cy="30" r="1.1" fill="#fef08a" opacity="0.9">
+              <animate attributeName="opacity" values="0.9;0.25;0.9" dur="3.8s" repeatCount="indefinite" />
+            </circle>
             <circle cx="290" cy="16" r="1.5" fill="#ffffff" opacity="0.8" />
-            <circle cx="360" cy="35" r="1" fill="#fef08a" opacity="0.7" />
-            <circle cx="315" cy="58" r="1.2" fill="#ffffff" opacity="0.6" />
+            <circle cx="360" cy="35" r="1" fill="#fef08a" opacity="0.7">
+              <animate attributeName="opacity" values="0.3;0.85;0.3" dur="2.2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="315" cy="58" r="1.2" fill="#ffffff" opacity="0.6">
+              <animate attributeName="opacity" values="0.7;0.2;0.7" dur="4.2s" repeatCount="indefinite" />
+            </circle>
 
             {/* Falling Shooting Star Streak */}
             <line x1="270" y1="18" x2="225" y2="40" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" opacity="0.85" />
@@ -319,8 +331,14 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
               <rect x="0" y="3" width="16" height="15" rx="3" fill="#1e293b" stroke="#38bdf8" strokeWidth="1" />
               <path d="M 16,6 C 20,6 20,13 16,13" stroke="#38bdf8" strokeWidth="1.5" fill="none" strokeLinecap="round" />
               {/* Animated wisps of steam */}
-              <path d="M 5,0 Q 2,-5 6,-9" stroke="rgba(255,255,255,0.45)" strokeWidth="1" opacity="0.7" fill="none" strokeLinecap="round" />
-              <path d="M 11,0 Q 14,-5 10,-9" stroke="rgba(255,255,255,0.45)" strokeWidth="1" opacity="0.7" fill="none" strokeLinecap="round" />
+              <path d="M 5,0 Q 2,-5 6,-9" stroke="rgba(255,255,255,0.45)" strokeWidth="1" opacity="0.7" fill="none" strokeLinecap="round">
+                <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2.4s" repeatCount="indefinite" />
+                <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3; 0 0" dur="2.4s" repeatCount="indefinite" />
+              </path>
+              <path d="M 11,0 Q 14,-5 10,-9" stroke="rgba(255,255,255,0.45)" strokeWidth="1" opacity="0.7" fill="none" strokeLinecap="round">
+                <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2.8s" repeatCount="indefinite" />
+                <animateTransform attributeName="transform" type="translate" values="0 0; 0 -2.5; 0 0" dur="2.8s" repeatCount="indefinite" />
+              </path>
             </g>
 
             {/* Center: Glowing Keyboard under Cat's paws */}
@@ -329,17 +347,21 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
             <line x1="156" y1="198" x2="244" y2="198" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3 3" opacity="0.8" filter="drop-shadow(0 0 3px #38bdf8)" />
             <line x1="156" y1="204" x2="244" y2="204" stroke="#ec4899" strokeWidth="2" strokeDasharray="3 3" opacity="0.8" filter="drop-shadow(0 0 3px #ec4899)" />
 
-            {/* 3. FLUFFY LOFI ANIME CAT WITH GENTLE BREATHING ANIMATION */}
+            {/* 3. FLUFFY LOFI ANIME CAT WITH GENTLE BREATHING ANIMATION & SOFT NEON GLOW */}
             <motion.g
               animate={{
-                y: [0, -1.8, 0],
+                y: [0, -2, 0],
+                rotate: [0, 0.35, 0, -0.35, 0],
               }}
               transition={{
                 repeat: Infinity,
-                duration: 3.8,
+                duration: 4.2,
                 ease: 'easeInOut',
               }}
-              style={{ transformOrigin: '200px 172px' }}
+              style={{
+                transformOrigin: '200px 172px',
+                filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.7)) drop-shadow(0 0 14px rgba(192, 132, 252, 0.22))',
+              }}
             >
             {/* Swaying Tail curling on right */}
             <path
