@@ -1254,63 +1254,6 @@ export const initialCashbackCards: CashbackCard[] = [
   },
 ];
 
-// Generate realistic weekly GCal events starting around current date
-const generateInitialGcalEvents = (): GCalEvent[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const getIsoDate = (offsetDays: number) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + offsetDays);
-    return d.toLocaleDateString('sv-SE');
-  };
-
-  return [
-    {
-      id: 'gcal-1',
-      summary: 'Созвон с амбассадорами «Я-Профи» (ДФО)',
-      start: { dateTime: `${getIsoDate(1)}T17:00:00+03:00`, date: getIsoDate(1) },
-      end: { dateTime: `${getIsoDate(1)}T18:00:00+03:00`, date: getIsoDate(1) },
-      timeStr: '17:00–18:00'
-    },
-    {
-      id: 'gcal-2',
-      summary: 'Свидание пары: ужин & прогулка',
-      start: { dateTime: `${getIsoDate(2)}T19:30:00+03:00`, date: getIsoDate(2) },
-      end: { dateTime: `${getIsoDate(2)}T21:30:00+03:00`, date: getIsoDate(2) },
-      timeStr: '19:30'
-    },
-    {
-      id: 'gcal-3',
-      summary: 'НИУ ВШЭ: Семинар по НИР (Магистратура)',
-      start: { dateTime: `${getIsoDate(3)}T15:00:00+03:00`, date: getIsoDate(3) },
-      end: { dateTime: `${getIsoDate(3)}T16:30:00+03:00`, date: getIsoDate(3) },
-      timeStr: '15:00–16:30'
-    },
-    {
-      id: 'gcal-4',
-      summary: 'Синхронизация по деплою OpenMap',
-      start: { dateTime: `${getIsoDate(4)}T18:00:00+03:00`, date: getIsoDate(4) },
-      end: { dateTime: `${getIsoDate(4)}T18:45:00+03:00`, date: getIsoDate(4) },
-      timeStr: '18:00'
-    },
-    {
-      id: 'gcal-5',
-      summary: 'Леруа Мерлен: закупка для дома (полка, герметик)',
-      start: { dateTime: `${getIsoDate(5)}T13:00:00+03:00`, date: getIsoDate(5) },
-      end: { dateTime: `${getIsoDate(5)}T15:00:00+03:00`, date: getIsoDate(5) },
-      timeStr: '13:00'
-    },
-    {
-      id: 'gcal-6',
-      summary: 'РУДН: Лекции и тестирование онлайн',
-      start: { dateTime: `${getIsoDate(6)}T12:00:00+03:00`, date: getIsoDate(6) },
-      end: { dateTime: `${getIsoDate(6)}T14:00:00+03:00`, date: getIsoDate(6) },
-      timeStr: '12:00–14:00'
-    }
-  ];
-};
-
 export const initialGcalEvents: GCalEvent[] = [];
 
 export const initialUtilityBills: UtilityBill[] = [

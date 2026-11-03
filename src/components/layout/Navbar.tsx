@@ -8,7 +8,8 @@ import {
   CalendarDays,
   CreditCard,
   Heart,
-  GraduationCap
+  GraduationCap,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ interface NavbarProps {
   onOpenNewTask: () => void;
   onOpenSearch: () => void;
   onOpenCatRoom?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -31,11 +33,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNewTask,
   onOpenSearch,
   onOpenCatRoom,
+  onOpenSettings,
 }) => {
   const { 
     lastSyncTime, 
     isSyncingLive, 
     syncWithLivePipeline, 
+    supabaseConfig,
     wishlist,
     gamification 
   } = useNexusStore();
@@ -163,29 +167,42 @@ export const Navbar: React.FC<NavbarProps> = ({
             </kbd>
           </div>
 
-          {/* Live Sync Status */}
-          <Button
-            variant="outline"
-            size="sm"
+          {/* Clean Tiny Sync Status Dot Indicator */}
+          <button
             onClick={() => syncWithLivePipeline()}
             disabled={isSyncingLive}
-            className="h-8 px-2.5 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-            title="Нажмите для принудительной синхронизации"
+            title={
+              isSyncingLive 
+                ? 'Синхронизация с Mac & Supabase...' 
+                : `Синхронизировано (${lastSyncTime || 'онлайн'}). Нажмите для обновления`
+            }
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-[11px] text-zinc-400 cursor-pointer transition-colors"
           >
-            <RefreshCw className={`h-3 w-3 ${isSyncingLive ? 'animate-spin text-amber-400' : 'text-emerald-500'}`} />
-            <span className="hidden lg:inline">
-              {isSyncingLive ? 'Синхронизация...' : `Live ${lastSyncTime || '16:59'}`}
+            <span className="relative flex h-2 w-2">
+              {isSyncingLive ? (
+                <span className="animate-spin h-2 w-2 rounded-full border border-amber-400 border-t-transparent inline-block" />
+              ) : (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </>
+              )}
             </span>
-          </Button>
+            <span className="hidden xl:inline font-mono text-[11px] text-zinc-400">
+              {isSyncingLive ? 'Синхронизация' : 'В сети'}
+            </span>
+          </button>
 
-          {/* Supabase Status Indicator */}
-          <Badge 
-            variant="outline" 
-            className="hidden xl:flex items-center gap-1 h-8 px-2.5 text-[11px] font-mono text-muted-foreground"
+          {/* Settings Button (⚙️) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenSettings}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-white/[0.06] rounded-lg"
+            title="Настройки Supabase, импорта и синхронизации"
           >
-            <Cloud className="h-3 w-3 text-sky-400" />
-            <span>Supabase Live</span>
-          </Badge>
+            <Settings className="h-4 w-4" />
+          </Button>
 
           {/* Add Task Button */}
           <Button 
