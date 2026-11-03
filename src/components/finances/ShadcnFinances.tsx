@@ -587,7 +587,7 @@ export const ShadcnFinances: React.FC = () => {
               className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] px-4 py-2 text-xs font-semibold text-zinc-200 transition-all flex items-center gap-1.5 cursor-pointer border-0"
             >
               <Plus className="h-3.5 w-3.5 text-emerald-400" />
-              <span>+ Добавить карту</span>
+              <span>Добавить карту</span>
             </button>
             <div className="flex items-center text-xs text-amber-300 bg-amber-500/10 gap-1.5 py-1.5 px-3 rounded-full">
               <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
@@ -990,7 +990,7 @@ export const ShadcnFinances: React.FC = () => {
                       />
                       <span>·</span>
                       <InlineText
-                        value={bill.periodText || 'Текущий месяц'}
+                        value={bill.periodText || 'Ноябрь 2026'}
                         onChange={(val) => updateUtilityBill(bill.id, { periodText: val })}
                         className="text-xs text-zinc-500"
                       />
@@ -1089,7 +1089,7 @@ export const ShadcnFinances: React.FC = () => {
               className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] px-3.5 py-1.5 text-xs text-zinc-200 transition-all flex items-center gap-1.5 border-0 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5 text-rose-400" />
-              <span>+ Записать расход</span>
+              <span>Записать расход</span>
             </button>
           </div>
         </div>

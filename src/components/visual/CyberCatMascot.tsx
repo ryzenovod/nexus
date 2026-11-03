@@ -177,15 +177,15 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
             viewBox="0 0 400 220"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="rounded-xl overflow-hidden shadow-2xl max-w-[460px]"
+            className="rounded-2xl overflow-hidden shadow-2xl max-w-[460px] border-0"
           >
             <defs>
               {/* Sunset Twilight Window Gradient */}
-              <linearGradient id="lofi-sky-grad" x1="200" y1="0" x2="200" y2="180" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#0d091a" />
-                <stop offset="0.45" stopColor="#1e1136" />
-                <stop offset="0.85" stopColor="#3b134f" />
-                <stop offset="1" stopColor="#581c87" />
+              <linearGradient id="lofi-sky-grad" x1="200" y1="0" x2="200" y2="168" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#070913" />
+                <stop offset="0.4" stopColor="#0f132b" />
+                <stop offset="0.75" stopColor="#1a1738" />
+                <stop offset="1" stopColor="#28173d" />
               </linearGradient>
 
               {/* Crescent Moon Glow */}
@@ -222,96 +222,105 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
             </defs>
 
             {/* 1. SKY & CITYSCAPE BACKGROUND */}
-            <rect width="400" height="180" fill="url(#lofi-sky-grad)" />
+            <rect width="400" height="168" fill="url(#lofi-sky-grad)" />
 
-            {/* Distant City Skyline Silhouettes */}
+            {/* Distant Moscow Skyline Silhouettes */}
             <path
-              d="M 0,180 L 0,148 L 22,148 L 22,136 L 45,136 L 45,152 L 68,152 L 68,142 L 95,142 L 95,156 L 130,156 L 130,146 L 160,146 L 160,160 L 250,160 L 250,144 L 285,144 L 285,154 L 320,154 L 320,138 L 350,138 L 350,150 L 380,150 L 380,142 L 400,142 L 400,180 Z"
-              fill="#120c22"
-              opacity="0.9"
+              d="M 0,168 L 0,140 L 18,140 L 18,126 L 38,126 L 38,144 L 56,144 L 56,112 L 64,112 L 64,88 L 65,58 L 66,88 L 66,112 L 74,112 L 74,148 L 105,148 L 105,136 L 135,136 L 135,124 L 152,124 L 152,150 L 245,150 L 245,132 L 265,118 L 275,118 L 285,132 L 285,148 L 315,148 L 315,130 L 338,130 L 338,142 L 370,142 L 370,134 L 400,134 L 400,168 Z"
+              fill="#0b0d18"
+              opacity="0.95"
             />
+            {/* Ostankino blinking red beacon */}
+            <circle cx="65.5" cy="58" r="1.5" fill="#ef4444" filter="drop-shadow(0 0 4px #ef4444)" />
             {/* Tiny City Window Lights */}
-            <circle cx="34" cy="142" r="1" fill="#fef08a" opacity="0.6" />
-            <circle cx="80" cy="148" r="1" fill="#fef08a" opacity="0.8" />
-            <circle cx="145" cy="152" r="1" fill="#f472b6" opacity="0.5" />
-            <circle cx="265" cy="150" r="1.2" fill="#fef08a" opacity="0.75" />
-            <circle cx="335" cy="146" r="1" fill="#67e8f9" opacity="0.6" />
+            <circle cx="28" cy="134" r="1" fill="#fef08a" opacity="0.6" />
+            <circle cx="120" cy="142" r="1" fill="#fef08a" opacity="0.75" />
+            <circle cx="144" cy="130" r="1" fill="#67e8f9" opacity="0.6" />
+            <circle cx="270" cy="126" r="1.2" fill="#fef08a" opacity="0.8" />
+            <circle cx="326" cy="137" r="1" fill="#f472b6" opacity="0.5" />
 
             {/* Telephone / Power lines cutting through sunset sky */}
-            <path d="M 0,110 Q 200,132 400,115" stroke="#3b134f" strokeWidth="1" opacity="0.6" fill="none" />
-            <path d="M 0,122 Q 200,144 400,128" stroke="#3b134f" strokeWidth="0.8" opacity="0.5" fill="none" />
+            <path d="M 0,105 Q 200,126 400,110" stroke="#25163a" strokeWidth="1" opacity="0.6" fill="none" />
+            <path d="M 0,117 Q 200,138 400,122" stroke="#25163a" strokeWidth="0.8" opacity="0.5" fill="none" />
 
             {/* Stars & Constellations */}
-            <circle cx="50" cy="30" r="1.2" fill="#ffffff" opacity="0.9" />
-            <circle cx="120" cy="42" r="1" fill="#fef08a" opacity="0.85" />
-            <circle cx="170" cy="22" r="1.4" fill="#ffffff" opacity="0.75" />
-            <circle cx="230" cy="35" r="1.1" fill="#fef08a" opacity="0.9" />
-            <circle cx="290" cy="18" r="1.5" fill="#ffffff" opacity="0.8" />
-            <circle cx="360" cy="40" r="1" fill="#fef08a" opacity="0.7" />
-            <circle cx="315" cy="65" r="1.2" fill="#ffffff" opacity="0.6" />
+            <circle cx="50" cy="26" r="1.2" fill="#ffffff" opacity="0.9" />
+            <circle cx="120" cy="38" r="1" fill="#fef08a" opacity="0.85" />
+            <circle cx="170" cy="18" r="1.4" fill="#ffffff" opacity="0.75" />
+            <circle cx="230" cy="30" r="1.1" fill="#fef08a" opacity="0.9" />
+            <circle cx="290" cy="16" r="1.5" fill="#ffffff" opacity="0.8" />
+            <circle cx="360" cy="35" r="1" fill="#fef08a" opacity="0.7" />
+            <circle cx="315" cy="58" r="1.2" fill="#ffffff" opacity="0.6" />
 
             {/* Falling Shooting Star Streak */}
-            <line x1="270" y1="20" x2="225" y2="42" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" opacity="0.85" />
-            <circle cx="225" cy="42" r="2" fill="#ffffff" opacity="0.9" />
+            <line x1="270" y1="18" x2="225" y2="40" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" opacity="0.85" />
+            <circle cx="225" cy="40" r="2" fill="#ffffff" opacity="0.9" />
 
-            {/* Crescent Moon */}
+            {/* Crescent Moon with Lunar Glow */}
             <circle cx="75" cy="55" r="30" fill="url(#lofi-moon-glow)" />
             <path
               d="M 82,42 A 16,16 0 0,0 68,70 A 13.5,13.5 0 0,1 82,42 Z"
               fill="#fef08a"
-              filter="drop-shadow(0 0 6px rgba(254, 240, 138, 0.8))"
+              filter="drop-shadow(0 0 8px rgba(254, 240, 138, 0.7))"
             />
 
             {/* Window Wooden Frame */}
-            <rect x="0" y="0" width="400" height="180" fill="none" stroke="#27272a" strokeWidth="4" />
-            <line x1="200" y1="0" x2="200" y2="180" stroke="#27272a" strokeWidth="2" strokeOpacity="0.3" />
+            <rect x="0" y="0" width="400" height="168" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+            <line x1="200" y1="0" x2="200" y2="168" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
 
-            {/* 2. COZY WORKSPACE WOODEN DESK */}
-            <rect x="0" y="172" width="400" height="48" fill="#18181b" stroke="#27272a" strokeWidth="1.5" />
-            <line x1="0" y1="172" x2="400" y2="172" stroke="#3f3f46" strokeWidth="2" />
+            {/* 2. COZY WORKSPACE WOODEN DESK WITH PERSPECTIVE */}
+            <rect x="0" y="168" width="400" height="52" fill="#111219" stroke="none" />
+            <line x1="0" y1="168" x2="400" y2="168" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+            <line x1="0" y1="170" x2="400" y2="170" stroke="#1d1e2a" strokeWidth="1" />
 
-            {/* Ambient Lamp Glow on Desk (Right side) */}
-            <ellipse cx="340" cy="165" rx="55" ry="35" fill="url(#lamp-light-cone)" />
+            {/* Ambient Warm Lamp Glow spreading on Desk */}
+            <ellipse cx="340" cy="176" rx="60" ry="26" fill="url(#lamp-light-cone)" />
 
-            {/* Left Decor: Monstera Plant in Ceramic Pot */}
-            <g transform="translate(18, 125)">
-              {/* Pot */}
-              <polygon points="12,50 38,50 34,22 16,22" fill="#7c2d12" stroke="#9a3412" strokeWidth="1" />
+            {/* Left Decor: Monstera Plant in Ceramic Pot resting ON desk */}
+            <g transform="translate(18, 118)">
+              {/* Pot Base Contact Shadow */}
+              <ellipse cx="25" cy="53" rx="15" ry="4" fill="#000000" opacity="0.65" />
+              {/* Pot Body */}
+              <polygon points="12,53 38,53 34,25 16,25" fill="#2d1b16" stroke="#4a2e26" strokeWidth="1" />
               {/* Monstera Leaves */}
-              <path d="M 14,24 C 5,14 4,-2 18,2 C 18,10 24,18 25,24 Z" fill="#15803d" />
-              <path d="M 25,23 C 25,10 38,-4 44,8 C 40,16 34,22 25,23 Z" fill="#16a34a" />
-              <path d="M 25,22 C 18,8 24,-12 30,-2 C 32,8 28,18 25,22 Z" fill="#22c55e" />
-              {/* Pot details */}
-              <ellipse cx="25" cy="22" rx="9" ry="2.5" fill="#451a03" />
+              <path d="M 14,27 C 5,16 4,-2 18,2 C 18,10 24,19 25,27 Z" fill="#15803d" />
+              <path d="M 25,26 C 25,12 38,-4 44,8 C 40,17 34,23 25,26 Z" fill="#16a34a" />
+              <path d="M 25,25 C 18,10 24,-12 30,-2 C 32,9 28,19 25,25 Z" fill="#22c55e" />
+              {/* Pot top soil */}
+              <ellipse cx="25" cy="25" rx="9" ry="2.5" fill="#190e0b" />
             </g>
 
-            {/* Neon LEVEL UP Sign (Above monstera) */}
-            <g transform="translate(15, 88)">
-              <rect width="66" height="20" rx="4" fill="#18181b" stroke="#ec4899" strokeWidth="1.2" opacity="0.9" />
-              <text x="33" y="14" fill="#f472b6" fontSize="8.5" fontFamily="monospace" fontWeight="bold" textAnchor="middle" filter="drop-shadow(0 0 4px #ec4899)">
-                LEVEL UP ↑
+            {/* Sleek Frosted Level Badge */}
+            <g transform="translate(18, 76)">
+              <rect width="72" height="20" rx="10" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+              <circle cx="28" cy="10" r="2.5" fill="#34d399" />
+              <text x="51" y="13.5" fill="#f4f4f5" fontSize="9" fontFamily="Inter, system-ui, -apple-system, sans-serif" fontWeight="600" textAnchor="middle" letterSpacing="0.4">
+                LVL {gamification.level || 1}
               </text>
             </g>
 
-            {/* Right Decor: Desk Lamp & Steaming Mug */}
-            {/* Warm Desk Lamp */}
-            <g transform="translate(330, 110)">
+            {/* Right Decor: Warm Desk Lamp firmly resting ON desk */}
+            <g transform="translate(325, 100)">
+              {/* Stand Base Shadow */}
+              <ellipse cx="20" cy="71" rx="14" ry="4" fill="#000000" opacity="0.6" />
               {/* Stand */}
-              <line x1="20" y1="65" x2="20" y2="25" stroke="#52525b" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="20" cy="65" r="7" fill="#27272a" stroke="#71717a" strokeWidth="1.5" />
+              <line x1="20" y1="69" x2="20" y2="28" stroke="#3f3f46" strokeWidth="3" strokeLinecap="round" />
+              <ellipse cx="20" cy="69" rx="11" ry="3.5" fill="#27272a" stroke="#52525b" strokeWidth="1.2" />
               {/* Lampshade */}
-              <path d="M 8,25 L 32,25 L 26,8 L 14,8 Z" fill="#f59e0b" stroke="#fbbf24" strokeWidth="1.2" />
+              <path d="M 6,28 L 34,28 L 27,9 L 13,9 Z" fill="#f59e0b" stroke="#fbbf24" strokeWidth="1.2" />
               {/* Bulb Light */}
-              <circle cx="20" cy="27" r="4" fill="#fef08a" filter="drop-shadow(0 0 10px #f59e0b)" />
+              <circle cx="20" cy="30" r="4.5" fill="#fef08a" filter="drop-shadow(0 0 14px rgba(245, 158, 11, 0.9))" />
             </g>
 
-            {/* Steaming Mug */}
-            <g transform="translate(290, 160)">
-              <rect x="0" y="0" width="16" height="15" rx="3" fill="#3b82f6" stroke="#60a5fa" strokeWidth="1" />
-              <path d="M 16,3 C 20,3 20,11 16,11" stroke="#60a5fa" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            {/* Steaming Mug resting ON desk */}
+            <g transform="translate(288, 153)">
+              {/* Mug Contact Shadow */}
+              <ellipse cx="8" cy="18" rx="10" ry="3" fill="#000000" opacity="0.6" />
+              <rect x="0" y="3" width="16" height="15" rx="3" fill="#1e293b" stroke="#38bdf8" strokeWidth="1" />
+              <path d="M 16,6 C 20,6 20,13 16,13" stroke="#38bdf8" strokeWidth="1.5" fill="none" strokeLinecap="round" />
               {/* Animated wisps of steam */}
-              <path d="M 5,-2 Q 2,-7 6,-11" stroke="#ffffff" strokeWidth="1" opacity="0.5" fill="none" strokeLinecap="round" />
-              <path d="M 11,-2 Q 14,-7 10,-11" stroke="#ffffff" strokeWidth="1" opacity="0.5" fill="none" strokeLinecap="round" />
+              <path d="M 5,0 Q 2,-5 6,-9" stroke="rgba(255,255,255,0.45)" strokeWidth="1" opacity="0.7" fill="none" strokeLinecap="round" />
+              <path d="M 11,0 Q 14,-5 10,-9" stroke="rgba(255,255,255,0.45)" strokeWidth="1" opacity="0.7" fill="none" strokeLinecap="round" />
             </g>
 
             {/* Center: Glowing Keyboard under Cat's paws */}
@@ -320,7 +329,18 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
             <line x1="156" y1="198" x2="244" y2="198" stroke="#38bdf8" strokeWidth="2" strokeDasharray="3 3" opacity="0.8" filter="drop-shadow(0 0 3px #38bdf8)" />
             <line x1="156" y1="204" x2="244" y2="204" stroke="#ec4899" strokeWidth="2" strokeDasharray="3 3" opacity="0.8" filter="drop-shadow(0 0 3px #ec4899)" />
 
-            {/* 3. FLUFFY LOFI ANIME CAT */}
+            {/* 3. FLUFFY LOFI ANIME CAT WITH GENTLE BREATHING ANIMATION */}
+            <motion.g
+              animate={{
+                y: [0, -1.8, 0],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 3.8,
+                ease: 'easeInOut',
+              }}
+              style={{ transformOrigin: '200px 172px' }}
+            >
             {/* Swaying Tail curling on right */}
             <path
               d="M 235,178 C 265,182 280,162 272,142 C 265,128 252,136 256,148"
@@ -494,6 +514,7 @@ export const CyberCatMascot: React.FC<CyberCatMascotProps> = ({
                 <line x1="219" y1="192" x2="219" y2="197" stroke="#fda4af" strokeWidth="1.5" />
               </g>
             )}
+            </motion.g>
           </svg>
         )}
       </motion.div>

@@ -376,7 +376,7 @@ export const initialHSECalculators: HSECourseCalculator[] = [
 export const initialRUDNSubjects: RUDNSubjectBRS[] = [
   {
     id: 'rudn-subj-1',
-    subjectName: 'Клиническая психология (РУДН Онлайн)',
+    subjectName: 'Управление продуктом (РУДН Онлайн)',
     currentControl: 54, // out of 60
     milestoneControl: 18, // out of 20
     finalExam: 19, // out of 20

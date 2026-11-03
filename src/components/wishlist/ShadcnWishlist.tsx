@@ -311,7 +311,7 @@ export const ShadcnWishlist: React.FC = () => {
                       ) : null}
                     </div>
 
-                    {item.notes && (
+                    {item.notes && item.notes.trim() !== '' && !item.notes.includes('Автоматически подтянуто') && (
                       <p className="text-[11px] text-zinc-400 line-clamp-1">
                         {item.notes}
                       </p>
