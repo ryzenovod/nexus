@@ -89,8 +89,8 @@ export const ShadcnWishlist: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col space-y-6 max-w-[1600px] mx-auto w-full pb-8">
       {/* ── 1. WISHLIST SECTION ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs">
-        <div className="p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs">
+        <div className="p-5 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <Heart className="h-4 w-4 text-rose-500 fill-rose-500/20" />
@@ -244,8 +244,8 @@ export const ShadcnWishlist: React.FC = () => {
       </div>
 
       {/* ── 2. APARTMENT BLUEPRINT PINS ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs p-6">
-        <div className="flex items-center justify-between pb-4 border-b">
+      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs p-6">
+        <div className="flex items-center justify-between pb-4">
           <div>
             <div className="flex items-center gap-2">
               <Home className="h-4 w-4 text-emerald-400" />
@@ -264,16 +264,21 @@ export const ShadcnWishlist: React.FC = () => {
             return (
               <div
                 key={pin.id}
-                className="p-3.5 rounded-lg border bg-muted/20 space-y-2 hover:border-zinc-700 transition-colors"
+                className="p-3.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.07] space-y-2 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">{pin.title}</span>
-                  <Badge 
-                    variant={pin.status === 'solved' ? 'default' : pin.status === 'in_progress' ? 'secondary' : 'outline'} 
-                    className="text-[10px]"
+                  <span className="text-xs font-semibold text-zinc-100">{pin.title}</span>
+                  <span 
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      pin.status === 'solved'
+                        ? 'bg-emerald-500/15 text-emerald-400'
+                        : pin.status === 'in_progress'
+                          ? 'bg-amber-500/15 text-amber-400'
+                          : 'bg-white/[0.06] text-zinc-400'
+                    }`}
                   >
                     {pin.status === 'solved' ? 'Готово' : pin.status === 'in_progress' ? 'В процессе' : 'Проблема'}
-                  </Badge>
+                  </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   {pin.notes || 'Точка обустройства интерьера'}

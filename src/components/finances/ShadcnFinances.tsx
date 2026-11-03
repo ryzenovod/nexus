@@ -62,7 +62,7 @@ const EMVChipIcon: React.FC<{ variant?: 'gold' | 'platinum' }> = ({ variant = 'g
 );
 
 const MirBadge: React.FC = () => (
-  <div className="flex items-center px-1.5 py-0.5 rounded bg-white/[0.12] border border-white/[0.15] text-[9.5px] font-black tracking-widest text-white/90">
+  <div className="flex items-center px-1.5 py-0.5 rounded bg-white/[0.12] text-[9.5px] font-black tracking-widest text-white/90">
     MIR
   </div>
 );
@@ -207,8 +207,10 @@ export const ShadcnFinances: React.FC = () => {
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [customCategoryPercent, setCustomCategoryPercent] = useState('5');
   
-  // Card Add / Edit Modal
+  // Card modals
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [isCardCashbackModalOpen, setIsCardCashbackModalOpen] = useState(false);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [cardFormBankName, setCardFormBankName] = useState('');
   const [cardFormUser, setCardFormUser] = useState<'egor' | 'anya' | 'joint'>('joint');
@@ -365,8 +367,8 @@ export const ShadcnFinances: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col space-y-6 max-w-[1600px] mx-auto w-full pb-8">
       {/* ── 1. JOINT BUDGET HEADER CARD ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b">
+      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl shadow-xs p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -474,19 +476,17 @@ export const ShadcnFinances: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={handleOpenAddCard}
-              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] border-white/10"
+              className="h-8 px-3 rounded-full text-xs font-semibold gap-1.5 cursor-pointer bg-white/[0.06] hover:bg-white/[0.1] text-zinc-200 transition flex items-center"
             >
               <Plus className="h-3.5 w-3.5 text-emerald-400" />
               <span>+ Добавить карту</span>
-            </Button>
-            <Badge variant="outline" className="text-xs text-amber-400 border-amber-400/30 gap-1.5 py-1">
+            </button>
+            <div className="flex items-center text-xs text-amber-400 bg-amber-500/10 gap-1.5 py-1 px-2.5 rounded-full">
               <Sparkles className="h-3 w-3 text-amber-400" />
               <span>Экономия: <strong className="font-mono-num font-semibold">~4 850 ₽/мес</strong></span>
-            </Badge>
+            </div>
           </div>
         </div>
 
@@ -542,7 +542,7 @@ export const ShadcnFinances: React.FC = () => {
                     <EMVChipIcon variant={theme.chipVariant} />
                     
                     {/* Active Categories Count Badge */}
-                    <div className="flex items-center gap-1 bg-black/45 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[9.5px] font-mono-num text-zinc-300">
+                    <div className="flex items-center gap-1 bg-black/45 backdrop-blur-md px-2 py-0.5 rounded-full text-[9.5px] font-mono-num text-zinc-300">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       <span>{card.categories?.length || 0} категорий</span>
                     </div>
@@ -598,234 +598,80 @@ export const ShadcnFinances: React.FC = () => {
           })}
         </div>
 
-        {/* Selected Card Inspector & Category Manager */}
+        {/* Selected Card Minimalist Inspector (Zero Inner Borders) */}
         {currentCard && (
-          <div className="rounded-xl border bg-card text-card-foreground p-5 space-y-5 shadow-xs">
-            {/* Inspector Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b">
-              <div className="flex items-center gap-2.5">
-                <div className="w-3 h-3 rounded-full bg-amber-400" />
-                <h4 className="text-xs font-bold uppercase tracking-wider">
-                  Управление картой: {currentCard.bankName} ({getCardTag(currentCard)})
-                </h4>
-              </div>
-
+          <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl p-4 space-y-3 shadow-xs">
+            {/* Row 1: Title and quiet text actions */}
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="text-sm font-medium text-zinc-100">{currentCard.bankName}</span>
+                <span className="text-xs text-zinc-400">· {getCardTag(currentCard)}</span>
+                <span className="text-[11px] text-zinc-500 ml-1">● Активна</span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsCardCashbackModalOpen(true)}
+                  className="bg-white/[0.06] hover:bg-white/[0.1] text-xs text-zinc-200 px-3 py-1.5 rounded-full transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="h-3 w-3 text-amber-400" />
+                  <span>+ Зачислить кэшбэк</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleOpenEditCard(currentCard)}
-                  className="h-7 text-xs gap-1 cursor-pointer"
+                  className="text-zinc-500 hover:text-zinc-200 p-1.5 rounded-full transition cursor-pointer"
+                  title="Редактировать карту"
                 >
-                  <Edit3 className="h-3 w-3" />
-                  <span>Редактировать</span>
-                </Button>
+                  <Edit3 className="h-3.5 w-3.5" />
+                </button>
                 {cardsList.length > 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={() => handleDeleteCard(currentCard.id)}
-                    className="h-7 text-xs gap-1 text-red-400 border-red-500/20 hover:bg-red-500/10 cursor-pointer"
+                    className="text-zinc-500 hover:text-red-400 p-1.5 rounded-full transition cursor-pointer"
+                    title="Удалить карту"
                   >
-                    <Trash2 className="h-3 w-3" />
-                    <span>Удалить</span>
-                  </Button>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 )}
-                <Button
-                  variant={currentCard.claimed ? "outline" : "default"}
-                  size="sm"
-                  onClick={() => toggleCashbackClaimed(currentCard.id)}
-                  className={`h-7 text-xs gap-1.5 cursor-pointer ${
-                    currentCard.claimed 
-                      ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' 
-                      : 'bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold'
-                  }`}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  <span>{currentCard.claimed ? 'Категории активированы в банке ✓' : 'Выбрать категории в приложении'}</span>
-                </Button>
               </div>
             </div>
 
-            {/* Smart Dynamic TickTick Task Matching Notification */}
-            {matchingTasks.length > 0 && (
-              <div className="space-y-2">
-                {matchingTasks.map((matchedTask) => (
-                  <div
-                    key={matchedTask.id}
-                    className="p-3 rounded-xl border border-amber-500/35 bg-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in"
+            {/* Row 2: Flat category capsules + single + Добавить button */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentCard.categories && currentCard.categories.length > 0 ? (
+                currentCard.categories.map((cat, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] text-xs text-zinc-200"
                   >
-                    <div className="flex items-start gap-2.5">
-                      <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-xs font-semibold text-amber-200">
-                          В TickTick есть задача: <span className="underline font-bold text-amber-300">{matchedTask.title}</span>
-                        </div>
-                        <p className="text-[11px] text-zinc-400 mt-0.5">
-                          Нажмите кнопку, чтобы отметить выполнение задачи в TickTick и зачислить кэшбэк в общий бюджет пары
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        const match = matchedTask.title.match(/(\d+[\s\d]*)\s*₽/);
-                        const amt = match ? parseInt(match[1].replace(/\s/g, ''), 10) : (parseFloat(cashbackDepositAmount) || 1500);
-                        
-                        // Complete in TickTick and deposit to store
-                        toggleTaskCompletion(matchedTask.id);
-                        claimCashbackForCard(currentCard.id, amt, matchedTask.title);
-                      }}
-                      className="h-8 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-zinc-950 shrink-0 gap-1.5 cursor-pointer shadow-xs"
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      <span>Выполнить и зачислить</span>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Universal Cashback Deposit Block */}
-            <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-emerald-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    Зачислить полученный кэшбэк по карте {currentCard.bankName}
-                  </span>
-                </div>
-                <Badge variant="outline" className="text-[10px] text-muted-foreground font-mono">
-                  Прямое пополнение бюджета
-                </Badge>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <div className="relative flex-1">
-                  <Input
-                    type="number"
-                    placeholder="Сумма кэшбэка в ₽ (например, 1500 или 3000)"
-                    value={cashbackDepositAmount}
-                    onChange={(e) => setCashbackDepositAmount(e.target.value)}
-                    className="h-9 pr-8 font-mono font-semibold bg-background"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground">
-                    ₽
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {['500', '1000', '1500', '3000'].map((preset) => (
-                    <Button
-                      key={preset}
+                    <span>{cat.category}</span>
+                    <span className="text-emerald-400 font-semibold">{cat.percent}%</span>
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCashbackDepositAmount(preset)}
-                      className={`h-9 px-2 text-xs font-mono ${cashbackDepositAmount === preset ? 'bg-muted font-bold' : ''}`}
+                      onClick={() => removeCashbackCategory(currentCard.id, idx)}
+                      className="text-zinc-500 hover:text-zinc-200 ml-0.5 p-0.5 cursor-pointer leading-none"
+                      title="Удалить категорию"
                     >
-                      {preset} ₽
-                    </Button>
-                  ))}
-                </div>
+                      ×
+                    </button>
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-zinc-500 italic">Категории не выбраны</span>
+              )}
 
-                <Button
-                  onClick={() => handleClaimUniversalCashback()}
-                  className="h-9 px-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white gap-1.5 cursor-pointer shrink-0 shadow-xs"
-                >
-                  <ArrowDownRight className="h-3.5 w-3.5" />
-                  <span>Зачислить в общий бюджет</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Active Categories Badges */}
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground">Активные категории карты на месяц (нажмите ✕ для удаления):</div>
-              <div className="flex flex-wrap gap-2">
-                {currentCard.categories && currentCard.categories.length > 0 ? (
-                  currentCard.categories.map((cat, idx) => (
-                    <Badge
-                      key={idx}
-                      variant="secondary"
-                      className="h-7 pl-2.5 pr-1.5 text-xs font-medium gap-1.5 bg-muted/60 hover:bg-muted/90"
-                    >
-                      <span>{cat.category}</span>
-                      <span className="font-mono-num font-bold text-amber-400 bg-amber-500/10 px-1 py-0.2 rounded border border-amber-500/20">
-                        {cat.percent}%
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeCashbackCategory(currentCard.id, idx)}
-                        className="ml-0.5 rounded-full hover:bg-white/10 p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
-                        title="Удалить категорию"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))
-                ) : (
-                  <div className="text-xs text-muted-foreground italic">Категории пока не добавлены</div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Add Popular Bank Categories */}
-            <div className="pt-2 border-t space-y-2">
-              <div className="text-xs text-muted-foreground">Добавить в 1 клик популярную категорию банка:</div>
-              <div className="flex flex-wrap gap-1.5">
-                {POPULAR_QUICK_CATEGORIES.map((preset) => (
-                  <Button
-                    key={preset.name}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCashbackCategory(currentCard.id, preset.name, preset.percent)}
-                    className="h-6 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                  >
-                    <Plus className="h-2.5 w-2.5" />
-                    <span>{preset.name}</span>
-                    <span className="text-amber-400 font-mono-num">{preset.percent}%</span>
-                  </Button>
-                ))}
-              </div>
-
-              {/* Custom Category Input */}
-              <div className="flex items-center gap-2 pt-2 max-w-md">
-                <Input
-                  placeholder="Своя категория..."
-                  value={customCategoryName}
-                  onChange={(e) => setCustomCategoryName(e.target.value)}
-                  className="h-7 text-xs bg-muted/20"
-                />
-                <div className="flex items-center gap-1 shrink-0">
-                  <Input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={customCategoryPercent}
-                    onChange={(e) => setCustomCategoryPercent(e.target.value)}
-                    className="h-7 w-14 text-xs font-mono text-center bg-muted/20"
-                  />
-                  <span className="text-xs text-muted-foreground">%</span>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    if (customCategoryName.trim()) {
-                      addCashbackCategory(
-                        currentCard.id,
-                        customCategoryName.trim(),
-                        parseFloat(customCategoryPercent) || 5
-                      );
-                      setCustomCategoryName('');
-                    }
-                  }}
-                  className="h-7 px-3 text-xs cursor-pointer"
-                >
-                  Добавить
-                </Button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddCategoryModalOpen(true)}
+                className="px-3 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-xs text-zinc-400 hover:text-white transition flex items-center gap-1 cursor-pointer"
+              >
+                <Plus className="h-3 w-3" />
+                <span>Добавить</span>
+              </button>
             </div>
           </div>
         )}
@@ -867,10 +713,10 @@ export const ShadcnFinances: React.FC = () => {
                     key={userKey}
                     type="button"
                     onClick={() => setCardFormUser(userKey)}
-                    className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                       cardFormUser === userKey
-                        ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
-                        : 'border-border bg-muted/20 text-muted-foreground hover:text-foreground'
+                        ? 'bg-white/[0.15] text-white font-bold shadow-xs'
+                        : 'bg-white/[0.04] text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {userKey === 'egor' ? 'Егор' : userKey === 'anya' ? 'Аня' : 'Общая (Пара)'}
@@ -893,10 +739,10 @@ export const ShadcnFinances: React.FC = () => {
                       key={key}
                       type="button"
                       onClick={() => setCardFormPreset(key)}
-                      className={`flex items-center gap-2 p-2 rounded-lg border text-left text-xs transition-all cursor-pointer ${
+                      className={`flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-all cursor-pointer ${
                         isPresetActive
-                          ? 'border-white/50 bg-white/10 ring-1 ring-white/30 font-semibold'
-                          : 'border-border bg-muted/20 hover:bg-muted/40'
+                          ? 'bg-white/[0.15] text-white font-semibold'
+                          : 'bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08]'
                       }`}
                     >
                       <span className={`w-3.5 h-3.5 rounded-full shrink-0 ${p.badgeBg} shadow-xs`} />
@@ -952,9 +798,198 @@ export const ShadcnFinances: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ── CARD CASHBACK CLAIM MODAL (Zero Inner Borders) ── */}
+      <Dialog open={isCardCashbackModalOpen} onOpenChange={setIsCardCashbackModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              <span>Зачислить кэшбэк: {currentCard?.bankName}</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Пополнение общего бюджета накопленным кэшбэком по карте
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {matchingTasks.length > 0 && (
+              <div className="p-3 rounded-lg bg-amber-500/10 space-y-2">
+                <div className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  <span>Найдена задача в TickTick:</span>
+                </div>
+                {matchingTasks.map((matchedTask) => (
+                  <div key={matchedTask.id} className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-zinc-200 truncate">{matchedTask.title}</span>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const match = matchedTask.title.match(/(\d+[\s\d]*)\s*₽/);
+                        const amt = match ? parseInt(match[1].replace(/\s/g, ''), 10) : (parseFloat(cashbackDepositAmount) || 1500);
+                        toggleTaskCompletion(matchedTask.id);
+                        claimCashbackForCard(currentCard.id, amt, matchedTask.title);
+                        setIsCardCashbackModalOpen(false);
+                      }}
+                      className="h-7 text-[11px] bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold cursor-pointer shrink-0"
+                    >
+                      Выполнить и зачислить
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-foreground">Сумма кэшбэка (₽)</label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  placeholder="1500"
+                  value={cashbackDepositAmount}
+                  onChange={(e) => setCashbackDepositAmount(e.target.value)}
+                  className="font-mono font-semibold pr-8"
+                  autoFocus
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground">₽</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {['500', '1000', '1500', '3000'].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setCashbackDepositAmount(preset)}
+                  className={`flex-1 py-1 text-xs font-mono rounded-md transition cursor-pointer ${
+                    cashbackDepositAmount === preset
+                      ? 'bg-white/[0.12] text-white font-semibold'
+                      : 'bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08]'
+                  }`}
+                >
+                  {preset} ₽
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2 flex items-center justify-between sm:justify-between">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCardCashbackModalOpen(false)}
+              className="text-xs"
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                handleClaimUniversalCashback();
+                setIsCardCashbackModalOpen(false);
+              }}
+              className="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer gap-1.5"
+            >
+              <ArrowDownRight className="h-3.5 w-3.5" />
+              <span>Зачислить в бюджет</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── CARD ADD CATEGORY MODAL (Zero Inner Borders) ── */}
+      <Dialog open={isAddCategoryModalOpen} onOpenChange={setIsAddCategoryModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Plus className="h-4 w-4 text-emerald-400" />
+              <span>Добавить категорию: {currentCard?.bankName}</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Выберите популярную категорию банка или укажите свою
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-foreground">Популярные категории:</label>
+              <div className="flex flex-wrap gap-1.5">
+                {POPULAR_QUICK_CATEGORIES.map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => {
+                      addCashbackCategory(currentCard.id, preset.name, preset.percent);
+                      setIsAddCategoryModalOpen(false);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-zinc-200 transition cursor-pointer"
+                  >
+                    <span>{preset.name}</span>
+                    <span className="text-emerald-400 font-semibold">{preset.percent}%</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-medium text-foreground">Своя категория:</label>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Название категории..."
+                  value={customCategoryName}
+                  onChange={(e) => setCustomCategoryName(e.target.value)}
+                  className="h-8 text-xs flex-1"
+                />
+                <div className="flex items-center gap-1 shrink-0">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={customCategoryPercent}
+                    onChange={(e) => setCustomCategoryPercent(e.target.value)}
+                    className="h-8 w-14 text-xs font-mono text-center"
+                  />
+                  <span className="text-xs text-zinc-400">%</span>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (customCategoryName.trim()) {
+                      addCashbackCategory(
+                        currentCard.id,
+                        customCategoryName.trim(),
+                        parseFloat(customCategoryPercent) || 5
+                      );
+                      setCustomCategoryName('');
+                      setIsAddCategoryModalOpen(false);
+                    }
+                  }}
+                  className="h-8 px-3 text-xs cursor-pointer bg-zinc-100 text-zinc-950 hover:bg-white font-medium"
+                >
+                  Добавить
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAddCategoryModalOpen(false)}
+              className="text-xs"
+            >
+              Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── 3. ЖКХ МОСКВЫ И СЧЕТА TABLE ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs">
-        <div className="p-5 border-b">
+      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl shadow-xs">
+        <div className="p-5">
           <h3 className="text-base font-semibold leading-none">
             ЖКХ Москвы и регулярные счета квартиры
           </h3>
@@ -985,9 +1020,9 @@ export const ShadcnFinances: React.FC = () => {
                 ЛС: 84392-104-55 (lk.mosenergosbyt.ru)
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
                   Показания переданы (день: 1420 / ночь: 680)
-                </Badge>
+                </span>
               </TableCell>
               <TableCell className="text-right font-mono-num text-xs">0 ₽</TableCell>
               <TableCell className="text-right">
@@ -1013,9 +1048,9 @@ export const ShadcnFinances: React.FC = () => {
                 Вода гор, хол, отопление, комм. услуги
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400">
                   К оплате до 10-го числа
-                </Badge>
+                </span>
               </TableCell>
               <TableCell className="text-right font-mono-num font-semibold text-xs text-amber-400">
                 1 685 ₽
@@ -1096,7 +1131,7 @@ export const ShadcnFinances: React.FC = () => {
       </div>
 
       {/* ── 4. RECHARTS DYNAMICS GRAPH ── */}
-      <div className="rounded-xl border bg-card text-card-foreground shadow-xs p-6">
+      <div className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl shadow-xs p-6">
         <h3 className="text-base font-semibold leading-none">
           Динамика бюджета и расходов
         </h3>
@@ -1112,7 +1147,7 @@ export const ShadcnFinances: React.FC = () => {
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: '#18181b', 
-                  borderColor: '#27272a', 
+                  border: 'none', 
                   borderRadius: '8px', 
                   fontSize: '12px',
                   color: '#f4f4f5' 

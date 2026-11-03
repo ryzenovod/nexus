@@ -229,7 +229,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           onClick={() => {
             document.getElementById('inbox-tasks-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs p-6 cursor-pointer hover:bg-white/[0.04] transition-all active:scale-[0.99]"
           title="Нажмите, чтобы перейти к списку активных задач"
         >
           <div className="flex flex-row items-center justify-between pb-2">
@@ -249,7 +249,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           onClick={() => {
             document.getElementById('week-calendar-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs p-6 cursor-pointer hover:bg-white/[0.04] transition-all active:scale-[0.99]"
           title="Нажмите, чтобы перейти к недельному календарю"
         >
           <div className="flex flex-row items-center justify-between pb-2">
@@ -271,7 +271,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         {/* Card 3: Joint Budget -> Switch to finances tab */}
         <div 
           onClick={() => onNavigateTab('finances')}
-          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs p-6 cursor-pointer hover:bg-white/[0.04] transition-all active:scale-[0.99]"
           title="Нажмите, чтобы открыть раздел Финансы и Бюджет"
         >
           <div className="flex flex-row items-center justify-between pb-2">
@@ -291,7 +291,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         {/* Card 4: Utilities -> Switch to finances tab */}
         <div 
           onClick={() => onNavigateTab('finances')}
-          className="rounded-xl border bg-card text-card-foreground shadow-xs p-6 cursor-pointer hover:border-zinc-700 hover:bg-muted/10 transition-all active:scale-[0.99]"
+          className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs p-6 cursor-pointer hover:bg-white/[0.04] transition-all active:scale-[0.99]"
           title="Нажмите, чтобы открыть квитанции и счетчики ЖКХ"
         >
           <div className="flex flex-row items-center justify-between pb-2">
@@ -308,8 +308,8 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
       </div>
 
       {/* ── 2. 7-DAY WEEK CALENDAR TIMELINE ── */}
-      <div id="week-calendar-section" className="rounded-xl border bg-card text-card-foreground shadow-xs">
-        <div className="flex flex-wrap items-center justify-between p-5 border-b gap-3">
+      <div id="week-calendar-section" className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs">
+        <div className="flex flex-wrap items-center justify-between p-5 gap-3">
           <div className="flex items-center gap-3">
             <div>
               <h3 className="text-base font-semibold leading-none">Календарь и задачи недели</h3>
@@ -325,7 +325,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-md border bg-muted/30 p-0.5">
+            <div className="flex items-center rounded-lg bg-white/[0.04] p-0.5">
               <Button
                 variant="ghost"
                 size="sm"
@@ -338,7 +338,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onOffsetChange(0)}
-                className={`h-7 px-2.5 text-xs ${activeWeekOffset === 0 ? 'bg-background font-semibold shadow-xs' : ''}`}
+                className={`h-7 px-2.5 text-xs ${activeWeekOffset === 0 ? 'bg-white/[0.12] text-white font-semibold shadow-xs' : ''}`}
               >
                 Сегодня
               </Button>
@@ -353,14 +353,14 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
             </div>
 
             {/* Assignee filter toggle */}
-            <div className="flex items-center rounded-md border bg-muted/30 p-0.5">
+            <div className="flex items-center rounded-lg bg-white/[0.04] p-0.5">
               {(['all', 'egor', 'anya'] as const).map(a => (
                 <button
                   key={a}
                   onClick={() => onAssigneeChange(a)}
-                  className={`h-7 px-2.5 text-xs rounded-sm transition-all cursor-pointer ${
+                  className={`h-7 px-2.5 text-xs rounded-md transition-all cursor-pointer ${
                     selectedAssignee === a
-                      ? 'bg-background text-foreground font-medium shadow-xs'
+                      ? 'bg-white/[0.12] text-white font-medium shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -372,19 +372,19 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         </div>
 
         {/* 7 Columns Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x border-border min-h-[220px]">
+        <div className="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-white/[0.06] min-h-[220px]">
           {weekDays.map((day) => {
             return (
               <div
                 key={day.iso}
                 onClick={() => onAddTask(day.iso)}
                 className={`flex flex-col p-3 transition-colors cursor-pointer group/day ${
-                  day.isToday ? 'bg-muted/20' : 'hover:bg-muted/10'
+                  day.isToday ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
                 }`}
                 title={`Нажмите для создания задачи на ${day.dayName}, ${day.dayNumber} ${day.monthName}`}
               >
                 {/* Day Header */}
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/60">
+                <div className="flex items-center justify-between pb-2 mb-2">
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xs font-medium text-muted-foreground">
                       {day.dayName}
@@ -405,8 +405,8 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                   {/* Calendar Events (Clickable to open Sheet inspector) */}
                   {day.events.map((ev, eIdx) => {
                     const time = ev.start?.dateTime
-                      ? new Date(ev.start.dateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-                      : 'весь день';
+                        ? new Date(ev.start.dateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+                        : 'весь день';
                     return (
                       <div
                         key={ev.id || eIdx}
@@ -414,7 +414,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                           e.stopPropagation();
                           setSelectedCalendarEvent({ ...ev, formattedTime: time, dateIso: day.iso, dayLabel: `${day.dayName}, ${day.dayNumber}` });
                         }}
-                        className="flex items-center gap-1.5 p-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/25 text-sky-200 text-xs cursor-pointer transition-colors"
+                        className="flex items-center gap-1.5 p-1.5 rounded-md bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 text-xs cursor-pointer transition-colors"
                         title="Нажмите для просмотра события и добавления в задачи"
                       >
                         <Clock className="h-3 w-3 text-sky-400 shrink-0" />
@@ -430,12 +430,12 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                     return (
                       <div
                         key={task.id}
-                        className={`group flex items-start gap-2 p-1.5 rounded-md border text-xs transition-colors cursor-pointer ${
+                        className={`group flex items-start gap-2 p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
                           isDone 
-                            ? 'bg-muted/30 border-transparent opacity-50 line-through' 
+                            ? 'bg-muted/30 opacity-50 line-through' 
                             : task.isOverdue
-                              ? 'bg-red-500/10 border-red-500/20 text-foreground'
-                              : 'bg-card hover:bg-accent hover:text-accent-foreground'
+                              ? 'bg-red-500/15 text-foreground'
+                              : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -490,8 +490,8 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
       </div>
 
       {/* ── 3. FLAT TASKS INBOX & HUBS BROWSER ── */}
-      <div id="inbox-tasks-section" className="rounded-xl border bg-card text-card-foreground shadow-xs">
-        <div className="p-5 border-b">
+      <div id="inbox-tasks-section" className="rounded-xl border border-white/[0.08] bg-zinc-950/65 backdrop-blur-2xl text-card-foreground shadow-xs">
+        <div className="p-5 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-base font-semibold leading-none">
@@ -537,7 +537,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         </div>
 
         {/* Tasks Grid / Flat List */}
-        <div className="divide-y border-t max-h-[500px] overflow-y-auto [scrollbar-width:thin]">
+        <div className="divide-y divide-white/[0.06] max-h-[500px] overflow-y-auto [scrollbar-width:thin]">
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task) => {
               const isDone = task.completed;
@@ -587,15 +587,14 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                   {/* Right: Hub Drawer Trigger Button */}
                   <div className="flex items-center gap-2 shrink-0">
                     {hasChecklist && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => setActiveHubTask(task)}
-                        className="h-7 px-2.5 text-xs gap-1 text-amber-400 border-amber-400/30 hover:bg-amber-400/10"
+                        className="h-7 px-2.5 text-xs gap-1 text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-md transition cursor-pointer flex items-center"
                       >
                         <Layers className="h-3 w-3" />
                         <span>Чек-лист {count > 0 ? `(${count})` : ''}</span>
-                      </Button>
+                      </button>
                     )}
                     <Button
                       variant="ghost"
@@ -625,9 +624,9 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
               <Badge variant="secondary" className="text-xs">
                 {activeHubTask?.room || 'Хаб обустройства'}
               </Badge>
-              <Badge variant="outline" className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 TickTick
-              </Badge>
+              </span>
             </div>
             <SheetTitle className="text-lg font-bold mt-1">
               {activeHubTask?.title}
@@ -648,10 +647,10 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
                   <div
                     key={sub.id || sIdx}
                     onClick={() => activeHubTask && handleToggleSubtask(activeHubTask.id, sub.id)}
-                    className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors cursor-pointer ${
+                    className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors cursor-pointer ${
                       isChecked
-                        ? 'bg-muted/40 border-transparent text-muted-foreground line-through'
-                        : 'bg-card hover:bg-accent border-border'
+                        ? 'bg-muted/40 text-muted-foreground line-through'
+                        : 'bg-white/[0.04] hover:bg-white/[0.08]'
                     }`}
                   >
                     <Checkbox checked={isChecked} />
@@ -675,10 +674,10 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
         <SheetContent side="right" className="w-full sm:max-w-md flex flex-col">
           <SheetHeader>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs text-sky-400 border-sky-400/30 gap-1">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/15 text-sky-300">
                 <Clock className="h-3 w-3" />
                 <span>Google Calendar Live</span>
-              </Badge>
+              </span>
               {selectedCalendarEvent?.dayLabel && (
                 <Badge variant="secondary" className="text-xs">
                   {selectedCalendarEvent.dayLabel}
@@ -696,7 +695,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
 
           <div className="flex-1 space-y-4 mt-6">
             {selectedCalendarEvent?.location && (
-              <div className="p-3 rounded-lg border bg-muted/20 space-y-1">
+              <div className="p-3 rounded-lg bg-white/[0.04] space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                   <MapPin className="h-3.5 w-3.5 text-amber-400" />
                   <span>Место проведения</span>
@@ -706,7 +705,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
             )}
 
             {selectedCalendarEvent?.description && (
-              <div className="p-3 rounded-lg border bg-muted/20 space-y-1">
+              <div className="p-3 rounded-lg bg-white/[0.04] space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                   <AlignLeft className="h-3.5 w-3.5 text-sky-400" />
                   <span>Описание / Заметки</span>
@@ -717,7 +716,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
               </div>
             )}
 
-            <div className="p-4 rounded-xl border border-sky-500/20 bg-sky-500/5 space-y-3">
+            <div className="p-4 rounded-xl bg-sky-500/10 space-y-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-sky-400" />
                 <span className="text-xs font-semibold text-sky-200">Синхронизация с планом Nexus</span>
