@@ -205,10 +205,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: -10 }}
         transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-        className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#12141a] shadow-2xl overflow-hidden"
+        className="w-full max-w-2xl rounded-2xl border border-white/[0.08] bg-[#0D101A]/95 shadow-[0_25px_60px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-2xl overflow-hidden"
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3 bg-white/[0.02]">
+        <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3 bg-white/[0.015]">
           <Search className="h-5 w-5 text-amber-400" />
           <input
             ref={inputRef}
@@ -223,7 +223,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             placeholder="Введите команду или задачу (напр. Купить герметик завтра #дом @егор 450р)..."
             className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none"
           />
-          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">
+          <kbd className="rounded-md bg-white/[0.08] px-1.5 py-0.5 tabular-nums text-[10px] text-zinc-400">
             ESC
           </kbd>
         </div>
@@ -232,7 +232,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         <div className="max-h-[460px] overflow-y-auto p-3 space-y-4">
           {/* Natural Language Task Preview */}
           {input.trim() && parsedNLP.title && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+            <div className="rounded-xl bg-amber-500/[0.08] p-3 shadow-[inset_0_1px_0_rgba(251,191,36,0.15)]">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -241,7 +241,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <button
                   type="button"
                   onClick={handleCreateNLPTask}
-                  className="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-bold text-black hover:bg-amber-400 transition-colors"
+                  className="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-semibold text-zinc-950 hover:bg-amber-300 transition-colors shadow-sm"
                 >
                   Создать
                 </button>
@@ -252,17 +252,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               </div>
 
               <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-zinc-300">
-                <span className="rounded bg-black/30 px-2 py-0.5 border border-white/10">
+                <span className="rounded-md bg-white/[0.06] px-2 py-0.5">
                   Исполнитель: {parsedNLP.assignee === 'egor' ? 'Егор' : parsedNLP.assignee === 'anya' ? 'Аня' : 'Вместе'}
                 </span>
-                <span className="rounded bg-black/30 px-2 py-0.5 border border-white/10">
+                <span className="rounded-md bg-white/[0.06] px-2 py-0.5">
                   Зона: {parsedNLP.room}
                 </span>
-                <span className="rounded bg-black/30 px-2 py-0.5 border border-white/10">
+                <span className="rounded-md bg-white/[0.06] px-2 py-0.5">
                   Срок: {parsedNLP.date}
                 </span>
                 {parsedNLP.price && (
-                  <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-mono text-emerald-300 border border-emerald-500/30">
+                  <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 tabular-nums text-emerald-300 font-medium">
                     {parsedNLP.price} ₽
                   </span>
                 )}
