@@ -53,6 +53,11 @@ begin
     end if;
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from public, anon, authenticated', t);
+    -- Old finance rows have no owner_id: member-wide grants would expose personal
+    -- spending to everyone. Keep that table inaccessible until row ownership exists.
+    if t = 'nexus_finances' then
+      continue;
+    end if;
     execute format('grant select, insert, update, delete on public.%I to authenticated', t);
 
     execute format(
