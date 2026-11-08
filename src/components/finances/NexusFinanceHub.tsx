@@ -359,7 +359,8 @@ export const NexusFinanceHub: React.FC = () => {
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><LockKeyhole className="size-4" /> Финансовый реестр заблокирован</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-zinc-400">Операции зашифрованы в браузере. Пароль не отправляется на сервер и не хранится в NEXUS. Без пароля восстановление невозможно.</p>
+          <p className="text-sm text-zinc-400">Операции зашифрованы в браузере. Пароль не отправляется на сервер и не хранится в NEXUS. Без него расшифровать данные нельзя.</p>
+          <p className="text-xs leading-relaxed text-zinc-400">Где взять пароль? Если он сохранён на Mac, открой системную программу «Связка ключей» (Keychain Access), выбери связку login и найди «NEXUS encrypted private finance ledger — GitHub Pages». Выбери «Показать пароль» и подтверди доступ в macOS. Не отправляй пароль в чат или на сайт кроме формы разблокировки NEXUS. Зашифрованная копия .nexus не содержит пароль.</p>
           <form className="flex flex-wrap gap-2" onSubmit={e => { e.preventDefault(); void unlock(); }}>
             <Input ref={passwordRef} type="password" autoComplete="current-password" aria-label="Пароль для финансового реестра" placeholder="Пароль для разблокировки" className="max-w-sm" />
             <Button type="submit" disabled={protecting}><KeyRound className="size-4" /> Разблокировать</Button>
