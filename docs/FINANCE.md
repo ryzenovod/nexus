@@ -48,6 +48,6 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 ## Boundaries
 
 - The legacy Карты и ЖКХ section still uses the old Zustand/Supabase model. Its totals are not merged with the bank ledger.
-- The current SQL schema allows public access with USING(true) policies. Implement proper authenticated member policies before any private financial cloud sync.
+- Source SQL now includes an authenticated-member RLS migration. Actual production policies are **unverified until the owner applies and tests** supabase/security_migration.sql. Do not enable bank-data cloud sync.
 - No automatic bank API access, payments, card repayments or transfers; read-only parsing and review.
 - Browser persistence is local; export CSV for a durable backup.
