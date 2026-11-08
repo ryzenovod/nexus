@@ -68,13 +68,25 @@ export async function fetchNexusSyncFeed(url: string, anonKey: string): Promise<
   }
 }
 
+// Allow only explicit couple-workspace fields on the shared cloud channel.
+// Banking transactions, card metadata and private financial registers never belong here.
+const ALLOWED_SHARED_STATE_KEYS = new Set([
+  'wishlist', 'budget', 'studyWorkItems', 'customStudySpaces',
+  'completedTaskIds', 'deletedTaskIds', 'customTasks', 'pendingTickTickCompletions',
+]);
+
 export async function pushSharedStateToNexusSync(url: string, anonKey: string, sharedState: any): Promise<boolean> {
   try {
+    if (!sharedState || typeof sharedState !== 'object' || Array.isArray(sharedState)) return false;
+    const safeState = Object.fromEntries(
+      Object.entries(sharedState).filter(([key]) => ALLOWED_SHARED_STATE_KEYS.has(key)),
+    );
+    if (!Object.keys(safeState).length) return false;
     const client = await authorizedClient(url, anonKey);
     if (!client) return false;
     const { error } = await client.from('nexus_sync').upsert({
       id: 'main_feed',
-      shared_state: sharedState,
+      shared_state: safeState,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' });
     return !error;
