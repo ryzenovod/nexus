@@ -16,7 +16,7 @@ import {
 } from '@/finance/ledger';
 import {
   LedgerLockedError, enablePrivateEncryption, loadPrivateLedger, lockPrivateLedger,
-  savePrivateLedger, unlockPrivateLedger,
+  savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup,
 } from '@/finance/storage';
 
 type GridMode = 'ledger' | 'joint' | 'review';
@@ -129,12 +129,14 @@ function Metric({ title, value, hint }: { title: string; value: string; hint: st
   </CardContent></Card>;
 }
 
-function downloadCSV(name: string, csv: string) {
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+function downloadFile(name: string, contents: string, mime: string) {
+  const url = URL.createObjectURL(new Blob([contents], { type: mime }));
   const anchor = document.createElement('a');
   anchor.href = url; anchor.download = name; document.body.appendChild(anchor); anchor.click(); anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+
+const downloadCSV = (name: string, csv: string) => downloadFile(name, csv, 'text/csv;charset=utf-8');
 
 export const NexusFinanceHub: React.FC = () => {
   const [ledger, setLedger] = useState<BankRow[]>([]);
@@ -151,6 +153,7 @@ export const NexusFinanceHub: React.FC = () => {
   const [bank, setBank] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const masterSyncRef = useRef<HTMLInputElement>(null);
+  const encryptedBackupRef = useRef<HTMLInputElement>(null);
   const saveChain = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
@@ -274,6 +277,36 @@ export const NexusFinanceHub: React.FC = () => {
     }
   };
 
+  const downloadEncryptedBackup = async () => {
+    setError('');
+    try {
+      const contents = await exportEncryptedLedgerBackup();
+      const today = new Date().toISOString().slice(0, 10);
+      downloadFile('nexus-finance-encrypted-' + today + '.nexus', contents, 'application/json;charset=utf-8');
+      setMessage('Зашифрованная копия сохранена в загрузки. Для восстановления нужен тот же пароль.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const restoreEncryptedBackup = async (file: File) => {
+    setError('');
+    try {
+      if (!loaded || ledgerLocked || !storageAvailable || ledger.length) {
+        throw Error('Восстановление возможно только в пустом локальном реестре');
+      }
+      if (file.size > 15 * 1024 * 1024) throw Error('Файл резервной копии слишком большой');
+      await saveChain.current;
+      await importEncryptedLedgerBackup(await file.text());
+      setEncrypted(true);
+      setStorageAvailable(false);
+      setLedgerLocked(true);
+      setMessage('Зашифрованный реестр восстановлен. Введи исходный пароль для разблокировки.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const candidates = ledger.filter(r => r.date >= '2026-10-21' && r.flow_type === 'EXPENSE');
   const allForGrid = filtered(visible);
   const jointForGrid = filtered(candidates);
@@ -293,7 +326,18 @@ export const NexusFinanceHub: React.FC = () => {
         <input ref={masterSyncRef} type="file" className="hidden" accept=".csv,text/csv" onChange={async e => {
           const file = e.target.files?.[0]; if (file) await syncReviewedMaster(file); e.target.value = '';
         }} />
+        <input ref={encryptedBackupRef} type="file" className="hidden" accept=".nexus,.json,application/json" onChange={async e => {
+          const file = e.target.files?.[0]; if (file) await restoreEncryptedBackup(file); e.target.value = '';
+        }} />
         <Button disabled={!loaded || ledgerLocked || !storageAvailable} onClick={() => inputRef.current?.click()}><FileUp /> Импорт CSV</Button>
+        {loaded && encrypted && <Button variant="outline" onClick={() => void downloadEncryptedBackup()}>
+          <ArrowDownToLine /> Шифр. копия
+        </Button>}
+        {loaded && !encrypted && !ledgerLocked && storageAvailable && !ledger.length && (
+          <Button variant="outline" onClick={() => encryptedBackupRef.current?.click()}>
+            <FileUp /> Восстановить .nexus
+          </Button>
+        )}
         <Button variant="outline" disabled={!loaded || ledgerLocked || !storageAvailable || !ledger.length}
           title="Загрузить мастер-CSV с проверенными категориями, не изменяя банковские суммы или локальные решения"
           onClick={() => masterSyncRef.current?.click()}><RefreshCw /> Сверить мастер</Button>
