@@ -105,6 +105,7 @@ describe('Private finance encryption', () => {
   });
 
   it('does not corrupt ciphertext if a previously open tab tries to write without unlocking', async () => {
+    await savePrivateLedger([fixture]);
     await enablePrivateEncryption([fixture], 'correct synthetic testing password');
     const before = await rawRecord();
     lockPrivateLedger();
