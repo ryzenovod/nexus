@@ -1,3 +1,4 @@
+import { safeExternalUrl } from '@/lib/safeExternalUrl';
 import React, { useState, useMemo } from 'react';
 import { 
   Heart, 
@@ -291,9 +292,9 @@ export const ShadcnWishlist: React.FC = () => {
                       {/* Item Store Link */}
                       {item.link ? (
                         <a
-                          href={item.link}
+                          href={safeExternalUrl(item.link) || undefined}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 rounded-full bg-sky-500/10 px-2.5 py-0.5 transition-all truncate max-w-[130px]"
                           title={item.link}
                         >

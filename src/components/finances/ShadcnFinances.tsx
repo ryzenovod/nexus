@@ -1,3 +1,4 @@
+import { openExternalUrl } from '@/lib/safeExternalUrl';
 import React, { useState, useMemo } from 'react';
 import { 
   CreditCard, 
@@ -1023,7 +1024,7 @@ export const ShadcnFinances: React.FC = () => {
                     {bill.linkUrl && (
                       <button
                         type="button"
-                        onClick={() => window.open(bill.linkUrl, '_blank')}
+                        onClick={() => openExternalUrl(bill.linkUrl)}
                         className="rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs text-zinc-300 hover:text-white px-3 py-1.5 transition-all cursor-pointer border-0 flex items-center gap-1"
                       >
                         <ExternalLink className="h-3 w-3" />
@@ -1035,12 +1036,13 @@ export const ShadcnFinances: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          payUtilityBill(bill.id);
-                          if (bill.linkUrl) window.open(bill.linkUrl, '_blank');
+                          if (window.confirm('Подтверди, что оплата действительно прошла. Только после этого счёт будет отмечен оплаченным.')) {
+                            payUtilityBill(bill.id);
+                          }
                         }}
                         className="rounded-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-xs px-3.5 py-1.5 transition-all cursor-pointer border-0 shadow-xs"
                       >
-                        Оплатить
+                        Отметить оплаченным
                       </button>
                     )}
 

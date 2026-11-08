@@ -1,3 +1,4 @@
+import { safeExternalUrl } from '@/lib/safeExternalUrl';
 import React, { useState } from 'react';
 import { X, Calendar, Trash2, CheckCircle2, User, Tag, Home, CreditCard, ExternalLink, Plus } from 'lucide-react';
 import { NexusTask, BracketColor, Assignee, RoomArea, TaskCategory } from '../../types/nexus';
@@ -284,7 +285,7 @@ export const LinearIssueInspector: React.FC<LinearIssueInspectorProps> = ({
         {task.link && (
           <div>
             <a
-              href={task.link}
+              href={safeExternalUrl(task.link) || undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[12px] text-[#5e6ad2] hover:underline"

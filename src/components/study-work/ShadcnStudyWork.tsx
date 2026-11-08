@@ -1,3 +1,4 @@
+import { openExternalUrl } from '@/lib/safeExternalUrl';
 import React, { useState, useMemo } from 'react';
 import { 
   GraduationCap, 
@@ -1391,7 +1392,7 @@ export const ShadcnStudyWork: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => window.open(editLinkUrl, '_blank')}
+                    onClick={() => openExternalUrl(editLinkUrl)}
                     className="h-9 px-3 text-xs bg-white/[0.06] text-zinc-200 border-0 rounded-full"
                   >
                     Открыть

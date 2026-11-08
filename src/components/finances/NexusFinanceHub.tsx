@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type ColumnDef, type SortingState, flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { AlertTriangle, ArrowDownToLine, FileUp, LockKeyhole, RefreshCw, Wallet } from 'lucide-react';
+import { AlertTriangle, ArrowDownToLine, FileUp, KeyRound, LockKeyhole, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,7 +14,10 @@ import {
   editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, sources,
   type BankRow, type Contour,
 } from '@/finance/ledger';
-import { loadPrivateLedger, savePrivateLedger } from '@/finance/storage';
+import {
+  LedgerLockedError, enablePrivateEncryption, loadPrivateLedger, lockPrivateLedger,
+  savePrivateLedger, unlockPrivateLedger,
+} from '@/finance/storage';
 
 type GridMode = 'ledger' | 'joint' | 'review';
 
@@ -137,6 +140,10 @@ export const NexusFinanceHub: React.FC = () => {
   const [ledger, setLedger] = useState<BankRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [storageAvailable, setStorageAvailable] = useState(false);
+  const [ledgerLocked, setLedgerLocked] = useState(false);
+  const [encrypted, setEncrypted] = useState(false);
+  const [protecting, setProtecting] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('Импортируй transactions.csv из ~/Documents/NEXUS. Сайт не содержит встроенных выписок.');
   const [error, setError] = useState('');
   const [contour, setContour] = useState<Contour | 'ВСЕ'>('ВСЕ');
@@ -149,8 +156,16 @@ export const NexusFinanceHub: React.FC = () => {
     let active = true;
     loadPrivateLedger().then(rows => {
       if (active) { setLedger(rows); setStorageAvailable(true); }
-    }).catch(e => { if (active) setError('Локальное хранилище недоступно: ' + String(e)); })
-      .finally(() => { if (active) setLoaded(true); });
+    }).catch(e => {
+      if (!active) return;
+      if (e instanceof LedgerLockedError) {
+        setLedgerLocked(true);
+        setEncrypted(true);
+        setMessage('Зашифрованный реестр заблокирован. Введи пароль для работы.');
+      } else {
+        setError('Локальное хранилище недоступно: ' + String(e));
+      }
+    }).finally(() => { if (active) setLoaded(true); });
     return () => { active = false; };
   }, []);
   useEffect(() => {
@@ -158,6 +173,54 @@ export const NexusFinanceHub: React.FC = () => {
     saveChain.current = saveChain.current.catch(() => {}).then(() => savePrivateLedger(ledger))
       .catch(e => setError('Автосохранение не удалось. Экспортируй CSV: ' + String(e)));
   }, [ledger, loaded, storageAvailable]);
+
+  const protect = async () => {
+    setError('');
+    setProtecting(true);
+    try {
+      await saveChain.current;
+      await enablePrivateEncryption(ledger, passwordRef.current?.value || '');
+      setEncrypted(true);
+      setMessage('Реестр зашифрован AES-GCM. После обновления страницы потребуется пароль.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (passwordRef.current) passwordRef.current.value = '';
+      setProtecting(false);
+    }
+  };
+
+  const unlock = async () => {
+    setError('');
+    setProtecting(true);
+    try {
+      const rows = await unlockPrivateLedger(passwordRef.current?.value || '');
+      setLedger(rows);
+      setStorageAvailable(true);
+      setLedgerLocked(false);
+      setEncrypted(true);
+      setMessage('Зашифрованный реестр открыт. Все правки сохраняются в зашифрованном виде.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (passwordRef.current) passwordRef.current.value = '';
+      setProtecting(false);
+    }
+  };
+
+  const lock = async () => {
+    setError('');
+    try {
+      await saveChain.current;
+      setStorageAvailable(false);
+      lockPrivateLedger();
+      setLedger([]);
+      setLedgerLocked(true);
+      setMessage('Реестр заблокирован на этой вкладке.');
+    } catch (e) {
+      setError('Нельзя заблокировать реестр до окончания записи: ' + String(e));
+    }
+  };
 
   const update = useCallback((id: string, patch: Partial<BankRow>) => {
     setLedger(current => current.map(row => row.transaction_id === id ? editRow(row, patch) : row));
@@ -208,11 +271,11 @@ export const NexusFinanceHub: React.FC = () => {
         <input ref={inputRef} type="file" className="hidden" accept=".csv,text/csv" onChange={async e => {
           const file = e.target.files?.[0]; if (file) await importFile(file); e.target.value = '';
         }} />
-        <Button disabled={!loaded} onClick={() => inputRef.current?.click()}><FileUp /> Импорт CSV</Button>
-        <Button variant="outline" disabled={!ledger.length} onClick={() => downloadCSV('nexus_shared_decisions.csv', exportCSV(candidates, DECISION_COLUMNS))}>
+        <Button disabled={!loaded || ledgerLocked || !storageAvailable} onClick={() => inputRef.current?.click()}><FileUp /> Импорт CSV</Button>
+        <Button variant="outline" disabled={ledgerLocked || !ledger.length} onClick={() => downloadCSV('nexus_shared_decisions.csv', exportCSV(candidates, DECISION_COLUMNS))}>
           <ArrowDownToLine /> Решения
         </Button>
-        <Button variant="outline" disabled={!ledger.length} onClick={() => downloadCSV('nexus_transactions_edited.csv', exportCSV(ledger, MASTER_COLUMNS))}>
+        <Button variant="outline" disabled={ledgerLocked || !ledger.length} onClick={() => downloadCSV('nexus_transactions_edited.csv', exportCSV(ledger, MASTER_COLUMNS))}>
           <ArrowDownToLine /> Реестр
         </Button>
       </div>
@@ -221,10 +284,38 @@ export const NexusFinanceHub: React.FC = () => {
       <LockKeyhole className="mt-0.5 size-4 shrink-0" />
       <span>Данные хранятся в IndexedDB на этом устройстве, без передачи в Supabase. Это не облачный бэкап: обязательно экспортируй CSV после правок. Старые вручную введённые финансы NEXUS учитываются отдельно.</span>
     </div>
+    {loaded && (ledgerLocked ? (
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><LockKeyhole className="size-4" /> Финансовый реестр заблокирован</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-zinc-400">Операции зашифрованы в браузере. Пароль не отправляется на сервер и не хранится в NEXUS. Без пароля восстановление невозможно.</p>
+          <form className="flex flex-wrap gap-2" onSubmit={e => { e.preventDefault(); void unlock(); }}>
+            <Input ref={passwordRef} type="password" autoComplete="current-password" aria-label="Пароль для финансового реестра" placeholder="Пароль для разблокировки" className="max-w-sm" />
+            <Button type="submit" disabled={protecting}><KeyRound className="size-4" /> Разблокировать</Button>
+          </form>
+        </CardContent>
+      </Card>
+    ) : storageAvailable && (
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-zinc-900/40 p-4">
+        {encrypted ? (
+          <>
+            <Badge variant="outline" className="border-emerald-800/60 text-emerald-300">AES-GCM · зашифровано</Badge>
+            <span className="min-w-52 flex-1 text-xs text-zinc-400">Данные на устройстве зашифрованы. Не забудь пароль — восстановить его нельзя.</span>
+            <Button variant="outline" disabled={protecting} onClick={() => void lock()}><LockKeyhole className="size-4" /> Заблокировать</Button>
+          </>
+        ) : (
+          <>
+            <span className="min-w-52 flex-1 text-xs text-zinc-400">Сейчас банковские операции хранятся в браузере без прикладного шифрования. Можно включить защиту паролем (от 12 символов).</span>
+            <Input ref={passwordRef} type="password" autoComplete="new-password" aria-label="Новый пароль для шифрования" placeholder="Придумай пароль от 12 символов" className="max-w-xs" />
+            <Button variant="outline" disabled={protecting || ledger.length === 0} onClick={() => void protect()}><KeyRound className="size-4" /> Зашифровать</Button>
+          </>
+        )}
+      </div>
+    ))}
     {error && <div role="alert" className="flex items-start gap-2 rounded-lg border border-red-900/50 bg-red-950/40 p-3 text-xs text-red-200"><AlertTriangle className="size-4 shrink-0" />{error}</div>}
     {message && <div className="text-xs text-zinc-400">{loaded ? message : 'Чтение локального хранилища…'}</div>}
 
-    <Tabs defaultValue="overview" className="w-full">
+    {!ledgerLocked && <Tabs defaultValue="overview" className="w-full">
       <TabsList className="mb-4 h-auto w-full flex-wrap justify-start gap-1 bg-white/[0.03] p-1">
         <TabsTrigger value="overview">Сводка</TabsTrigger>
         <TabsTrigger value="personal">Мои финансы</TabsTrigger>
@@ -333,6 +424,6 @@ export const NexusFinanceHub: React.FC = () => {
       </TabsContent>
 
       <TabsContent value="old"><ShadcnFinances /></TabsContent>
-    </Tabs>
+    </Tabs>}
   </div>;
 };
