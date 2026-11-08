@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { BankRow } from './ledger';
 import {
   enablePrivateEncryption, LedgerLockedError, loadPrivateLedger, lockPrivateLedger,
-  savePrivateLedger, unlockPrivateLedger,
+  savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup,
 } from './storage';
 
 const fixture: BankRow = {
@@ -154,6 +154,40 @@ describe('Private finance encryption', () => {
     lockPrivateLedger();
     await expect(savePrivateLedger([])).rejects.toBeInstanceOf(LedgerLockedError);
     expect(await rawRecord()).toEqual(before);
+  });
+
+  it('exports only ciphertext and restores it safely into a clean browser profile', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'correct synthetic testing password');
+    const exported = await exportEncryptedLedgerBackup();
+    expect(exported).toContain('nexus-encrypted-finance-backup-v1');
+    expect(exported).not.toContain('Private merchant');
+    expect(exported).not.toContain('Never send to server');
+    lockPrivateLedger();
+    await removeDb();
+    await importEncryptedLedgerBackup(exported);
+    await expect(loadPrivateLedger()).rejects.toBeInstanceOf(LedgerLockedError);
+    expect(await unlockPrivateLedger('correct synthetic testing password')).toEqual([fixture]);
+  });
+
+  it('refuses to overwrite existing ledger rows during an encrypted backup restore', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'correct synthetic testing password');
+    const exported = await exportEncryptedLedgerBackup();
+    lockPrivateLedger();
+    await removeDb();
+    const newer = [{ ...fixture, category: 'Do not overwrite' }];
+    await savePrivateLedger(newer);
+    await expect(importEncryptedLedgerBackup(exported)).rejects.toThrow('уже есть реестр');
+    expect(await loadPrivateLedger()).toEqual(newer);
+  });
+
+  it('rejects invalid backup formats without touching the local ledger', async () => {
+    await savePrivateLedger([fixture]);
+    await expect(importEncryptedLedgerBackup('{}')).rejects.toThrow('Неизвестный формат');
+    await expect(importEncryptedLedgerBackup('garbage')).rejects.toThrow('JSON');
+    await expect(importEncryptedLedgerBackup('x'.repeat(15 * 1024 * 1024 + 1))).rejects.toThrow('размер');
+    expect(await loadPrivateLedger()).toEqual([fixture]);
   });
 
 });
