@@ -22,6 +22,15 @@ describe('NEXUS public build security contract', () => {
     }
   });
 
+  it('keeps partially initialized databases safe and skips absent legacy tables', () => {
+    const migration = read('supabase/security_migration.sql').toLowerCase();
+    expect(migration).toContain("to_regclass(format('public.%i', t)) is null");
+    expect(migration).toContain('revoke all on public.nexus_members from public, anon, authenticated;');
+    expect(migration).toContain('revoke all on public.%i from public, anon, authenticated');
+    expect(migration).toContain('create policy nexus_members_self_read');
+    expect(migration).not.toMatch(/using\s*\(\s*true\s*\)/);
+  });
+
   it('requires authorized members for shared cloud sync', () => {
     const source = read('src/services/supabaseClient.ts');
     expect(source).toContain('authorizedClient');

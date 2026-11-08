@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS nexus_study_work (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Harden all existing NEXUS tables and enable Supabase Auth membership.
+-- 5. Security policies: same verified migration as security_migration.sql
 -- NEXUS security migration v1 | 2026-11-08
 -- FAIL CLOSED. Run in Supabase SQL Editor by project owner after making a database backup.
 -- Existing data is preserved. Members must be enrolled out-of-band by the owner.
@@ -89,7 +89,7 @@ create table if not exists public.nexus_members (
   added_at timestamptz not null default now()
 );
 alter table public.nexus_members enable row level security;
-revoke all on public.nexus_members from anon, authenticated;
+revoke all on public.nexus_members from public, anon, authenticated;
 grant select on public.nexus_members to authenticated;
 
 create table if not exists public.nexus_sync (
@@ -126,8 +126,12 @@ declare t text;
 begin
   foreach t in array array['nexus_tasks','nexus_wishlist','nexus_finances','nexus_study_work','nexus_sync']
   loop
+    -- Some installations have only nexus_sync; skip absent legacy tables.
+    if to_regclass(format('public.%I', t)) is null then
+      continue;
+    end if;
     execute format('alter table public.%I enable row level security', t);
-    execute format('revoke all on public.%I from anon, authenticated', t);
+    execute format('revoke all on public.%I from public, anon, authenticated', t);
     execute format('grant select, insert, update, delete on public.%I to authenticated', t);
 
     execute format(

@@ -10,7 +10,7 @@ create table if not exists public.nexus_members (
   added_at timestamptz not null default now()
 );
 alter table public.nexus_members enable row level security;
-revoke all on public.nexus_members from anon, authenticated;
+revoke all on public.nexus_members from public, anon, authenticated;
 grant select on public.nexus_members to authenticated;
 
 create table if not exists public.nexus_sync (
@@ -47,8 +47,12 @@ declare t text;
 begin
   foreach t in array array['nexus_tasks','nexus_wishlist','nexus_finances','nexus_study_work','nexus_sync']
   loop
+    -- Some installations have only nexus_sync; skip absent legacy tables.
+    if to_regclass(format('public.%I', t)) is null then
+      continue;
+    end if;
     execute format('alter table public.%I enable row level security', t);
-    execute format('revoke all on public.%I from anon, authenticated', t);
+    execute format('revoke all on public.%I from public, anon, authenticated', t);
     execute format('grant select, insert, update, delete on public.%I to authenticated', t);
 
     execute format(

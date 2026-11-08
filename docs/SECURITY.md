@@ -11,21 +11,17 @@
 - Content Security Policy added. Vitest toolchain upgraded; tests and npm audit run locally and in CI.
 - UI built with existing MIT-licensed shadcn/ui components, Radix UI, TanStack Table, Tailwind utility classes; no handwritten CSS files.
 
-## IMPORTANT: database migration is not applied by deploying code
+## Production RLS applied and verified — 2026-11-08
 
-The production Supabase instance remains unverified until its owner applies the migration.
+The production Supabase project was inspected and updated via its authorized SQL Editor. Before migration, the only NEXUS table was `nexus_sync`, containing zero rows and one permissive RLS policy; neither `anon` nor `authenticated` had direct table grants, and Supabase Auth contained zero users.
 
-1. Back up the actual hosted Postgres database using Supabase Dashboard.
-2. Review and run supabase/security_migration.sql in SQL Editor. It will immediately block anonymous access while preserving rows. Legacy unauthenticated sync will stop.
-3. Register the legitimate users in Supabase Auth. Verify both UUIDs in Authentication > Users. In SQL Editor, enroll each verified UUID, using the real value rather than a guessed one:
+A private pre-migration archive was created in `nexus_security_archive`, containing the schema-preserving copy of `nexus_sync` and the original policy metadata. RLS is enabled on the archive and client roles have no schema access. The migration was adapted for missing legacy tables and applied successfully.
 
-    insert into public.nexus_members (user_id)
-    values ('ACTUAL-UUID-HERE')
-    on conflict (user_id) do nothing;
+Post-migration checks: RLS enabled on `nexus_sync` and `nexus_members`; four membership-restricted policies on the former and one self-read policy on the latter; zero public or `USING(true)` policies; no `anon` SELECT/INSERT grants. The public-key REST request for `nexus_sync` returned HTTP 401. Supabase Auth Site URL and its allowed redirect are both `https://ryzenovod.github.io/nexus/`. Public signups and anonymous sign-ins are disabled, email confirmation is enabled.
 
-4. Allow the exact redirect URL https://ryzenovod.github.io/nexus/ in Supabase Auth URL Configuration.
-5. Log into the web app Settings via email magic link. Only signed-in members may synchronize.
-6. Verify SELECT/INSERT/UPDATE/DELETE as anon, authenticated member and authenticated non-member. Supabase documentation recommends testing in a disposable DB first.
+**Remaining onboarding:** Supabase Auth still has no real users. Only the owner may invite confirmed participants, verify their Auth UUIDs and add those UUIDs to `nexus_members`. Do not infer identities from old task notes or create arbitrary accounts. Test actual member/non-member sessions before enabling cross-device private sync. Banking data are intentionally not part of this shared-state system.
+
+In any other environment, the source SQL migration must be applied separately after taking its own backup. Deployment of frontend code does not modify remote database policies.
 
 ## Verify actual server policies (SQL Editor)
 
@@ -51,4 +47,14 @@ There must be no anonymous grants to private NEXUS tables and no permissive ALL/
 - Arbitrary task/wishlist/bill links are restricted to HTTP(S) without embedded URL credentials. A utility bill is only marked paid after explicit confirmation, never merely because its payment website was opened.
 - Existing legacy finance data is NOT a replacement for the master banking ledger.
 - Credentials for a server-side TickTick or Telegram integration must remain outside browser code and require authenticated server actions.
-- The source migration is not equivalent to proving that production RLS is fixed. Do not claim completion until the project owner has applied and tested it.
+- Production RLS was applied and an unauthenticated REST request was blocked on 2026-11-08. End-to-end testing for legitimate members and non-members remains pending until actual user accounts are invited.
+
+
+## 2026-11-08 production verification & GitHub protection
+
+- Production Supabase RLS changed and verified using authenticated SQL Editor. Before: only nexus_sync table, zero rows, one public/true policy but no anon/authenticated grants. Now: nexus_sync has RLS and four membership policies; nexus_members has RLS and self-read policy; no public unrestricted policies. Anonymous REST request returned 401.
+- Private backup retained in database schema nexus_security_archive; anon/authenticated have no access. The source migration was adapted to skip absent legacy tables and published in Git.
+- Supabase Auth site URL and allowed redirect URL now set to https://ryzenovod.github.io/nexus/. Anonymous sign-in and public signup disabled; email confirmation enabled. No actual users or membership entries yet. Cloud sync remains unavailable pending owner-verified invitations.
+- GitHub repo settings: Dependency graph, Dependabot alerts, Dependabot security updates and private vulnerability reporting enabled and verified. Push protection already on.
+- After Git history rewrite, old commit objects are still retrievable by direct SHA; GitHub Support ticket #4972776 exists (Open) requesting cache/object purge, no duplicate ticket needed. Support may decide if purging is warranted.
+- Browser app backup exported to ~/Documents/NEXUS/backups/browser-snapshot-20261108-233043/nexus-backup-2026-11-08.json (permissions 600), containing 58 tasks, 15 wishlist items, 1 legacy transaction. Bank master remains separate with 254 rows.
