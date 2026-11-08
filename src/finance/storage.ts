@@ -217,6 +217,69 @@ export async function savePrivateLedger(rows: BankRow[]): Promise<void> {
   });
 }
 
+
+const BACKUP_FORMAT = 'nexus-encrypted-finance-backup-v1';
+const MAX_BACKUP_SIZE = 15 * 1024 * 1024;
+
+function validatedEncryptedRecord(value: unknown): SealedLedger {
+  if (!isSealed(value)) throw new Error('Файл не является зашифрованным реестром NEXUS');
+  const sealed = value as SealedLedger;
+  if (sealed.rounds !== ROUNDS
+      || typeof sealed.salt !== 'string'
+      || typeof sealed.iv !== 'string'
+      || typeof sealed.data !== 'string'
+      || sealed.data.length > MAX_BACKUP_SIZE) {
+    throw new Error('Недопустимая версия или размер зашифрованной копии');
+  }
+  try {
+    if (fromBase64(sealed.salt).length !== 16
+        || fromBase64(sealed.iv).length !== 12
+        || fromBase64(sealed.data).length < 16) {
+      throw new Error('Invalid ciphertext length');
+    }
+  } catch {
+    throw new Error('Повреждённый формат зашифрованной копии');
+  }
+  return { format: FORMAT, rounds: ROUNDS, salt: sealed.salt, iv: sealed.iv, data: sealed.data };
+}
+
+/** Export only ciphertext and metadata; never decrypt or expose the finance password. */
+export async function exportEncryptedLedgerBackup(): Promise<string> {
+  const sealed = validatedEncryptedRecord(await getRaw());
+  return JSON.stringify({
+    backup_format: BACKUP_FORMAT,
+    exported_at: new Date().toISOString(),
+    ...sealed,
+  }, null, 2);
+}
+
+/**
+ * Restore only into an empty ledger. Existing records can NEVER be silently
+ * overwritten by an imported file. Unlock later to verify GCM authentication.
+ */
+export async function importEncryptedLedgerBackup(contents: string): Promise<void> {
+  if (contents.length > MAX_BACKUP_SIZE || contents.length === 0) {
+    throw new Error('Недопустимый размер файла резервной копии');
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contents);
+  } catch {
+    throw new Error('Неверный JSON резервной копии');
+  }
+  if (!parsed || typeof parsed !== 'object'
+      || (parsed as { backup_format?: unknown }).backup_format !== BACKUP_FORMAT) {
+    throw new Error('Неизвестный формат резервной копии NEXUS');
+  }
+  const sealed = validatedEncryptedRecord(parsed);
+  await checkedWrite(sealed, existing => {
+    if (existing != null && !(Array.isArray(existing) && existing.length === 0)) {
+      throw new Error('На устройстве уже есть реестр. Сначала сохрани его копию: импорт не перезаписывает данные.');
+    }
+  });
+  session = null;
+}
+
 export function lockPrivateLedger(): void {
   session = null;
 }
