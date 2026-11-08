@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNexusStore } from './store/useNexusStore';
 import { Navbar, DashboardTab } from './components/layout/Navbar';
-import { ShadcnOverview } from './components/dashboard/ShadcnOverview';
-import { NexusFinanceHub } from './components/finances/NexusFinanceHub';
-import { ShadcnWishlist } from './components/wishlist/ShadcnWishlist';
-import { ShadcnStudyWork } from './components/study-work/ShadcnStudyWork';
-import { ShadcnTaskDialog } from './components/command-center/ShadcnTaskDialog';
-import { CatRoomDialog } from './components/visual/CatRoomDialog';
-import { CommandPalette } from './components/command-palette/CommandPalette';
-import { SettingsModal } from './components/settings/SettingsModal';
-import { NexusTask } from './types/nexus';
+import type { NexusTask } from './types/nexus';
+
+// Open-source React.lazy code splitting. Heavy routes and dialogs load on demand.
+const ShadcnOverview = React.lazy(() => import('./components/dashboard/ShadcnOverview').then(m => ({ default: m.ShadcnOverview })));
+const NexusFinanceHub = React.lazy(() => import('./components/finances/NexusFinanceHub').then(m => ({ default: m.NexusFinanceHub })));
+const ShadcnWishlist = React.lazy(() => import('./components/wishlist/ShadcnWishlist').then(m => ({ default: m.ShadcnWishlist })));
+const ShadcnStudyWork = React.lazy(() => import('./components/study-work/ShadcnStudyWork').then(m => ({ default: m.ShadcnStudyWork })));
+const ShadcnTaskDialog = React.lazy(() => import('./components/command-center/ShadcnTaskDialog').then(m => ({ default: m.ShadcnTaskDialog })));
+const CatRoomDialog = React.lazy(() => import('./components/visual/CatRoomDialog').then(m => ({ default: m.CatRoomDialog })));
+const CommandPalette = React.lazy(() => import('./components/command-palette/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const SettingsModal = React.lazy(() => import('./components/settings/SettingsModal').then(m => ({ default: m.SettingsModal })));
 
 export const App: React.FC = () => {
   const {
@@ -93,6 +95,7 @@ export const App: React.FC = () => {
 
         {/* ── Main Viewport ── */}
         <main className="flex-1 flex flex-col relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 w-full pt-7 md:pt-9">
+          <React.Suspense fallback={<div role="status" className="flex min-h-48 items-center justify-center text-sm text-zinc-400">Загрузка раздела NEXUS…</div>}>
           <div key={activeTab} className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out w-full">
             {activeTab === 'overview' && (
               <ShadcnOverview
@@ -115,11 +118,13 @@ export const App: React.FC = () => {
 
             {activeTab === 'study-work' && <ShadcnStudyWork />}
           </div>
+          </React.Suspense>
         </main>
       </div>
 
+      <React.Suspense fallback={null}>
       {/* ── shadcn Task Modal Dialog ── */}
-      <ShadcnTaskDialog
+      {activeTaskDialog && <ShadcnTaskDialog
         isOpen={activeTaskDialog}
         taskToEdit={selectedTaskToEdit}
         initialDate={initialTaskDate}
@@ -142,16 +147,16 @@ export const App: React.FC = () => {
           setActiveTaskDialog(false);
           setSelectedTaskToEdit(null);
         }}
-      />
+      />}
 
       {/* ── Room of Cyber Cat Mascot Dialog ── */}
-      <CatRoomDialog
+      {activeCatRoom && <CatRoomDialog
         isOpen={activeCatRoom}
         onClose={() => setActiveCatRoom(false)}
-      />
+      />}
 
       {/* ── Command Palette (⌘K) ── */}
-      <CommandPalette
+      {activeCommandPalette && <CommandPalette
         isOpen={activeCommandPalette}
         onClose={() => setActiveCommandPalette(false)}
         onSelectTab={(tab) => {
@@ -162,13 +167,14 @@ export const App: React.FC = () => {
         }}
         onToggleWidgetMode={() => {}}
         onOpenSettings={() => setActiveSettings(true)}
-      />
+      />}
 
       {/* ── Settings & Supabase Modal ── */}
-      <SettingsModal
+      {activeSettings && <SettingsModal
         isOpen={activeSettings}
         onClose={() => setActiveSettings(false)}
-      />
+      />}
+      </React.Suspense>
     </div>
   );
 };
