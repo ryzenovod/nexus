@@ -48,8 +48,10 @@ describe('NEXUS public build security contract', () => {
     expect(pushStart).toBeGreaterThan(0);
     expect(pushEnd).toBeGreaterThan(pushStart);
     const sharedPush = store.slice(pushStart, pushEnd);
-    expect(sharedPush).not.toMatch(/\\btransactions\\b/);
-    expect(sharedPush).not.toMatch(/\\bcashbackCards\\b/);
+    expect(sharedPush).not.toContain('transactions,');
+    expect(sharedPush).not.toContain('transactions:');
+    expect(sharedPush).not.toContain('cashbackCards,');
+    expect(sharedPush).not.toContain('cashbackCards:');
     expect(store).not.toContain('transactions: ss.transactions || state.transactions');
     expect(store).not.toContain('cashbackCards: ss.cashbackCards || state.cashbackCards');
     for (const name of ['supabase/schema.sql', 'supabase/security_migration.sql']) {
