@@ -39,6 +39,25 @@ async function rawRecord(): Promise<unknown> {
   } finally { db.close(); }
 }
 
+async function overwriteRawForTest(value: unknown): Promise<void> {
+  const db = await new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open('nexus-private-ledger', 1);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('finance', 'readwrite');
+      tx.objectStore('finance').put(value, 'master-v1');
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+}
+
 describe('Private finance encryption', () => {
   beforeEach(async () => {
     lockPrivateLedger();
@@ -86,10 +105,55 @@ describe('Private finance encryption', () => {
   });
 
   it('does not corrupt ciphertext if a previously open tab tries to write without unlocking', async () => {
+    await savePrivateLedger([fixture]);
     await enablePrivateEncryption([fixture], 'correct synthetic testing password');
     const before = await rawRecord();
     lockPrivateLedger();
     await expect(savePrivateLedger([])).rejects.toBeInstanceOf(LedgerLockedError);
     expect(await rawRecord()).toEqual(before);
   });
+  it('refuses to encrypt stale tab data over a newer plaintext version', async () => {
+    await savePrivateLedger([fixture]);
+    const newer = [{ ...fixture, category: 'Newer browser edit' }];
+    await savePrivateLedger(newer);
+    await expect(enablePrivateEncryption([fixture], 'correct synthetic testing password'))
+      .rejects.toThrow('Реестр изменился');
+    expect(await loadPrivateLedger()).toEqual(newer);
+  });
+
+  it('aborts stale ciphertext writes if another tab changed its revision', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'correct synthetic testing password');
+    const original = await rawRecord() as { format: string; iv: string; data: string };
+    const otherTab = { ...original, iv: 'another-tab-committed-a-new-revision' };
+    await overwriteRawForTest(otherTab);
+    await expect(savePrivateLedger([{ ...fixture, category: 'stale edit' }]))
+      .rejects.toThrow('другой вкладкой');
+    expect(await rawRecord()).toEqual(otherTab);
+  });
+
+  it('never silently loses concurrent encrypted edits from the same browser session', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'correct synthetic testing password');
+    const versions = [
+      [{ ...fixture, category: 'First edit' }],
+      [{ ...fixture, category: 'Second edit' }],
+    ];
+    const results = await Promise.allSettled(versions.map(rows => savePrivateLedger(rows)));
+    expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter(result => result.status === 'rejected')).toHaveLength(1);
+    lockPrivateLedger();
+    const recovered = await unlockPrivateLedger('correct synthetic testing password');
+    expect(['First edit', 'Second edit']).toContain(recovered[0].category);
+  });
+
+  it('never replaces encrypted data with plaintext after a stale tab races to save', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'correct synthetic testing password');
+    const before = await rawRecord();
+    lockPrivateLedger();
+    await expect(savePrivateLedger([])).rejects.toBeInstanceOf(LedgerLockedError);
+    expect(await rawRecord()).toEqual(before);
+  });
+
 });

@@ -20,6 +20,7 @@ interface UnlockSession {
   key: CryptoKey;
   salt: Uint8Array;
   rounds: number;
+  revision: string; // Last committed ciphertext IV, for cross-tab conflict detection.
 }
 
 let session: UnlockSession | null = null;
@@ -90,7 +91,7 @@ async function unseal(value: SealedLedger, password: string): Promise<{
   }
   const rows = JSON.parse(new TextDecoder().decode(decrypted));
   if (!Array.isArray(rows)) throw new Error('Расшифрованные данные имеют неверный формат');
-  return { rows: rows as BankRow[], state: { key, salt, rounds: value.rounds } };
+  return { rows: rows as BankRow[], state: { key, salt, rounds: value.rounds, revision: value.iv } };
 }
 
 function openDatabase(): Promise<IDBDatabase> {
@@ -116,17 +117,38 @@ async function getRaw(): Promise<unknown> {
   } finally { db.close(); }
 }
 
-async function putRaw(value: unknown): Promise<void> {
+/**
+ * Verify and write inside one IndexedDB transaction. A separate get then put
+ * can overwrite ciphertext when another tab encrypts or edits the ledger.
+ */
+async function checkedWrite(value: unknown, verify: (existing: unknown) => void): Promise<void> {
   const db = await openDatabase();
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put(value, KEY);
+      const store = tx.objectStore(STORE);
+      let explicitError: Error | null = null;
+      const read = store.get(KEY);
+      read.onsuccess = () => {
+        try {
+          verify(read.result);
+          store.put(value, KEY);
+        } catch (e) {
+          explicitError = e instanceof Error ? e : new Error(String(e));
+          tx.abort();
+        }
+      };
+      read.onerror = () => {
+        explicitError = read.error ?? new Error('Ошибка проверки сохранённого реестра');
+        tx.abort();
+      };
       tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error('Ошибка записи'));
-      tx.onabort = () => reject(tx.error ?? new Error('Запись прервана'));
+      tx.onerror = () => reject(explicitError ?? tx.error ?? new Error('Ошибка записи'));
+      tx.onabort = () => reject(explicitError ?? tx.error ?? new Error('Запись прервана'));
     });
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
 }
 
 export async function loadPrivateLedger(): Promise<BankRow[]> {
@@ -147,23 +169,52 @@ export async function unlockPrivateLedger(password: string): Promise<BankRow[]> 
 
 export async function enablePrivateEncryption(rows: BankRow[], password: string): Promise<void> {
   if (password.length < 12) throw new Error('Пароль должен содержать не менее 12 символов');
-  const current = await getRaw();
-  if (isSealed(current)) throw new LedgerLockedError();
+  const initial = await getRaw();
+  if (isSealed(initial)) throw new LedgerLockedError();
+  if (initial != null && !Array.isArray(initial)) throw new Error('Неизвестный формат банковского реестра');
+  if (JSON.stringify(initial ?? []) !== JSON.stringify(rows)) {
+    throw new Error('Реестр изменился в другой вкладке. Обнови страницу перед шифрованием.');
+  }
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const state: UnlockSession = { key: await deriveKey(password, salt, ROUNDS), salt, rounds: ROUNDS };
+  const state: UnlockSession = {
+    key: await deriveKey(password, salt, ROUNDS),
+    salt,
+    rounds: ROUNDS,
+    revision: '',
+  };
   const encrypted = await seal(rows, state);
-  await putRaw(encrypted);
-  session = state; // only enter encrypted mode after the database transaction commits
+  await checkedWrite(encrypted, existing => {
+    if (isSealed(existing)) throw new LedgerLockedError();
+    if (JSON.stringify(existing ?? []) !== JSON.stringify(rows)) {
+      throw new Error('Реестр изменился при шифровании. Обнови страницу.');
+    }
+  });
+  state.revision = encrypted.iv;
+  session = state; // Enter encrypted mode only after IndexedDB transaction commits.
 }
 
 export async function savePrivateLedger(rows: BankRow[]): Promise<void> {
   if (session) {
-    await putRaw(await seal(rows, session));
+    const active = session;
+    const expectedRevision = active.revision;
+    const encrypted = await seal(rows, active);
+    await checkedWrite(encrypted, existing => {
+      if (!isSealed(existing)) throw new LedgerLockedError();
+      if (existing.salt !== toBase64(active.salt)
+          || existing.rounds !== active.rounds
+          || existing.iv !== expectedRevision) {
+        throw new Error('Реестр обновлён другой вкладкой. Экспортируй свои правки, затем обнови страницу.');
+      }
+    });
+    active.revision = encrypted.iv;
     return;
   }
-  // A second/old browser tab must not overwrite ciphertext with plaintext.
-  if (isSealed(await getRaw())) throw new LedgerLockedError();
-  await putRaw(rows);
+  await checkedWrite(rows, existing => {
+    if (isSealed(existing)) throw new LedgerLockedError();
+    if (existing != null && !Array.isArray(existing)) {
+      throw new Error('Неизвестный формат банковского реестра');
+    }
+  });
 }
 
 export function lockPrivateLedger(): void {
