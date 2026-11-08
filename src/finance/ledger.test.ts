@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type BankRow, applyDecisions, combineMaster, computeStats, DECISION_COLUMNS,
   editRow, exportCSV, isPending, kopeks, MASTER_COLUMNS, parseCSV,
-  parseMaster, sources,
+  parseMaster, reconcileVerifiedMaster, sources,
 } from './ledger';
 
 const sample: BankRow = {
@@ -74,5 +74,51 @@ describe('NEXUS local finance ledger', () => {
   it('reports observed bank coverage without inventing missing records', () => {
     const list = sources([sample, { ...sample, transaction_id: 'fixture-2', date: '2026-11-05' }]);
     expect(list).toEqual([{ bank: 'Тестовый банк', count: 2, first: '2026-11-01', last: '2026-11-05' }]);
+  });
+});
+
+
+describe('Reconcile reviewed master classifications without overwriting user decisions', () => {
+  const grocery: BankRow = {
+    ...sample, bank: 'Альфа-Банк', date: '2026-10-12', month: '2026-10',
+    contour: 'ЛИЧНЫЙ', category: 'На классификацию', needs_review: 'Да',
+    review_reason: 'На классификацию',
+    counterparty_description: 'Операция по карте: тест, место совершения операции: RU/MOSCOW/PYATEROCHKA 102',
+  };
+  it('applies only verified pre-cohabitation grocery classifications', () => {
+    const incoming = { ...grocery, category: 'Продукты', needs_review: 'Нет' as const, review_reason: '' };
+    const result = reconcileVerifiedMaster([grocery], [incoming]);
+    expect(result).toMatchObject({ updated: 1, confirmed: 1, categorized: 1 });
+    expect(result.rows[0].needs_review).toBe('Нет');
+    expect(result.rows[0].category).toBe('Продукты');
+    expect(reconcileVerifiedMaster(result.rows, [incoming]).updated).toBe(0);
+  });
+  it('keeps later unallocated shopping pending after category update', () => {
+    const later = { ...grocery, date: '2026-10-25', contour: 'НЕ РАСПРЕДЕЛЕНО' as const };
+    const imported = { ...later, category: 'Продукты', needs_review: 'Да' as const };
+    const result = reconcileVerifiedMaster([later], [imported]);
+    expect(result).toMatchObject({ updated: 1, confirmed: 0, categorized: 1 });
+    expect(result.rows[0].needs_review).toBe('Да');
+    expect(result.rows[0].contour).toBe('НЕ РАСПРЕДЕЛЕНО');
+  });
+  it('rejects tampered bank-origin amounts and mismatched ID sets atomically', () => {
+    expect(() => reconcileVerifiedMaster([grocery], [{ ...grocery, amount_rub: '-1.00' }])).toThrow('Конфликт');
+    expect(() => reconcileVerifiedMaster([grocery], [])).toThrow('полная версия');
+    expect(() => reconcileVerifiedMaster([grocery], [{ ...grocery, transaction_id: 'other' }])).toThrow('ID');
+  });
+  it('never approves a P2P transfer disguised as a grocery purchase', () => {
+    const p2p = { ...grocery, counterparty_description: 'Перевод CARD2CARD AMOBILE' };
+    const incoming = { ...p2p, category: 'Продукты', needs_review: 'Нет' as const, review_reason: '' };
+    const result = reconcileVerifiedMaster([p2p], [incoming]);
+    expect(result.confirmed).toBe(0);
+    expect(result.rows[0].needs_review).toBe('Да');
+  });
+  it('preserves a more specific human category and browser note', () => {
+    const manuallyTagged = { ...grocery, category: 'Дом', note: 'Сохранить локальный комментарий' };
+    const incoming = { ...manuallyTagged, category: 'Продукты', note: 'Другой текст' };
+    const result = reconcileVerifiedMaster([manuallyTagged], [incoming]);
+    expect(result.updated).toBe(0);
+    expect(result.rows[0].category).toBe('Дом');
+    expect(result.rows[0].note).toBe('Сохранить локальный комментарий');
   });
 });

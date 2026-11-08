@@ -8,10 +8,10 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 - The website starts without bank data. The user imports transactions.csv, or an authorized local Mac automation seeds browser IndexedDB.
 - Ledger state is stored in IndexedDB database nexus-private-ledger, separate from Zustand and Supabase. It is per browser and website origin; it is NOT cloud synchronization.
 - The new app does not send bank rows to the network. Never commit CSVs or copy them into public/.
-- Re-importing the same transaction ID is idempotent. Conflicting amounts/bank/date cause an error.
+- Re-importing the same transaction ID is idempotent. Conflicting bank evidence (date, amount, account, merchant or cashback) causes an error. Existing classifications are not silently overwritten.
 - The website exports full edited ledger and/or shared-purchase decisions.
 - Optional IndexedDB encryption: enter a password of 12+ characters and select **Зашифровать** in Finance. The browser uses AES-256-GCM with an independent 96-bit nonce per write and PBKDF2-SHA256 (310,000 rounds, random salt). The password is never synced, stored or transmitted. The old unencrypted store is migrated only when the owner explicitly enables protection.
-- After encryption, page reloads and locking require the same password. **There is no password recovery**; create and protect a CSV backup before enabling encryption. CSV exports remain unencrypted unless protected outside the app. Past plaintext remnants may remain in browser/system backups; encryption is not retroactive disk erasure.
+- After encryption, page reloads and locking require the same password. **The app itself cannot recover a forgotten password.** Store the recovery key securely outside the app (for example in the OS password manager) and create an offline CSV backup. CSV exports remain unencrypted unless protected outside the app. Past plaintext remnants may remain in browser/system backups; encryption is not retroactive disk erasure.
 
 - Local Python master remains the source of truth. To apply the exported file:
 
@@ -25,7 +25,8 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
     python3 nexus_engine.py apply-decisions ~/Downloads/nexus_shared_decisions.csv
     python3 nexus_engine.py summary
 
-- Both Python merge commands create a timestamped backup before overwriting the master.
+- Both Python merge commands create a timestamped backup before overwriting the master. A stale browser export that would undo a previously confirmed merchant classification is rejected.
+- To bring verified local-master changes into an already populated browser, first unlock the ledger, click **Сверить мастер**, and choose `~/Documents/NEXUS/transactions.csv`. This action validates all immutable bank fields and merges only safe grocery categorizations without changing user notes, bank amounts, contours or joint decisions. It is not automatic filesystem sync.
 
 ## Accounting
 
@@ -38,15 +39,14 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 - Shared candidates are purchases on or after 2026-10-21. Date does not prove that a purchase is joint.
 - Marking a purchase ОБЩАЯ or ЛИЧНАЯ changes contour, but does not clear review without explicit confirmation.
 - Paid amounts do not equal debt: participants must agree on allocation and settlements.
-- WB Bank is a credit card with 100000 RUB limit, not cash. WB cashback units are equivalent to 1 RUB, tracked separately.
+- Credit-card available limits are not cash or bank deposits. Reward units and cashback must be tracked separately from purchases and card balances.
 
-## Import coverage 2026-11-08
+## Reconciliation state
 
-- 254 loaded rows: Alfa Bank 237, WB Bank 6, T-Bank 11.
-- All 67 rows typed EXPENSE are pending review, so confirmed clean expense is 0.
-- 179 rows in review queue; 23 potential joint purchases.
-- Alfa period about 2026-09-18 to 2026-11-03, WB and T-Bank partial imports. Sber, VTB, Ozon not imported.
-- Gross negative debits 418586.23 RUB across imported rows are NOT clean consumption.
+- The local master contains partially imported statements from several banks; source coverage varies. **Exact bank counts, transaction amounts, coverage dates and spending totals are intentionally omitted from this public repository.**
+- The narrow rule `alfa-card-known-grocery-merchant-v1` categorizes observed external grocery-card merchants. It confirms only purchases already assigned to the personal contour before the configured cohabitation date. Later unassigned purchases retain their review flag.
+- The private Mac master has more recent reviewed categories than the encrypted Safari ledger. After unlocking Safari, use **Сверить мастер** to merge these decisions. No private bank rows are included in Git.
+- See the private local `~/Documents/NEXUS/STATE.md` for exact balances and reconciliation metrics.
 
 ## Boundaries
 

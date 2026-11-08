@@ -71,11 +71,60 @@ export function combineMaster(existing:BankRow[],incoming:BankRow[]){
   for(const row of incoming){
     const old=map.get(row.transaction_id);
     if(old){
-      if(old.date!==row.date||old.bank!==row.bank||kopeks(old.amount_rub)!==kopeks(row.amount_rub))throw Error('Конфликт банковского ID '+row.transaction_id);
+      if(old.date!==row.date||old.bank!==row.bank||old.account_alias!==row.account_alias||old.counterparty_description!==row.counterparty_description||kopeks(old.amount_rub)!==kopeks(row.amount_rub)||kopeks(old.cashback_rub)!==kopeks(row.cashback_rub))throw Error('Конфликт банковского ID '+row.transaction_id);
     }else{map.set(row.transaction_id,row);added++}
   }
   return {rows:[...map.values()].sort((a,b)=>b.date.localeCompare(a.date)),added};
 }
+export function reconcileVerifiedMaster(
+  existing: BankRow[], incoming: BankRow[],
+): { rows: BankRow[]; updated: number; confirmed: number; categorized: number } {
+  if (existing.length !== incoming.length) {
+    throw Error('Для сверки нужна полная версия мастер-реестра с теми же ID. Новые операции загружай через «Импорт CSV».');
+  }
+  const map = new Map(incoming.map(r => [r.transaction_id, r]));
+  if (map.size !== incoming.length || existing.some(r => !map.has(r.transaction_id))) {
+    throw Error('Наборы ID мастер-файла и браузера различаются. Сверка остановлена без изменений.');
+  }
+  let updated = 0, confirmed = 0, categorized = 0;
+  const rows = existing.map(current => {
+    const fromMaster = map.get(current.transaction_id)!;
+    const immutableFields: (keyof BankRow)[] = [
+      'date', 'posting_date', 'bank', 'account_alias', 'counterparty_description', 'source_file',
+    ];
+    if (immutableFields.some(k => current[k] !== fromMaster[k])
+      || kopeks(current.amount_rub) !== kopeks(fromMaster.amount_rub)
+      || kopeks(current.cashback_rub) !== kopeks(fromMaster.cashback_rub)
+      || current.flow_type !== fromMaster.flow_type || current.contour !== fromMaster.contour) {
+      throw Error('Конфликт исходных данных, потока или контура операции ' + current.transaction_id);
+    }
+    const next = { ...current };
+    const placeholder = ['', 'На классификацию', 'Без категории'];
+    let changed = false;
+    if (placeholder.includes(next.category) && !placeholder.includes(fromMaster.category)) {
+      next.category = fromMaster.category;
+      categorized++;
+      changed = true;
+    }
+    // Only this narrowly audited pre-cohabitation merchant case can clear the flag automatically.
+    // Joint/unallocated rows, cash, P2P and wallet transfers remain pending.
+    if (current.needs_review === 'Да' && fromMaster.needs_review === 'Нет'
+      && current.flow_type === 'EXPENSE' && current.contour === 'ЛИЧНЫЙ'
+      && current.date < '2026-10-21' && fromMaster.category === 'Продукты'
+      && fromMaster.review_reason === ''
+      && /операция по карте:/i.test(current.counterparty_description)
+      && /место совершения операции\s*:[^,;\n]*(?:PYATEROCHKA|PEREKRESTOK)/i.test(current.counterparty_description)) {
+      next.needs_review = 'Нет';
+      next.review_reason = '';
+      confirmed++;
+      changed = true;
+    }
+    if (changed) updated++;
+    return next;
+  });
+  return { rows, updated, confirmed, categorized };
+}
+
 export function applyDecisions(ledger:BankRow[],text:string){
   const heads=text.replace(/^\uFEFF/,'').split(/\r?\n/,1)[0].split(',');
   if(!['transaction_id','payer','shared_decision'].every(x=>heads.includes(x)))throw Error('Нужен CSV решений: transaction_id, payer, shared_decision');

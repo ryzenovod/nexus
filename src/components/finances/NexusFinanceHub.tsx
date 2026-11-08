@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShadcnFinances } from './ShadcnFinances';
 import {
   applyDecisions, combineMaster, computeStats, CONTOURS, DECISION_COLUMNS, DECISIONS,
-  editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, sources,
+  editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
   type BankRow, type Contour,
 } from '@/finance/ledger';
 import {
@@ -150,6 +150,7 @@ export const NexusFinanceHub: React.FC = () => {
   const [search, setSearch] = useState('');
   const [bank, setBank] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const masterSyncRef = useRef<HTMLInputElement>(null);
   const saveChain = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
@@ -255,6 +256,24 @@ export const NexusFinanceHub: React.FC = () => {
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
+  const syncReviewedMaster = async (file: File) => {
+    setError('');
+    try {
+      if (!loaded || ledgerLocked || !storageAvailable) throw Error('Сначала разблокируй локальный реестр');
+      const incoming = parseMaster(await file.text());
+      const reconciliation = reconcileVerifiedMaster(ledger, incoming);
+      if (reconciliation.updated) setLedger(reconciliation.rows);
+      setMessage(
+        'Сверка с ' + file.name + ': обновлено ' + reconciliation.updated +
+        ', подтверждено покупок ' + reconciliation.confirmed +
+        ', уточнено категорий ' + reconciliation.categorized +
+        '. Неопределённые совместные покупки остаются на проверке.',
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const candidates = ledger.filter(r => r.date >= '2026-10-21' && r.flow_type === 'EXPENSE');
   const allForGrid = filtered(visible);
   const jointForGrid = filtered(candidates);
@@ -271,7 +290,13 @@ export const NexusFinanceHub: React.FC = () => {
         <input ref={inputRef} type="file" className="hidden" accept=".csv,text/csv" onChange={async e => {
           const file = e.target.files?.[0]; if (file) await importFile(file); e.target.value = '';
         }} />
+        <input ref={masterSyncRef} type="file" className="hidden" accept=".csv,text/csv" onChange={async e => {
+          const file = e.target.files?.[0]; if (file) await syncReviewedMaster(file); e.target.value = '';
+        }} />
         <Button disabled={!loaded || ledgerLocked || !storageAvailable} onClick={() => inputRef.current?.click()}><FileUp /> Импорт CSV</Button>
+        <Button variant="outline" disabled={!loaded || ledgerLocked || !storageAvailable || !ledger.length}
+          title="Загрузить мастер-CSV с проверенными категориями, не изменяя банковские суммы или локальные решения"
+          onClick={() => masterSyncRef.current?.click()}><RefreshCw /> Сверить мастер</Button>
         <Button variant="outline" disabled={ledgerLocked || !ledger.length} onClick={() => downloadCSV('nexus_shared_decisions.csv', exportCSV(candidates, DECISION_COLUMNS))}>
           <ArrowDownToLine /> Решения
         </Button>
