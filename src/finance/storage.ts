@@ -196,12 +196,13 @@ export async function enablePrivateEncryption(rows: BankRow[], password: string)
 export async function savePrivateLedger(rows: BankRow[]): Promise<void> {
   if (session) {
     const active = session;
+    const expectedRevision = active.revision;
     const encrypted = await seal(rows, active);
     await checkedWrite(encrypted, existing => {
       if (!isSealed(existing)) throw new LedgerLockedError();
       if (existing.salt !== toBase64(active.salt)
           || existing.rounds !== active.rounds
-          || existing.iv !== active.revision) {
+          || existing.iv !== expectedRevision) {
         throw new Error('Реестр обновлён другой вкладкой. Экспортируй свои правки, затем обнови страницу.');
       }
     });
