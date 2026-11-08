@@ -68,13 +68,25 @@ export async function fetchNexusSyncFeed(url: string, anonKey: string): Promise<
   }
 }
 
+// Allow only explicit couple-workspace fields on the shared cloud channel.
+// Banking transactions, card metadata and private financial registers never belong here.
+const ALLOWED_SHARED_STATE_KEYS = new Set([
+  'wishlist', 'budget', 'studyWorkItems', 'customStudySpaces',
+  'completedTaskIds', 'deletedTaskIds', 'customTasks', 'pendingTickTickCompletions',
+]);
+
 export async function pushSharedStateToNexusSync(url: string, anonKey: string, sharedState: any): Promise<boolean> {
   try {
+    if (!sharedState || typeof sharedState !== 'object' || Array.isArray(sharedState)) return false;
+    const safeState = Object.fromEntries(
+      Object.entries(sharedState).filter(([key]) => ALLOWED_SHARED_STATE_KEYS.has(key)),
+    );
+    if (!Object.keys(safeState).length) return false;
     const client = await authorizedClient(url, anonKey);
     if (!client) return false;
     const { error } = await client.from('nexus_sync').upsert({
       id: 'main_feed',
-      shared_state: sharedState,
+      shared_state: safeState,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' });
     return !error;
@@ -193,41 +205,11 @@ export async function executeBidirectionalSync(
       }))
     : payload.wishlist;
 
-  // 3. Sync Finances
-  if (payload.finances.length > 0) {
-    const financeRows = payload.finances.map((f) => ({
-      id: f.id,
-      date: f.date,
-      title: f.title,
-      amount: f.amount,
-      type: f.type,
-      category: f.category,
-      paid_by: f.paidBy,
-      split_ratio: f.splitRatio,
-      notes: f.notes,
-    }));
-    await client.from('nexus_finances').upsert(financeRows, { onConflict: 'id' });
-  }
-
-  const { data: remoteFinances } = await client
-    .from('nexus_finances')
-    .select('*')
-    .order('date', { ascending: false });
-
-  const mappedFinances: FinanceTransaction[] = remoteFinances && remoteFinances.length > 0
-    ? remoteFinances.map((row: any) => ({
-        id: row.id,
-        date: row.date,
-        title: row.title,
-        amount: Number(row.amount),
-        type: row.type,
-        category: row.category,
-        paidBy: row.paid_by,
-        splitRatio: row.split_ratio,
-        notes: row.notes,
-        createdAt: row.created_at,
-      }))
-    : payload.finances;
+  // 3. Legacy finances: LOCAL ONLY.
+  // nexus_finances is a shared table: neither personal transactions nor
+  // cashback card information should be sent to all couple members.
+  // Keep this value in the return contract until the old store is retired.
+  const mappedFinances: FinanceTransaction[] = payload.finances;
 
   // 4. Sync Study & Work
   if (payload.studyWork.length > 0) {

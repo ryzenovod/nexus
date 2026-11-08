@@ -39,6 +39,29 @@ describe('NEXUS public build security contract', () => {
     expect(source).not.toMatch(/Authorization:[^\n]+anonKey/);
   });
 
+  it('never sends personal finance records or cashback cards into shared couple sync', () => {
+    const client = read('src/services/supabaseClient.ts');
+    const store = read('src/store/useNexusStore.ts');
+    expect(client).not.toContain("from('nexus_finances')");
+    expect(client).toContain('ALLOWED_SHARED_STATE_KEYS');
+    expect(client).toContain('shared_state: safeState');
+    expect(client).not.toContain('shared_state: sharedState');
+    const pushStart = store.indexOf('pushCloudState: async () => {');
+    const pushEnd = store.indexOf('saveSupabaseToLocalEnv:', pushStart);
+    expect(pushStart).toBeGreaterThan(0);
+    expect(pushEnd).toBeGreaterThan(pushStart);
+    const sharedPush = store.slice(pushStart, pushEnd);
+    expect(sharedPush).not.toContain('transactions,');
+    expect(sharedPush).not.toContain('transactions:');
+    expect(sharedPush).not.toContain('cashbackCards,');
+    expect(sharedPush).not.toContain('cashbackCards:');
+    expect(store).not.toContain('transactions: ss.transactions || state.transactions');
+    expect(store).not.toContain('cashbackCards: ss.cashbackCards || state.cashbackCards');
+    for (const name of ['supabase/schema.sql', 'supabase/security_migration.sql']) {
+      expect(read(name)).toContain("if t = 'nexus_finances' then");
+    }
+  });
+
   it('does not include public write bridge or browser bot token requests', () => {
     const server = read('vite.config.ts');
     expect(server).toContain("host: '127.0.0.1'");
