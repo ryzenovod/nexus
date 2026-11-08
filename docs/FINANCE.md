@@ -51,7 +51,7 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 
 ## Boundaries
 
-- The legacy Карты и ЖКХ section still uses the old Zustand/Supabase model. Its totals are not merged with the bank ledger.
+- The legacy Карты и ЖКХ section uses local Zustand state and is not merged with the bank ledger. To prevent both couple members from seeing personal finances, **legacy transactions and cashback-card metadata are excluded from cloud upload and download**. The shared `nexus_finances` table has no client permissions until user-specific ownership rules exist.
 - The production shared-state RLS migration was applied and anonymous REST access was blocked on 2026-11-08. Supabase Auth users have not been enrolled; the separate bank ledger must remain local until user-scoped bank-data policies and end-to-end authentication tests exist.
 - No automatic bank API access, payments, card repayments or transfers; read-only parsing and review.
 - Browser persistence is local; export CSV for a durable backup.
