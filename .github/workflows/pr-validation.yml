@@ -1,0 +1,28 @@
+name: Validate NEXUS pull requests
+
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Tests, audit and production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Audit known dependency vulnerabilities
+        run: npm audit --audit-level=moderate
+      - name: Unit and security regression tests
+        run: npm test
+      - name: Typecheck and bundle
+        run: npm run build
