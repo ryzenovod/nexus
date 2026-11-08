@@ -1604,13 +1604,6 @@ export const useNexusStore = create<NexusState>()(
                       );
                     });
                   }
-                  if (Array.isArray(ss.cashbackCards)) {
-                    const fakeDigits = new Set(['7714', '5529', '8831', '1409', '9276']);
-                    ss.cashbackCards = ss.cashbackCards.map((c: any) => ({
-                      ...c,
-                      digits: c.digits && fakeDigits.has(c.digits) ? undefined : c.digits,
-                    }));
-                  }
                   if (Array.isArray(ss.wishlist)) {
                     ss.wishlist = ss.wishlist.map((w: any) => {
                       const notesLower = (w.notes || '').toLowerCase();
@@ -1672,9 +1665,9 @@ export const useNexusStore = create<NexusState>()(
 
                     return {
                       wishlist: ss.wishlist || state.wishlist,
-                      transactions: ss.transactions || state.transactions,
+                      // Never import legacy finance transactions into this device from shared cloud state.
                       budget: ss.budget || state.budget,
-                      cashbackCards: ss.cashbackCards || state.cashbackCards,
+                      // Card metadata remains private to the local device.
                       studyWorkItems: ss.studyWorkItems || state.studyWorkItems,
                       customStudySpaces: ss.customStudySpaces || state.customStudySpaces,
                       completedTaskIds: mergedCompleted,
@@ -1872,8 +1865,6 @@ export const useNexusStore = create<NexusState>()(
           supabaseConfig,
           wishlist,
           budget,
-          transactions,
-          cashbackCards,
           studyWorkItems,
           customStudySpaces,
           completedTaskIds,
@@ -1885,8 +1876,6 @@ export const useNexusStore = create<NexusState>()(
           return await pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
             wishlist,
             budget,
-            transactions,
-            cashbackCards,
             studyWorkItems,
             customStudySpaces,
             completedTaskIds,
