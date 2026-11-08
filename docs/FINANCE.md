@@ -10,6 +10,9 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 - The new app does not send bank rows to the network. Never commit CSVs or copy them into public/.
 - Re-importing the same transaction ID is idempotent. Conflicting amounts/bank/date cause an error.
 - The website exports full edited ledger and/or shared-purchase decisions.
+- Optional IndexedDB encryption: enter a password of 12+ characters and select **Зашифровать** in Finance. The browser uses AES-256-GCM with an independent 96-bit nonce per write and PBKDF2-SHA256 (310,000 rounds, random salt). The password is never synced, stored or transmitted. The old unencrypted store is migrated only when the owner explicitly enables protection.
+- After encryption, page reloads and locking require the same password. **There is no password recovery**; create and protect a CSV backup before enabling encryption. CSV exports remain unencrypted unless protected outside the app. Past plaintext remnants may remain in browser/system backups; encryption is not retroactive disk erasure.
+
 - Local Python master remains the source of truth. To apply the exported file:
 
     cd ~/Documents/NEXUS

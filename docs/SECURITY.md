@@ -46,7 +46,9 @@ There must be no anonymous grants to private NEXUS tables and no permissive ALL/
 
 - Previous Git history still contains old content. Deleting files in the current commit does not erase Git history, third-party clones or caches. Rotate any actual credentials previously published and consider a coordinated history purge.
 - Public GitHub Pages always exposes its JavaScript bundle. Do not place private data in source files or assets.
-- The app does not encrypt bank IndexedDB data at rest. Physical access to an unlocked browser profile is a remaining risk.
+- Bank IndexedDB data can now be encrypted with an explicit passphrase. By default, existing installations remain plaintext until the owner enables protection. Web Crypto AES-GCM with PBKDF2 is used; encrypted browser data cannot be recovered without the passphrase.
+- Encryption protects stored bank rows, not data exposed to a compromised unlocked browser/session, malicious browser extensions, screenshots, or previously copied plaintext. The browser and OS remain part of the trusted computing base.
+- Arbitrary task/wishlist/bill links are restricted to HTTP(S) without embedded URL credentials. A utility bill is only marked paid after explicit confirmation, never merely because its payment website was opened.
 - Existing legacy finance data is NOT a replacement for the master banking ledger.
 - Credentials for a server-side TickTick or Telegram integration must remain outside browser code and require authenticated server actions.
 - The source migration is not equivalent to proving that production RLS is fixed. Do not claim completion until the project owner has applied and tested it.
