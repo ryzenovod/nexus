@@ -43,6 +43,9 @@ describe('NEXUS public build security contract', () => {
     const client = read('src/services/supabaseClient.ts');
     const store = read('src/store/useNexusStore.ts');
     expect(client).not.toContain("from('nexus_finances')");
+    expect(client).toContain('ALLOWED_SHARED_STATE_KEYS');
+    expect(client).toContain('shared_state: safeState');
+    expect(client).not.toContain('shared_state: sharedState');
     const pushStart = store.indexOf('pushCloudState: async () => {');
     const pushEnd = store.indexOf('saveSupabaseToLocalEnv:', pushStart);
     expect(pushStart).toBeGreaterThan(0);
