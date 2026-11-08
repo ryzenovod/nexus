@@ -193,41 +193,11 @@ export async function executeBidirectionalSync(
       }))
     : payload.wishlist;
 
-  // 3. Sync Finances
-  if (payload.finances.length > 0) {
-    const financeRows = payload.finances.map((f) => ({
-      id: f.id,
-      date: f.date,
-      title: f.title,
-      amount: f.amount,
-      type: f.type,
-      category: f.category,
-      paid_by: f.paidBy,
-      split_ratio: f.splitRatio,
-      notes: f.notes,
-    }));
-    await client.from('nexus_finances').upsert(financeRows, { onConflict: 'id' });
-  }
-
-  const { data: remoteFinances } = await client
-    .from('nexus_finances')
-    .select('*')
-    .order('date', { ascending: false });
-
-  const mappedFinances: FinanceTransaction[] = remoteFinances && remoteFinances.length > 0
-    ? remoteFinances.map((row: any) => ({
-        id: row.id,
-        date: row.date,
-        title: row.title,
-        amount: Number(row.amount),
-        type: row.type,
-        category: row.category,
-        paidBy: row.paid_by,
-        splitRatio: row.split_ratio,
-        notes: row.notes,
-        createdAt: row.created_at,
-      }))
-    : payload.finances;
+  // 3. Legacy finances: LOCAL ONLY.
+  // nexus_finances is a shared table: neither personal transactions nor
+  // cashback card information should be sent to all couple members.
+  // Keep this value in the return contract until the old store is retired.
+  const mappedFinances: FinanceTransaction[] = payload.finances;
 
   // 4. Sync Study & Work
   if (payload.studyWork.length > 0) {
