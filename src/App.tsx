@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNexusStore } from './store/useNexusStore';
 import { Navbar, DashboardTab } from './components/layout/Navbar';
 import { ShadcnOverview } from './components/dashboard/ShadcnOverview';
-import { ShadcnFinances } from './components/finances/ShadcnFinances';
+import { NexusFinanceHub } from './components/finances/NexusFinanceHub';
 import { ShadcnWishlist } from './components/wishlist/ShadcnWishlist';
 import { ShadcnStudyWork } from './components/study-work/ShadcnStudyWork';
 import { ShadcnTaskDialog } from './components/command-center/ShadcnTaskDialog';
@@ -128,7 +128,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {activeTab === 'finances' && <ShadcnFinances />}
+            {activeTab === 'finances' && <NexusFinanceHub />}
 
             {activeTab === 'wishlist' && <ShadcnWishlist />}
 

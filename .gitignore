@@ -5,3 +5,10 @@ dist-ssr
 .DS_Store
 .agent-repos
 .env
+
+# Private banking exports must never be committed
+*.csv
+*.xlsx
+*.xls
+*.ofx
+*.qfx
