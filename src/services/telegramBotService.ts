@@ -27,90 +27,19 @@ export interface TelegramUpdate {
 }
 
 class TelegramBotService {
-  private baseUrl = 'https://api.telegram.org/bot';
-
-  // Send message via direct client fetch to Telegram Bot API
+  // Security: Bot tokens must never be used in browser fetch URLs.
+  // Future Telegram support requires a permissioned server-side action.
   public async sendMessage(
-    botToken: string,
-    chatId: string,
-    text: string,
-    parseMode: 'Markdown' | 'HTML' = 'Markdown'
+    _botToken: string, _chatId: string, _text: string,
+    _parseMode: 'Markdown' | 'HTML' = 'Markdown'
   ): Promise<{ success: boolean; error?: string }> {
-    if (!botToken || !chatId) {
-      return { success: false, error: 'Токен бота или Chat ID не заполнены' };
-    }
-
-    const cleanToken = botToken.trim();
-    const cleanChatId = chatId.trim();
-    const url = `${this.baseUrl}${cleanToken}/sendMessage`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: cleanChatId,
-          text,
-          parse_mode: parseMode,
-          disable_web_page_preview: true,
-        }),
-      });
-
-      const data: TelegramSendMessageResponse = await response.json();
-
-      if (!response.ok || !data.ok) {
-        return {
-          success: false,
-          error: data.description || `HTTP ${response.status}`,
-        };
-      }
-
-      return { success: true };
-    } catch (err: any) {
-      return {
-        success: false,
-        error: err.message || 'Ошибка сетевого запроса к Telegram API',
-      };
-    }
+    return { success: false, error: 'Telegram из браузера отключён: требуется защищённый серверный шлюз' };
   }
 
-  // Fetch new messages from Telegram chat using getUpdates
   public async getUpdates(
-    botToken: string,
-    offset: number = 0
+    _botToken: string, _offset: number = 0
   ): Promise<{ success: boolean; updates: TelegramUpdate[]; error?: string }> {
-    if (!botToken) {
-      return { success: false, updates: [], error: 'Токен бота не указан' };
-    }
-
-    const cleanToken = botToken.trim();
-    const url = `${this.baseUrl}${cleanToken}/getUpdates?offset=${offset}&timeout=2`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!response.ok || !data.ok) {
-        return {
-          success: false,
-          updates: [],
-          error: data.description || `HTTP ${response.status}`,
-        };
-      }
-
-      return {
-        success: true,
-        updates: data.result || [],
-      };
-    } catch (err: any) {
-      return {
-        success: false,
-        updates: [],
-        error: err.message || 'Не удалось связаться с Telegram',
-      };
-    }
+    return { success: false, updates: [], error: 'Telegram из браузера отключён для защиты токена' };
   }
 
   // Beautiful message formatter for Wishlist Shopping List

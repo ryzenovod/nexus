@@ -4,6 +4,8 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { AlertTriangle, ArrowDownToLine, FileUp, LockKeyhole, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShadcnFinances } from './ShadcnFinances';
@@ -88,24 +90,22 @@ function FinanceGrid({ data, mode, onEdit }: {
   });
   return <Card>
     <CardContent className="p-0">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[980px] border-collapse text-left text-xs">
-          <thead className="bg-white/[0.035] text-zinc-400">
-            {table.getHeaderGroups().map(group => <tr key={group.id}>
-              {group.headers.map(h => <th key={h.id} className="whitespace-nowrap border-b border-white/10 px-3 py-3 font-medium">
+      <Table className="min-w-[980px] text-xs">
+          <TableHeader className="bg-white/[0.035] text-zinc-400">
+            {table.getHeaderGroups().map(group => <TableRow key={group.id}>
+              {group.headers.map(h => <TableHead key={h.id} className="whitespace-nowrap border-b border-white/10 px-3 py-3 font-medium">
                 {h.isPlaceholder ? null : <button type="button" className="cursor-pointer text-left hover:text-white" onClick={h.column.getToggleSortingHandler()}>
                   {flexRender(h.column.columnDef.header, h.getContext())}{h.column.getIsSorted() === 'asc' ? ' ↑' : h.column.getIsSorted() === 'desc' ? ' ↓' : ''}
                 </button>}
-              </th>)}
-            </tr>)}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(r => <tr key={r.id} className="border-b border-white/[0.06] hover:bg-white/[0.035]">
-              {r.getVisibleCells().map(c => <td key={c.id} className="px-3 py-3 align-top">{flexRender(c.column.columnDef.cell, c.getContext())}</td>)}
-            </tr>)}
-          </tbody>
-        </table>
-      </div>
+              </TableHead>)}
+            </TableRow>)}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map(r => <TableRow key={r.id} className="border-b border-white/[0.06] hover:bg-white/[0.035]">
+              {r.getVisibleCells().map(c => <TableCell key={c.id} className="px-3 py-3 align-top">{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>)}
+            </TableRow>)}
+          </TableBody>
+        </Table>
       {data.length === 0 && <div className="p-7 text-center text-sm text-zinc-400">Нет операций с такими параметрами</div>}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-4 py-3 text-xs text-zinc-400">
         <span>{data.length} операций · страница {table.getState().pagination.pageIndex + 1} из {Math.max(1, table.getPageCount())}</span>
@@ -200,7 +200,7 @@ export const NexusFinanceHub: React.FC = () => {
   return <div className="space-y-5 pb-12">
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <div className="mb-1 flex items-center gap-2 text-xs text-zinc-500"><Wallet className="size-4" /> NEXUS / Finance</div>
+        <div className="mb-2 flex items-center gap-2 text-xs text-zinc-500"><Wallet className="size-4" /> NEXUS / Finance <Badge variant="outline" className="border-white/10 text-[10px] font-normal text-zinc-400">Локальный реестр</Badge></div>
         <h1 className="text-2xl font-semibold tracking-tight">Финансовый реестр</h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">Личные и совместные финансы без двойного счёта переводов. Выписки остаются в этом браузере, отдельно от облачной синхронизации NEXUS.</p>
       </div>

@@ -311,9 +311,6 @@ if (typeof window !== 'undefined') {
           }
         } catch {}
       }
-      localStorage.removeItem('nexus-real-sync-v1');
-      localStorage.removeItem('nexus-real-sync-v2');
-      localStorage.removeItem('nexus-real-sync-v3');
     }
   } catch {}
 }
@@ -393,8 +390,8 @@ export const useNexusStore = create<NexusState>()(
       supabaseConfig: {
         url: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) || 'https://sdkuyfcjmwtcevsyvbwl.supabase.co',
         anonKey: (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY) || 'sb_publishable_DUr8B1CJtEw-0ZMSACL-2A_mJMG4LD1',
-        isConnected: true,
-        autoSync: true,
+        isConnected: false,
+        autoSync: false,
         lastSyncAt: null,
       },
       isSyncing: false,
@@ -485,15 +482,11 @@ export const useNexusStore = create<NexusState>()(
 
           // 6. Real TickTick completion via local dev bridge or Supabase cloud queue
           const pid = (currentTask as any)?.projectId || '6abeae1535d42cc80be02175';
-          fetch('/api/ticktick/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId: id, projectId: pid }),
-          }).catch(() => {});
+          // No unauthenticated local TickTick write endpoint.
 
           // Remote queue push for mobile devices (iPhone, Android, Windows)
           const { supabaseConfig } = get();
-          if (supabaseConfig.url && supabaseConfig.anonKey) {
+          if (supabaseConfig.autoSync && supabaseConfig.url && supabaseConfig.anonKey) {
             pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
               pendingTickTickCompletions: [{ projectId: pid, taskId: id, timestamp: Date.now() }],
             }).catch(() => {});
@@ -742,8 +735,10 @@ export const useNexusStore = create<NexusState>()(
 
       // --- Telegram Bridge Actions ---
       setTelegramConfig: (config) => {
+        // Do not accept or persist a bot token from a browser.
+        const { botToken: _discarded, ...safe } = config;
         set((state) => ({
-          telegramConfig: { ...state.telegramConfig, ...config },
+          telegramConfig: { ...state.telegramConfig, ...safe, botToken: '', isConnected: false },
         }));
       },
 
@@ -1165,11 +1160,7 @@ export const useNexusStore = create<NexusState>()(
         }));
 
         if (matchedTaskId) {
-          fetch('/api/ticktick/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ taskId: matchedTaskId }),
-          }).catch(() => {});
+          // Marked complete locally; server writes require an authorized integration.
         }
 
         try {
@@ -1699,14 +1690,7 @@ export const useNexusStore = create<NexusState>()(
             }
           }
 
-          // 3. Fallback to public live-data.json snapshot
-          if (!rawData) {
-            const resp = await fetch('./live-data.json', { cache: 'no-cache' });
-            if (resp.ok) {
-              rawData = await resp.json();
-              syncSource = 'static-snapshot (live-data.json)';
-            }
-          }
+          // Public task snapshots are no longer served with the static website.
 
           if (!rawData) {
             throw new Error('Данные недоступны');
@@ -1896,7 +1880,7 @@ export const useNexusStore = create<NexusState>()(
           deletedTaskIds,
           tasks,
         } = get();
-        if (!supabaseConfig.url || !supabaseConfig.anonKey) return false;
+        if (!supabaseConfig.url || !supabaseConfig.anonKey || !supabaseConfig.autoSync) return false;
         try {
           return await pushSharedStateToNexusSync(supabaseConfig.url, supabaseConfig.anonKey, {
             wishlist,
@@ -1915,24 +1899,10 @@ export const useNexusStore = create<NexusState>()(
         }
       },
 
-      saveSupabaseToLocalEnv: async (url: string, key: string) => {
-        try {
-          const resp = await fetch('/api/save-supabase-env', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, key }),
-          });
-          if (resp.ok) {
-            return { success: true, message: 'Ключи успешно сохранены в ~/.config/ubersicht-dashboard/.env!' };
-          }
-        } catch {
-          // not in local dev server
-        }
-        return { 
-          success: false, 
-          message: `Выполните в терминале на Маке:\necho "SUPABASE_URL=\\"${url}\\"\\nSUPABASE_KEY=\\"${key}\\"" > ~/.config/ubersicht-dashboard/.env` 
-        };
-      },
+      saveSupabaseToLocalEnv: async (_url: string, _key: string) => ({
+        success: false,
+        message: 'Передача ключей в локальный API отключена. Используйте Supabase Auth для синхронизации.',
+      }),
 
       resetToDefaultData: () => {
         set({
@@ -1955,8 +1925,21 @@ export const useNexusStore = create<NexusState>()(
     {
       name: 'nexus-real-sync-v4',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        ...state,
+        telegramConfig: { ...state.telegramConfig, botToken: '', isConnected: false },
+      }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
+        // Never revive unsafe legacy credentials or unauthenticated cloud-write state.
+        if (state.telegramConfig) {
+          state.telegramConfig.botToken = '';
+          state.telegramConfig.isConnected = false;
+        }
+        if (state.supabaseConfig) {
+          state.supabaseConfig.isConnected = false;
+          state.supabaseConfig.autoSync = false;
+        }
         // Ensure completedTaskIds and deletedTaskIds exist
         if (!state.completedTaskIds) state.completedTaskIds = [];
         if (!state.deletedTaskIds) state.deletedTaskIds = [];

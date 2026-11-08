@@ -12,3 +12,6 @@ dist-ssr
 *.xls
 *.ofx
 *.qfx
+
+# Sensitive local live sync snapshot, never publish
+public/live-data.json

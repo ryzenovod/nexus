@@ -1,3 +1,4 @@
+import securityMigrationSql from '../../supabase/security_migration.sql?raw';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { 
   NexusTask, 
@@ -10,101 +11,74 @@ import {
 } from '../types/nexus';
 
 let supabaseInstance: SupabaseClient | null = null;
+let configured = '';
 
 export function getSupabaseClient(url?: string, anonKey?: string): SupabaseClient | null {
-  if (url && anonKey) {
-    try {
-      supabaseInstance = createClient(url, anonKey);
-      return supabaseInstance;
-    } catch (e) {
-      console.warn('Failed to initialize Supabase client:', e);
+  if (!url || !anonKey) return supabaseInstance;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' || !/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname) || parsed.username || parsed.password) {
       return null;
     }
+    const fingerprint = parsed.origin + '|' + anonKey;
+    if (supabaseInstance && configured === fingerprint) return supabaseInstance;
+    supabaseInstance = createClient(parsed.origin, anonKey, {
+      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true },
+    });
+    configured = fingerprint;
+    return supabaseInstance;
+  } catch {
+    return null;
   }
-  return supabaseInstance;
 }
 
 export async function testSupabaseConnection(url: string, anonKey: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = createClient(url, anonKey);
-    // Simple ping to check credentials
-    const { error } = await client.from('nexus_tasks').select('id').limit(1);
-    if (error && error.code !== 'PGRST116' && !error.message.includes('relation "nexus_tasks" does not exist')) {
-      return { success: false, error: error.message };
-    }
+    const client = await authorizedClient(url, anonKey);
+    if (!client) return { success: false, error: 'Нужен вход в Supabase Auth и подтверждённое членство в NEXUS' };
     return { success: true };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown network error';
-    return { success: false, error: message };
+  } catch {
+    return { success: false, error: 'Не удалось безопасно подтвердить авторизацию' };
   }
 }
 
-export const SUPABASE_SQL_SCHEMA = `-- =========================================================
--- NEXUS COUPLE LIFE OS // DATABASE MIGRATION SCRIPT
--- Unified table for Live Feed from fetch_data.py + Couple Shared State
--- Run this script in your Supabase Project -> SQL Editor
--- =========================================================
+export const SUPABASE_SQL_SCHEMA = securityMigrationSql;
 
-create table if not exists public.nexus_sync (
-  id text primary key,
-  payload jsonb not null default '{}'::jsonb,
-  shared_state jsonb not null default '{}'::jsonb,
-  updated_at timestamptz default now()
-);
-
-alter table public.nexus_sync enable row level security;
-
-drop policy if exists "Allow public read/write for couple" on public.nexus_sync;
-create policy "Allow public read/write for couple" on public.nexus_sync for all using (true) with check (true);
-
--- Enable Realtime for instant push across all 4 devices
-alter publication supabase_realtime add table public.nexus_sync;
-`;
+async function authorizedClient(url: string, anonKey: string): Promise<SupabaseClient | null> {
+  const client = getSupabaseClient(url, anonKey);
+  if (!client) return null;
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error || !user) return null;
+  const { data: membership, error: memberError } = await client
+    .from('nexus_members').select('user_id').eq('user_id', user.id).maybeSingle();
+  if (memberError || !membership) return null;
+  return client;
+}
 
 export async function fetchNexusSyncFeed(url: string, anonKey: string): Promise<{ payload: any; shared_state?: any } | null> {
   try {
-    const endpoint = `${url.replace(/\/$/, '')}/rest/v1/nexus_sync?id=eq.main_feed&select=*`;
-    const resp = await fetch(endpoint, {
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${anonKey}`,
-      },
-    });
-    if (!resp.ok) return null;
-    const rows = await resp.json();
-    if (Array.isArray(rows) && rows.length > 0) {
-      return {
-        payload: rows[0].payload,
-        shared_state: rows[0].shared_state,
-      };
-    }
-    return null;
-  } catch (e) {
-    console.warn('Failed to fetch from Supabase nexus_sync:', e);
+    const client = await authorizedClient(url, anonKey);
+    if (!client) return null;
+    const { data, error } = await client.from('nexus_sync')
+      .select('payload,shared_state').eq('id', 'main_feed').maybeSingle();
+    if (error || !data) return null;
+    return { payload: data.payload, shared_state: data.shared_state };
+  } catch {
     return null;
   }
 }
 
 export async function pushSharedStateToNexusSync(url: string, anonKey: string, sharedState: any): Promise<boolean> {
   try {
-    const endpoint = `${url.replace(/\/$/, '')}/rest/v1/nexus_sync`;
-    const resp = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${anonKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates',
-      },
-      body: JSON.stringify({
-        id: 'main_feed',
-        shared_state: sharedState,
-        updated_at: new Date().toISOString(),
-      }),
-    });
-    return resp.ok;
-  } catch (e) {
-    console.warn('Failed to push shared state to Supabase:', e);
+    const client = await authorizedClient(url, anonKey);
+    if (!client) return false;
+    const { error } = await client.from('nexus_sync').upsert({
+      id: 'main_feed',
+      shared_state: sharedState,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+    return !error;
+  } catch {
     return false;
   }
 }
@@ -120,6 +94,11 @@ export async function executeBidirectionalSync(
   client: SupabaseClient,
   payload: SyncPayload
 ): Promise<SyncPayload> {
+  const { data: { user }, error: authError } = await client.auth.getUser();
+  if (authError || !user) throw new Error('NEXUS cloud sync requires Supabase Auth');
+  const { data: member, error: membershipError } = await client.from('nexus_members')
+    .select('user_id').eq('user_id', user.id).maybeSingle();
+  if (membershipError || !member) throw new Error('NEXUS cloud sync requires authorized membership');
   // 1. Sync Tasks: Upsert local tasks
   if (payload.tasks.length > 0) {
     const taskRows = payload.tasks.map((task) => ({

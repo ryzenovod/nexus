@@ -1,3 +1,4 @@
+import { SupabaseAuthPanel } from './SupabaseAuthPanel';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -35,7 +36,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     syncWithSupabase,
     syncWithLivePipeline,
     pushCloudState,
-    saveSupabaseToLocalEnv,
     isSyncing,
     isSyncingLive,
     resetToDefaultData,
@@ -50,7 +50,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [url, setUrl] = useState(supabaseConfig.url || '');
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey || '');
   const [copiedSql, setCopiedSql] = useState(false);
-  const [envSaveStatus, setEnvSaveStatus] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
 
@@ -88,19 +87,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
     setCopiedSql(true);
     setTimeout(() => setCopiedSql(false), 2000);
-  };
-
-  const handleSaveToLocalEnv = async () => {
-    if (!url.trim() || !anonKey.trim()) {
-      setEnvSaveStatus('Сначала укажите URL и Anon Key выше');
-      setTimeout(() => setEnvSaveStatus(null), 3000);
-      return;
-    }
-    const res = await saveSupabaseToLocalEnv(url.trim(), anonKey.trim());
-    setEnvSaveStatus(res.message || 'Ключи сохранены!');
-    // Also copy bash command
-    navigator.clipboard.writeText(`echo "SUPABASE_URL=\\"${url.trim()}\\"\\nSUPABASE_KEY=\\"${anonKey.trim()}\\"" > ~/.config/ubersicht-dashboard/.env`);
-    setTimeout(() => setEnvSaveStatus(null), 6000);
   };
 
   // Export all state to JSON
@@ -213,7 +199,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="flex items-center gap-2">
                 <Database className="h-4 w-4 text-emerald-400" />
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                  Подключение к Supabase (Синхронизация для двоих)
+                  Supabase Auth · защищённая синхронизация
                 </h3>
               </div>
               <span
@@ -228,7 +214,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             <p className="text-xs text-zinc-400">
-              NEXUS работает на 100% автономно без облака. Для мгновенной синхронизации между MacBook, iPhone, Windows-ноутбуком и Samsung создайте бесплатный проект в Supabase и вставьте ключи ниже:
+              Безопасная синхронизация доступна только после применения SQL-миграции, входа через Supabase Auth и добавления пользователя владельцем базы. Публикация ключа anon сама по себе доступа не даёт:
             </p>
 
             <div className="space-y-2">
@@ -247,7 +233,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
               <div>
                 <label className="block text-[11px] font-mono text-zinc-300 mb-1">
-                  SUPABASE_ANON_KEY:
+                  SUPABASE_PUBLISHABLE_KEY:
                 </label>
                 <input
                   type="password"
@@ -259,6 +245,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             </div>
 
+            <SupabaseAuthPanel url={url.trim()} anonKey={anonKey.trim()} />
             {testResult && (
               <div
                 className={`rounded-lg p-2.5 text-xs border ${
@@ -268,12 +255,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 }`}
               >
                 {testResult.message}
-              </div>
-            )}
-
-            {envSaveStatus && (
-              <div className="rounded-lg p-2.5 text-xs bg-sky-500/10 border border-sky-500/30 text-sky-300 font-mono whitespace-pre-line">
-                {envSaveStatus}
               </div>
             )}
 
@@ -288,14 +269,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   {isTesting ? 'Проверка...' : 'Проверить и сохранить'}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleSaveToLocalEnv}
-                  className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 hover:bg-amber-500/25 px-3 py-1.5 text-xs font-semibold text-amber-200 transition-colors cursor-pointer"
-                  title="Записать ключи в ~/.config/ubersicht-dashboard/.env для автоматического пуша из Übersicht"
-                >
-                  <span>⚡️ Прописать ключи в fetch_data.py</span>
-                </button>
               </div>
 
               {/* One Click SQL Migration Copy */}
@@ -312,7 +285,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 ) : (
                   <>
                     <Copy className="h-3.5 w-3.5 text-amber-400" />
-                    <span>📋 Скопировать готовый SQL для Supabase</span>
+                    <span>Скопировать миграцию безопасности (SQL)</span>
                   </>
                 )}
               </button>

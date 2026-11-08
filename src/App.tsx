@@ -79,26 +79,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen nexus-ambient-bg text-foreground flex flex-col antialiased relative selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Background ambient layer */}
-      <div className="nexus-ambient-bg pointer-events-none fixed inset-0 z-0" />
-
-      {/* Subtle delicate stars layer */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <svg className="absolute inset-0 w-full h-full opacity-35" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="8%" cy="12%" r="1" fill="#fff" opacity="0.6" />
-          <circle cx="22%" cy="6%" r="1" fill="#fff" opacity="0.7" />
-          <circle cx="38%" cy="18%" r="0.8" fill="#fff" opacity="0.5" />
-          <circle cx="58%" cy="10%" r="1.2" fill="#fff" opacity="0.65" />
-          <circle cx="75%" cy="20%" r="0.8" fill="#fff" opacity="0.5" />
-          <circle cx="90%" cy="7%" r="1.1" fill="#fff" opacity="0.7" />
-          <circle cx="15%" cy="38%" r="0.8" fill="#fff" opacity="0.4" />
-          <circle cx="82%" cy="45%" r="1" fill="#fff" opacity="0.5" />
-          <circle cx="30%" cy="65%" r="1" fill="#fff" opacity="0.55" />
-          <circle cx="85%" cy="75%" r="0.8" fill="#fff" opacity="0.4" />
-        </svg>
-      </div>
-
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col antialiased">
       <div className="relative z-10 flex flex-col flex-1">
         {/* ── Official shadcn/ui Navbar ── */}
         <Navbar
@@ -111,7 +92,7 @@ export const App: React.FC = () => {
         />
 
         {/* ── Main Viewport ── */}
-        <main className="flex-1 flex flex-col relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 w-full pt-6 overflow-y-auto">
+        <main className="flex-1 flex flex-col relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pb-24 w-full pt-7 md:pt-9">
           <div key={activeTab} className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out w-full">
             {activeTab === 'overview' && (
               <ShadcnOverview

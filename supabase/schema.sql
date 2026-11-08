@@ -76,26 +76,76 @@ CREATE TABLE IF NOT EXISTS nexus_study_work (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Row Level Security (RLS) - Public anon access for couple sync
-ALTER TABLE nexus_tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nexus_wishlist ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nexus_finances ENABLE ROW LEVEL SECURITY;
-ALTER TABLE nexus_study_work ENABLE ROW LEVEL SECURITY;
+-- 5. Harden all existing NEXUS tables and enable Supabase Auth membership.
+-- NEXUS security migration v1 | 2026-11-08
+-- FAIL CLOSED. Run in Supabase SQL Editor by project owner after making a database backup.
+-- Existing data is preserved. Members must be enrolled out-of-band by the owner.
+-- Do NOT insert an arbitrary email or derive user identity from browser input.
 
-DROP POLICY IF EXISTS "Allow public anon access for nexus_tasks" ON nexus_tasks;
-CREATE POLICY "Allow public anon access for nexus_tasks" ON nexus_tasks FOR ALL USING (true) WITH CHECK (true);
+begin;
 
-DROP POLICY IF EXISTS "Allow public anon access for nexus_wishlist" ON nexus_wishlist;
-CREATE POLICY "Allow public anon access for nexus_wishlist" ON nexus_wishlist FOR ALL USING (true) WITH CHECK (true);
+create table if not exists public.nexus_members (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  added_at timestamptz not null default now()
+);
+alter table public.nexus_members enable row level security;
+revoke all on public.nexus_members from anon, authenticated;
+grant select on public.nexus_members to authenticated;
 
-DROP POLICY IF EXISTS "Allow public anon access for nexus_finances" ON nexus_finances;
-CREATE POLICY "Allow public anon access for nexus_finances" ON nexus_finances FOR ALL USING (true) WITH CHECK (true);
+create table if not exists public.nexus_sync (
+  id text primary key,
+  payload jsonb not null default '{}'::jsonb,
+  shared_state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now()
+);
 
-DROP POLICY IF EXISTS "Allow public anon access for nexus_study_work" ON nexus_study_work;
-CREATE POLICY "Allow public anon access for nexus_study_work" ON nexus_study_work FOR ALL USING (true) WITH CHECK (true);
+-- Remove ANY previous permissive or unknown policies on NEXUS tables.
+-- This is intentional: unknown older policies can silently OR with restrictive policies.
+do $nexus$
+declare p record;
+begin
+  for p in select schemaname, tablename, policyname from pg_policies
+    where schemaname = 'public'
+      and tablename in ('nexus_members', 'nexus_tasks', 'nexus_wishlist',
+                        'nexus_finances', 'nexus_study_work', 'nexus_sync')
+  loop
+    execute format('drop policy if exists %I on %I.%I', p.policyname, p.schemaname, p.tablename);
+  end loop;
+end
+$nexus$;
 
--- 6. Enable Realtime Publications
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_wishlist;
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_finances;
-ALTER PUBLICATION supabase_realtime ADD TABLE nexus_study_work;
+create policy nexus_members_self_read on public.nexus_members
+  for select to authenticated
+  using (user_id = (select auth.uid()));
+
+-- No INSERT/UPDATE/DELETE privileges or RLS policies for membership from the client.
+-- Only owner / service-role operations can authorize a new member.
+
+do $nexus$
+declare t text;
+begin
+  foreach t in array array['nexus_tasks','nexus_wishlist','nexus_finances','nexus_study_work','nexus_sync']
+  loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('revoke all on public.%I from anon, authenticated', t);
+    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
+
+    execute format(
+      'create policy nexus_member_select on public.%I for select to authenticated using (exists (select 1 from public.nexus_members m where m.user_id = (select auth.uid())))', t);
+    execute format(
+      'create policy nexus_member_insert on public.%I for insert to authenticated with check (exists (select 1 from public.nexus_members m where m.user_id = (select auth.uid())))', t);
+    execute format(
+      'create policy nexus_member_update on public.%I for update to authenticated using (exists (select 1 from public.nexus_members m where m.user_id = (select auth.uid()))) with check (exists (select 1 from public.nexus_members m where m.user_id = (select auth.uid())))', t);
+    execute format(
+      'create policy nexus_member_delete on public.%I for delete to authenticated using (exists (select 1 from public.nexus_members m where m.user_id = (select auth.uid())))', t);
+  end loop;
+end
+$nexus$;
+
+-- Nobody gets automatically enrolled. Populate only with VERIFIED auth.users IDs
+-- using Supabase dashboard SQL editor, after users register:
+-- insert into public.nexus_members(user_id) values ('<ACTUAL_AUTH_USER_UUID>')
+-- on conflict (user_id) do nothing;
+-- Repeat once for each person. The client cannot enroll itself.
+
+commit;

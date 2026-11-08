@@ -198,12 +198,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
     const key = `${hubId}_${subId}`;
     setHubChecklistState(prev => ({ ...prev, [key]: !prev[key] }));
 
-    // Send completion to local bridge
-    fetch('/api/ticktick/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ taskId: hubId, itemId: subId }),
-    }).catch(() => {});
+    // Subtask completion is kept locally until an authorized integration is available.
   };
 
   // Safe subtasks for activeHubTask
@@ -566,7 +561,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
               Все задачи и хабы обустройства
             </h3>
             <p className="text-xs text-zinc-400 mt-1">
-              47 реальных дел из ваших списков TickTick с быстрым доступом к чек-листам
+              {tasks.length} задач и хабов в текущем рабочем пространстве
             </p>
           </div>
 
