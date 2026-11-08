@@ -280,6 +280,8 @@ export const NexusFinanceHub: React.FC = () => {
   const downloadEncryptedBackup = async () => {
     setError('');
     try {
+      // Do not export a stale revision while recent edits are still being saved.
+      await saveChain.current;
       const contents = await exportEncryptedLedgerBackup();
       const today = new Date().toISOString().slice(0, 10);
       downloadFile('nexus-finance-encrypted-' + today + '.nexus', contents, 'application/json;charset=utf-8');
