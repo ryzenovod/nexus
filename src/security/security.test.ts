@@ -62,6 +62,18 @@ describe('NEXUS public build security contract', () => {
     }
   });
 
+  it('requires explicit CSV recovery and archives the original encrypted payload', () => {
+    const ui = read('src/components/finances/NexusFinanceHub.tsx');
+    const store = read('src/finance/storage.ts');
+    expect(ui).toContain('rebuildLockedLedgerFromCSV(rows, chosen)');
+    expect(ui).toContain("recoveryPhraseRef.current?.value.trim() !== 'ВОССТАНОВИТЬ'");
+    expect(ui).toContain('replacementAcknowledged');
+    expect(ui).toContain('Checkbox checked={replacementAcknowledged}');
+    expect(store).toContain('archive-before-password-recovery-v1');
+    expect(store).toContain('store.put(current, RECOVERY_ARCHIVE_KEY)');
+    expect(store).toContain('store.put(replacement, KEY)');
+  });
+
   it('checks autosave failures before locking or exporting encrypted backups', () => {
     const component = read('src/components/finances/NexusFinanceHub.tsx');
     expect(component).toContain('const saveFailure = useRef<Error | null>(null)');

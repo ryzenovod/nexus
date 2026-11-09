@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   type BankRow, applyDecisions, combineMaster, computeStats, DECISION_COLUMNS,
-  bankCoverage, editRow, exportCSV, isPending, kopeks, MASTER_COLUMNS, parseCSV,
+  auditLedgerQuality, bankCoverage, editRow, exportCSV, isPending, kopeks, MASTER_COLUMNS, parseCSV,
   parseMaster, reconcileVerifiedMaster, sources,
 } from './ledger';
 
@@ -135,6 +135,22 @@ describe('NEXUS local finance ledger', () => {
       bank: 'Сбер', count: 2, first: '2026-10-01', last: '2026-11-01', imported: true,
     });
     expect(coverage.filter(r => r.bank === 'Сбер')).toHaveLength(1);
+  });
+
+  it('audits missing categories, unresolved contour and review by bank without guessing balances', () => {
+    const pending = { ...sample, category: 'На классификацию', flow_type: 'EXPENSE' as const };
+    const unclear = { ...sample, transaction_id: 'second', flow_type: 'REVIEW_REQUIRED' as const, bank: 'ВТБ' };
+    const reviewed = { ...sample, transaction_id: 'third', bank: 'ВТБ',
+      contour: 'ЛИЧНЫЙ' as const, needs_review: 'Нет' as const, shared_decision: 'ЛИЧНАЯ' as const };
+    const quality = auditLedgerQuality([pending, unclear, reviewed]);
+    expect(quality).toMatchObject({
+      total: 3, pending: 2, reviewed: 1, reviewedPercent: 33,
+      unallocated: 2, withoutCategory: 1, unclearTransfer: 1, unresolvedJoint: 1,
+    });
+    expect(quality.banks.find(b => b.bank === 'ВТБ')).toMatchObject({
+      total: 2, pending: 1, reviewed: 1, unclearTransfer: 1,
+    });
+    expect(auditLedgerQuality([])).toMatchObject({ total: 0, reviewedPercent: 0, banks: [] });
   });
 
   it('reports observed bank coverage without inventing missing records', () => {

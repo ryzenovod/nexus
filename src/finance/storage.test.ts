@@ -4,6 +4,7 @@ import type { BankRow } from './ledger';
 import {
   enablePrivateEncryption, LedgerLockedError, loadPrivateLedger, lockPrivateLedger,
   savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup,
+  rebuildLockedLedgerFromCSV, exportPreviousEncryptedLedgerBackup, hasPreviousEncryptedLedgerBackup,
 } from './storage';
 
 const fixture: BankRow = {
@@ -189,5 +190,56 @@ describe('Private finance encryption', () => {
     await expect(importEncryptedLedgerBackup('x'.repeat(15 * 1024 * 1024 + 1))).rejects.toThrow('размер');
     expect(await loadPrivateLedger()).toEqual([fixture]);
   });
+
+  it('recovers from lost password using a new passphrase while archiving original ciphertext', async () => {
+    const oldPassword = 'synthetic-original-passphrase-2026';
+    const newPassword = 'synthetic-new-owner-passphrase-2026';
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], oldPassword);
+    const original = await rawRecord();
+    lockPrivateLedger();
+    const replacement = [{ ...fixture, transaction_id: 'restored-master-01', note: 'from verified master CSV' }];
+    await rebuildLockedLedgerFromCSV(replacement, newPassword);
+    expect(await hasPreviousEncryptedLedgerBackup()).toBe(true);
+    const archive = JSON.parse(await exportPreviousEncryptedLedgerBackup());
+    expect(archive.backup_format).toBe('nexus-encrypted-finance-backup-v1');
+    expect(archive.data).toBe((original as { data: string }).data);
+    expect(JSON.stringify(archive)).not.toContain('Private merchant');
+    lockPrivateLedger();
+    await expect(unlockPrivateLedger(oldPassword)).rejects.toThrow('Неверный пароль');
+    await expect(unlockPrivateLedger(newPassword)).resolves.toEqual(replacement);
+    // Original encrypted data remain independently restorable with original key.
+    lockPrivateLedger();
+    await removeDb();
+    await importEncryptedLedgerBackup(JSON.stringify(archive));
+    await expect(unlockPrivateLedger(oldPassword)).resolves.toEqual([fixture]);
+  });
+
+  it('refuses unsafe repeated password recovery without overwriting the first archive', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'synthetic-password-previous-vault');
+    lockPrivateLedger();
+    await rebuildLockedLedgerFromCSV([fixture], 'synthetic-password-vault-two');
+    const previous = await exportPreviousEncryptedLedgerBackup();
+    lockPrivateLedger();
+    const active = await rawRecord();
+    await expect(rebuildLockedLedgerFromCSV([fixture], 'synthetic-password-vault-three'))
+      .rejects.toThrow('Архив предыдущего реестра');
+    expect(await rawRecord()).toEqual(active);
+    expect(JSON.parse(await exportPreviousEncryptedLedgerBackup()).data).toBe(JSON.parse(previous).data);
+  });
+
+  it('does not change a locked vault if replacement has no rows, duplicate IDs or weak password', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'synthetic-valid-original-2026');
+    lockPrivateLedger();
+    const before = await rawRecord();
+    await expect(rebuildLockedLedgerFromCSV([], 'synthetic-new-password-2026')).rejects.toThrow('непустой');
+    await expect(rebuildLockedLedgerFromCSV([fixture, fixture], 'synthetic-new-password-2026')).rejects.toThrow('дублирующиеся');
+    await expect(rebuildLockedLedgerFromCSV([fixture], 'short')).rejects.toThrow('12 символов');
+    expect(await hasPreviousEncryptedLedgerBackup()).toBe(false);
+    expect(await rawRecord()).toEqual(before);
+  });
+
 
 });

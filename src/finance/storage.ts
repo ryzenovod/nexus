@@ -4,6 +4,7 @@ import type { BankRow } from './ledger';
 const DB_NAME = 'nexus-private-ledger';
 const STORE = 'finance';
 const KEY = 'master-v1';
+const RECOVERY_ARCHIVE_KEY = 'archive-before-password-recovery-v1';
 const FORMAT = 'nexus-aes-gcm-v1';
 const ROUNDS = 310_000;
 const AAD = new TextEncoder().encode(FORMAT);
@@ -106,11 +107,11 @@ function openDatabase(): Promise<IDBDatabase> {
   });
 }
 
-async function getRaw(): Promise<unknown> {
+async function getRaw(key: string = KEY): Promise<unknown> {
   const db = await openDatabase();
   try {
     return await new Promise((resolve, reject) => {
-      const request = db.transaction(STORE, 'readonly').objectStore(STORE).get(KEY);
+      const request = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error ?? new Error('Ошибка чтения'));
     });
@@ -278,6 +279,89 @@ export async function importEncryptedLedgerBackup(contents: string): Promise<voi
     }
   });
   session = null;
+}
+
+/**
+ * Recover access WITHOUT pretending to decrypt the previous AES-GCM ciphertext.
+ * Only explicit user-provided bank CSV rows enter the new vault; the original
+ * encrypted payload is atomically archived in IndexedDB for later recovery
+ * with its original password. This never uploads credentials or bank records.
+ */
+export async function rebuildLockedLedgerFromCSV(
+  rows: BankRow[], newPassword: string,
+): Promise<void> {
+  if (!rows.length) throw new Error('Сначала выбери непустой мастер-CSV');
+  if (newPassword.length < 12) throw new Error('Новый пароль должен содержать не менее 12 символов');
+  const ids = rows.map(r => r.transaction_id);
+  if (new Set(ids).size !== ids.length || ids.some(id => !id)) throw new Error('В CSV есть дублирующиеся или пустые ID');
+  const original = validatedEncryptedRecord(await getRaw());
+  if (await getRaw(RECOVERY_ARCHIVE_KEY) != null) {
+    throw new Error('Архив предыдущего реестра уже существует: повторная замена без его выгрузки запрещена');
+  }
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const state: UnlockSession = {
+    key: await deriveKey(newPassword, salt, ROUNDS),
+    salt,
+    rounds: ROUNDS,
+    revision: '',
+  };
+  const replacement = await seal(rows, state);
+  const db = await openDatabase();
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      const store = tx.objectStore(STORE);
+      let explicitError: Error | null = null;
+      const fail = (e: unknown) => {
+        explicitError = e instanceof Error ? e : new Error(String(e));
+        tx.abort();
+      };
+      const currentRequest = store.get(KEY);
+      currentRequest.onsuccess = () => {
+        const current = currentRequest.result;
+        if (!isSealed(current)
+            || current.iv !== original.iv
+            || current.salt !== original.salt
+            || current.data !== original.data) {
+          fail(new Error('Зашифрованный реестр изменился в другой вкладке. Обнови страницу.'));
+          return;
+        }
+        const archiveRequest = store.get(RECOVERY_ARCHIVE_KEY);
+        archiveRequest.onsuccess = () => {
+          if (archiveRequest.result != null) {
+            fail(new Error('Архив предыдущего реестра уже существует; запись запрещена'));
+            return;
+          }
+          store.put(current, RECOVERY_ARCHIVE_KEY);
+          store.put(replacement, KEY);
+        };
+        archiveRequest.onerror = () => fail(archiveRequest.error ?? new Error('Ошибка проверки архива'));
+      };
+      currentRequest.onerror = () => fail(currentRequest.error ?? new Error('Ошибка чтения шифротекста'));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(explicitError ?? tx.error ?? new Error('Ошибка замены хранилища'));
+      tx.onabort = () => reject(explicitError ?? tx.error ?? new Error('Замена реестра прервана'));
+    });
+  } finally {
+    db.close();
+  }
+  state.revision = replacement.iv;
+  session = state;
+}
+
+/** This preserved backup can still be decrypted with the OLD password. */
+export async function exportPreviousEncryptedLedgerBackup(): Promise<string> {
+  const archived = validatedEncryptedRecord(await getRaw(RECOVERY_ARCHIVE_KEY));
+  return JSON.stringify({
+    backup_format: BACKUP_FORMAT,
+    exported_at: new Date().toISOString(),
+    ...archived,
+  }, null, 2);
+}
+
+export async function hasPreviousEncryptedLedgerBackup(): Promise<boolean> {
+  return isSealed(await getRaw(RECOVERY_ARCHIVE_KEY));
 }
 
 export function lockPrivateLedger(): void {

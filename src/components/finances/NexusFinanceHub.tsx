@@ -6,17 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShadcnFinances } from './ShadcnFinances';
 import {
   applyDecisions, combineMaster, computeStats, CONTOURS, DECISION_COLUMNS, DECISIONS,
-  bankCoverage, editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
+  auditLedgerQuality, bankCoverage, editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
   type BankRow, type Contour,
 } from '@/finance/ledger';
 import {
   LedgerLockedError, enablePrivateEncryption, loadPrivateLedger, lockPrivateLedger,
   savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup,
+  rebuildLockedLedgerFromCSV, exportPreviousEncryptedLedgerBackup, hasPreviousEncryptedLedgerBackup,
 } from '@/finance/storage';
 
 type GridMode = 'ledger' | 'joint' | 'review';
@@ -145,10 +148,18 @@ export const NexusFinanceHub: React.FC = () => {
   const [ledgerLocked, setLedgerLocked] = useState(false);
   const [encrypted, setEncrypted] = useState(false);
   const [protecting, setProtecting] = useState(false);
+  const [showCsvRecovery, setShowCsvRecovery] = useState(false);
+  const [replacementFile, setReplacementFile] = useState<File | null>(null);
+  const [replacementAcknowledged, setReplacementAcknowledged] = useState(false);
+  const [previousArchiveAvailable, setPreviousArchiveAvailable] = useState(false);
+  const newRecoveryPasswordRef = useRef<HTMLInputElement>(null);
+  const repeatRecoveryPasswordRef = useRef<HTMLInputElement>(null);
+  const recoveryPhraseRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('Импортируй transactions.csv из ~/Documents/NEXUS. Сайт не содержит встроенных выписок.');
   const [error, setError] = useState('');
   const [contour, setContour] = useState<Contour | 'ВСЕ'>('ВСЕ');
+  const [financeTab, setFinanceTab] = useState('overview');
   const [search, setSearch] = useState('');
   const [bank, setBank] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -163,6 +174,7 @@ export const NexusFinanceHub: React.FC = () => {
 
 
   useEffect(() => {
+    void hasPreviousEncryptedLedgerBackup().then(setPreviousArchiveAvailable).catch(() => {});
     let active = true;
     loadPrivateLedger().then(rows => {
       if (active) { setLedger(rows); setStorageAvailable(true); }
@@ -245,6 +257,7 @@ export const NexusFinanceHub: React.FC = () => {
   const jointStats = useMemo(() => computeStats(ledger.filter(r => r.contour === 'СОВМЕСТНЫЙ')), [ledger]);
   const bankList = useMemo(() => sources(ledger), [ledger]);
   const coverage = useMemo(() => bankCoverage(ledger), [ledger]);
+  const quality = useMemo(() => auditLedgerQuality(ledger), [ledger]);
 
   const filtered = useCallback((set: BankRow[]) => set.filter(r => {
     const text = (r.counterparty_description + ' ' + r.bank + ' ' + r.category + ' ' + r.transaction_id).toLocaleLowerCase('ru');
@@ -320,6 +333,53 @@ export const NexusFinanceHub: React.FC = () => {
     }
   };
 
+  const recoverFromMasterCSV = async () => {
+    setError('');
+    setProtecting(true);
+    try {
+      if (!loaded || !ledgerLocked || !encrypted) throw Error('Этот способ доступен только для заблокированного реестра');
+      if (!replacementAcknowledged || recoveryPhraseRef.current?.value.trim() !== 'ВОССТАНОВИТЬ') {
+        throw Error('Подтверди архивацию и введи слово ВОССТАНОВИТЬ');
+      }
+      if (!replacementFile || replacementFile.size > 15 * 1024 * 1024) {
+        throw Error('Выбери корректный мастер-CSV размером не более 15 МБ');
+      }
+      const chosen = newRecoveryPasswordRef.current?.value ?? '';
+      if (chosen.length < 12) throw Error('Новый пароль должен содержать не менее 12 символов');
+      if (chosen !== repeatRecoveryPasswordRef.current?.value) throw Error('Новые пароли не совпадают');
+      const rows = parseMaster(await replacementFile.text());
+      await rebuildLockedLedgerFromCSV(rows, chosen);
+      setPreviousArchiveAvailable(true);
+      setLedger(rows);
+      setStorageAvailable(true);
+      setLedgerLocked(false);
+      setEncrypted(true);
+      setShowCsvRecovery(false);
+      setReplacementFile(null);
+      setReplacementAcknowledged(false);
+      setMessage('Новый зашифрованный реестр восстановлен из CSV: ' + rows.length +
+        ' операций. Старый шифротекст сохранён отдельно. Новый пароль известен только тебе.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (newRecoveryPasswordRef.current) newRecoveryPasswordRef.current.value = '';
+      if (repeatRecoveryPasswordRef.current) repeatRecoveryPasswordRef.current.value = '';
+      if (recoveryPhraseRef.current) recoveryPhraseRef.current.value = '';
+      setProtecting(false);
+    }
+  };
+
+  const downloadPreviousEncryptedArchive = async () => {
+    setError('');
+    try {
+      const archive = await exportPreviousEncryptedLedgerBackup();
+      downloadFile('nexus-original-encrypted-archive.nexus', archive, 'application/json;charset=utf-8');
+      setMessage('Старый зашифрованный реестр экспортирован. Для его расшифровки нужен прежний пароль.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
   const candidates = ledger.filter(r => r.date >= '2026-10-21' && r.flow_type === 'EXPENSE');
   const allForGrid = filtered(visible);
   const jointForGrid = filtered(candidates);
@@ -371,11 +431,60 @@ export const NexusFinanceHub: React.FC = () => {
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><LockKeyhole className="size-4" /> Финансовый реестр заблокирован</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-zinc-400">Операции зашифрованы в браузере. Пароль не отправляется на сервер и не хранится в NEXUS. Без него расшифровать данные нельзя.</p>
-          <p className="text-xs leading-relaxed text-zinc-400">Где взять пароль? Если он сохранён на Mac, открой системную программу «Связка ключей» (Keychain Access), выбери связку login и найди «NEXUS encrypted private finance ledger — GitHub Pages». Выбери «Показать пароль» и подтверди доступ в macOS. Не отправляй пароль в чат или на сайт кроме формы разблокировки NEXUS. Зашифрованная копия .nexus не содержит пароль.</p>
+          <p className="max-w-3xl text-sm leading-relaxed text-zinc-400">
+            Старый пароль находится в системном приложении Mac <strong>«Связка ключей» (Keychain Access)</strong>:
+            связка <strong>login</strong>, элемент «NEXUS encrypted private finance ledger — GitHub Pages».
+            Открой элемент и выбери «Показать пароль» (macOS может запросить подтверждение владельца).
+            <strong> Это не Safari «Пароли» и не запись nexus для supabase.com.</strong>
+            Автоматическая подстановка из Safari для этого ключа не настроена.
+          </p>
           <form className="flex flex-wrap gap-2" onSubmit={e => { e.preventDefault(); void unlock(); }}>
             <Input ref={passwordRef} type="password" autoComplete="current-password" aria-label="Пароль для финансового реестра" placeholder="Пароль для разблокировки" className="max-w-sm" />
             <Button type="submit" disabled={protecting}><KeyRound className="size-4" /> Разблокировать</Button>
           </form>
+          <div className="border-t border-white/10 pt-4">
+            <Button type="button" variant="outline" size="sm"
+              onClick={() => setShowCsvRecovery(v => !v)} disabled={protecting}>
+              <FileUp className="size-4" /> Нет доступа к паролю? Восстановить из CSV
+            </Button>
+            {showCsvRecovery && <div className="mt-4 max-w-3xl space-y-4">
+              <p className="text-sm text-amber-200">
+                Это не расшифровка старой копии. Новый реестр будет создан из выбранного мастер-CSV,
+                а прежний зашифрованный реестр сохранится как отдельный архив в этом браузере.
+                Правки, сделанные только в старом браузерном реестре после последнего CSV, могут отсутствовать.
+              </p>
+              <p className="text-xs text-zinc-400">
+                На этом Mac актуальный мастер-файл: Documents/NEXUS/transactions.csv.
+                Перед восстановлением сохрани отдельную «Шифр. копию» старого реестра.
+              </p>
+              <label className="block space-y-2 text-sm text-zinc-300">
+                <span>Мастер-реестр CSV</span>
+                <Input type="file" accept=".csv,text/csv" className="max-w-lg"
+                  onChange={e => setReplacementFile(e.target.files?.[0] ?? null)} />
+              </label>
+              {replacementFile && <p className="text-xs text-zinc-400">Выбран: {replacementFile.name}</p>}
+              <p className="text-xs text-zinc-400">Придумай и сохрани новый пароль самостоятельно. Он не будет отправлен в Supabase или сохранён в NEXUS; старые правки, отсутствующие в CSV, можно прочитать только с прежним паролем.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input ref={newRecoveryPasswordRef} type="password" autoComplete="new-password"
+                  aria-label="Новый пароль финансового реестра" placeholder="Новый пароль (от 12 символов)" />
+                <Input ref={repeatRecoveryPasswordRef} type="password" autoComplete="new-password"
+                  aria-label="Повтори новый пароль" placeholder="Повтори новый пароль" />
+              </div>
+              <label className="flex items-start gap-2 text-xs text-zinc-300">
+                <Checkbox checked={replacementAcknowledged}
+                  onCheckedChange={value => setReplacementAcknowledged(value === true)}
+                  aria-label="Подтверждение сохранения старого зашифрованного реестра" />
+                <span>Понимаю, что старые данные останутся только в зашифрованном архиве, и мне нужен прежний пароль для их чтения.</span>
+              </label>
+              <Input ref={recoveryPhraseRef} placeholder="Напиши ВОССТАНОВИТЬ"
+                aria-label="Подтверждение восстановления реестра" className="max-w-sm" />
+              <Button type="button" variant="destructive"
+                disabled={protecting || !replacementFile || !replacementAcknowledged}
+                onClick={() => void recoverFromMasterCSV()}>
+                <LockKeyhole className="size-4" /> Создать новый зашифрованный реестр
+              </Button>
+            </div>}
+          </div>
         </CardContent>
       </Card>
     ) : storageAvailable && (
@@ -395,16 +504,23 @@ export const NexusFinanceHub: React.FC = () => {
         )}
       </div>
     ))}
+    {loaded && previousArchiveAvailable && <div className="flex flex-wrap items-center gap-3">
+      <Button type="button" variant="outline" size="sm" onClick={() => void downloadPreviousEncryptedArchive()}>
+        <ArrowDownToLine className="size-4" /> Скачать архив прежнего зашифрованного реестра
+      </Button>
+      <span className="text-xs text-zinc-400">Архив читается только с прежним паролем.</span>
+    </div>}
     {error && <div role="alert" className="flex items-start gap-2 rounded-lg border border-red-900/50 bg-red-950/40 p-3 text-xs text-red-200"><AlertTriangle className="size-4 shrink-0" />{error}</div>}
     {message && <div className="text-xs text-zinc-400">{loaded ? message : 'Чтение локального хранилища…'}</div>}
 
-    {!ledgerLocked && <Tabs defaultValue="overview" className="w-full">
+    {!ledgerLocked && <Tabs value={financeTab} onValueChange={setFinanceTab} className="w-full">
       <TabsList className="mb-4 h-auto w-full flex-wrap justify-start gap-1 bg-white/[0.03] p-1">
         <TabsTrigger value="overview">Сводка</TabsTrigger>
         <TabsTrigger value="personal">Мои финансы</TabsTrigger>
         <TabsTrigger value="joint">Совместные покупки</TabsTrigger>
         <TabsTrigger value="ledger">Операции</TabsTrigger>
         <TabsTrigger value="sources">Банки</TabsTrigger>
+        <TabsTrigger value="quality">Контроль качества</TabsTrigger>
         <TabsTrigger value="review">На проверку ({ledger.filter(isPending).length})</TabsTrigger>
         <TabsTrigger value="old">Карты и ЖКХ</TabsTrigger>
       </TabsList>
@@ -513,6 +629,59 @@ export const NexusFinanceHub: React.FC = () => {
           </Table>
         </CardContent></Card>
         <p className={muted}>Список ожидаемых источников — контроль загрузки, а не подтверждение наличия счетов или их остатков. Отсутствующие банки не участвуют в сводных суммах.</p>
+      </TabsContent>
+
+      <TabsContent value="quality" className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-medium">Контроль качества данных</h2>
+            <p className={muted}>Проверка классификации и неполных источников без выдуманных остатков и скрытого пересчёта операций.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setFinanceTab('review')}>Разобрать спорные</Button>
+            <Button variant="outline" size="sm" onClick={() => setFinanceTab('sources')}>Покрытие банков</Button>
+          </div>
+        </div>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Обработка операций</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap justify-between gap-2 text-sm">
+              <span className="text-zinc-300">Без флага проверки: {quality.reviewed} из {quality.total}</span>
+              <span className="font-medium tabular-nums">{quality.reviewedPercent}%</span>
+            </div>
+            <Progress value={quality.reviewedPercent} aria-label="Доля операций без флага проверки" />
+            <p className={muted}>Это доля классифицированных записей, а не показатель полноты загруженных банковских выписок.</p>
+          </CardContent>
+        </Card>
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Metric title="На проверке" value={String(quality.pending)} hint="Не входят в подтверждённое потребление" />
+          <Metric title="Контур не указан" value={String(quality.unallocated)} hint="Нужны личное или совместное назначение" />
+          <Metric title="Без категории" value={String(quality.withoutCategory)} hint="Покупки с неопределённой категорией" />
+          <Metric title="Тип не определён" value={String(quality.unclearTransfer)} hint="Потоки REVIEW_REQUIRED" />
+        </section>
+        <p className={muted}>Кандидаты в совместные покупки без решения: {quality.unresolvedJoint}. Их нельзя автоматически считать общими расходами.</p>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Очередь проверки по банкам</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Банк</TableHead>
+                <TableHead className="text-right">Всего</TableHead>
+                <TableHead className="text-right">Проверить</TableHead>
+                <TableHead className="text-right">Без контура</TableHead>
+                <TableHead className="text-right">Без категории</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>{quality.banks.map(item => <TableRow key={item.bank}>
+                <TableCell className="font-medium">{item.bank}</TableCell>
+                <TableCell className="text-right tabular-nums">{item.total}</TableCell>
+                <TableCell className="text-right tabular-nums">{item.pending}</TableCell>
+                <TableCell className="text-right tabular-nums">{item.unallocated}</TableCell>
+                <TableCell className="text-right tabular-nums">{item.withoutCategory}</TableCell>
+              </TableRow>)}</TableBody>
+            </Table>
+            {quality.banks.length===0 && <div className="p-6 text-sm text-zinc-500">Нет импортированных операций. Сначала добавь мастер-CSV.</div>}
+          </CardContent>
+        </Card>
       </TabsContent>
 
       <TabsContent value="review" className="space-y-4">

@@ -235,6 +235,44 @@ export function bankCoverage(rows:BankRow[]):SourceCoverage[]{
   ];
 }
 
+export interface BankQuality {
+  bank: string;
+  total: number;
+  reviewed: number;
+  pending: number;
+  unallocated: number;
+  withoutCategory: number;
+  unclearTransfer: number;
+}
+
+export function auditLedgerQuality(rows: BankRow[]) {
+  const bankMap = new Map<string, BankQuality>();
+  let reviewed=0, pending=0, unallocated=0, withoutCategory=0, unclearTransfer=0, unresolvedJoint=0;
+  const emptyCategories = new Set(['', 'На классификацию', 'Без категории']);
+  for (const r of rows) {
+    let bank = bankMap.get(r.bank);
+    if (!bank) {
+      bank={bank:r.bank,total:0,reviewed:0,pending:0,unallocated:0,withoutCategory:0,unclearTransfer:0};
+      bankMap.set(r.bank,bank);
+    }
+    bank.total++;
+    const flag=isPending(r);
+    if(flag){pending++;bank.pending++} else {reviewed++;bank.reviewed++}
+    if(r.contour==='НЕ РАСПРЕДЕЛЕНО'){unallocated++;bank.unallocated++}
+    if(r.flow_type==='EXPENSE'&&emptyCategories.has(r.category.trim())){
+      withoutCategory++;bank.withoutCategory++;
+    }
+    if(r.flow_type==='REVIEW_REQUIRED'){unclearTransfer++;bank.unclearTransfer++}
+    if(r.flow_type==='EXPENSE'&&r.date>='2026-10-21'
+      &&r.shared_decision==='НЕ РЕШЕНО'&&flag)unresolvedJoint++;
+  }
+  return {
+    total:rows.length,reviewed,pending,unallocated,withoutCategory,unclearTransfer,unresolvedJoint,
+    reviewedPercent:rows.length?Math.round(reviewed*100/rows.length):0,
+    banks:[...bankMap.values()].sort((a,b)=>b.pending-a.pending||a.bank.localeCompare(b.bank,'ru')),
+  };
+}
+
 export function exportCSV(rows:BankRow[],columns:(keyof BankRow)[]):string{
   const output=[columns.join(',')];
   for(const r of rows)output.push(columns.map(field=>{
