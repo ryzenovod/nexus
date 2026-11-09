@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShadcnFinances } from './ShadcnFinances';
 import { auditInternalTransferPairs } from '@/finance/transferPairs';
+import { possibleDuplicateImports } from '@/finance/duplicates';
 import {
   applyDecisions, combineMaster, computeStats, CONTOURS, DECISION_COLUMNS, DECISIONS,
   auditLedgerQuality, bankCoverage, editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
@@ -284,6 +285,7 @@ export const NexusFinanceHub: React.FC = () => {
   const coverage = useMemo(() => bankCoverage(ledger), [ledger]);
   const quality = useMemo(() => auditLedgerQuality(ledger), [ledger]);
   const transferAudit = useMemo(() => auditInternalTransferPairs(ledger), [ledger]);
+  const duplicateGroups = useMemo(() => possibleDuplicateImports(ledger), [ledger]);
 
   const filtered = useCallback((set: BankRow[]) => set.filter(r => {
     const text = (r.counterparty_description + ' ' + r.bank + ' ' + r.category + ' ' + r.transaction_id).toLocaleLowerCase('ru');
@@ -730,6 +732,24 @@ export const NexusFinanceHub: React.FC = () => {
               </TableRow>)}</TableBody>
             </Table>
             {quality.banks.length===0 && <div className="p-6 text-sm text-zinc-500">Нет импортированных операций. Сначала добавь мастер-CSV.</div>}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Проверка возможного повторного импорта</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className={muted}>Групп с одинаковым банком, счётом, датой, суммой до копейки и описанием: {duplicateGroups.length}. Это только признаки возможного дубля — два одинаковых платежа могут быть настоящими. Автоматического удаления или изменения расходов нет.</p>
+            {duplicateGroups.length > 0 && <Table>
+              <TableHeader><TableRow>
+                <TableHead>Банк</TableHead><TableHead>Дата</TableHead><TableHead className="text-right">Сумма</TableHead><TableHead className="text-right">Записей</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>{duplicateGroups.slice(0, 12).map((group, i) => <TableRow key={group.bank+group.date+i}>
+                <TableCell>{group.bank}</TableCell>
+                <TableCell>{group.date}</TableCell>
+                <TableCell className="text-right tabular-nums">{money(group.amountKopeks)}</TableCell>
+                <TableCell className="text-right tabular-nums">{group.rows.length}</TableCell>
+              </TableRow>)}</TableBody>
+            </Table>}
+            {duplicateGroups.length > 12 && <p className={muted}>Показаны первые 12 групп; остальные требуют отдельной сверки выписок.</p>}
           </CardContent>
         </Card>
       </TabsContent>

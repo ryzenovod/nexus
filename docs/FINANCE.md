@@ -72,3 +72,7 @@ The «Связки переводов» tab uses a read-only one-to-one matcher:
 ## Change vault password
 
 When an encrypted finance ledger is already unlocked, the owner can choose «Изменить пароль» to re-encrypt it with a new owner-chosen password (at least 12 characters), without needing the old plaintext phrase. Each rotation creates a new salt and checks that the record has not changed in another tab. After rotation, export a fresh encrypted backup; older backups still require their original password. When locked without the old password, the separate CSV recovery workflow can create a new vault after explicit owner confirmation. A password offered by Safari for supabase.com is NOT the NEXUS finance ledger password.
+
+## Potential duplicate imports
+
+Finance > Контроль качества displays groups of distinct transaction IDs sharing the exact observed bank, account, operation date, signed amount in kopeks and normalized merchant description. These are only possible import duplicates: two equal charges from the same merchant on one day may both be legitimate. The app never deletes, merges or silently excludes any of these records. Confirmation requires original bank evidence.
