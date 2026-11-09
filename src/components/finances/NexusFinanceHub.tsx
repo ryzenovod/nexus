@@ -10,9 +10,12 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShadcnFinances } from './ShadcnFinances';
 import { auditInternalTransferPairs } from '@/finance/transferPairs';
 import { possibleDuplicateImports } from '@/finance/duplicates';
+import { clearPrivateFinance, publishPrivateFinance } from '@/finance/privateOverview';
+import { planCsvImport, type ImportPlan } from '@/finance/importPlan';
 import {
   applyDecisions, combineMaster, computeStats, CONTOURS, DECISION_COLUMNS, DECISIONS,
   auditLedgerQuality, bankCoverage, editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
@@ -162,8 +165,10 @@ export const NexusFinanceHub: React.FC = () => {
   const recoveryPhraseRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('Импортируй transactions.csv из ~/Documents/NEXUS. Сайт не содержит встроенных выписок.');
+  const [importPreview, setImportPreview] = useState<{ plan: ImportPlan; fileName: string; originalRows: BankRow[] } | null>(null);
   const [error, setError] = useState('');
   const [contour, setContour] = useState<Contour | 'ВСЕ'>('ВСЕ');
+  const [personalMonth, setPersonalMonth] = useState('ПОСЛЕДНИЙ');
   const [financeTab, setFinanceTab] = useState('overview');
   const [search, setSearch] = useState('');
   const [bank, setBank] = useState('');
@@ -186,6 +191,7 @@ export const NexusFinanceHub: React.FC = () => {
     }).catch(e => {
       if (!active) return;
       if (e instanceof LedgerLockedError) {
+        clearPrivateFinance();
         setLedgerLocked(true);
         setEncrypted(true);
         setMessage('Зашифрованный реестр заблокирован. Введи пароль для работы.');
@@ -198,8 +204,12 @@ export const NexusFinanceHub: React.FC = () => {
   useEffect(() => {
     if (!loaded || !storageAvailable) return;
     saveChain.current = saveChain.current.then(() => savePrivateLedger(ledger))
-      .then(() => { saveFailure.current = null; })
+      .then(() => {
+        saveFailure.current = null;
+        publishPrivateFinance(ledger);
+      })
       .catch(e => {
+        clearPrivateFinance();
         saveFailure.current = e instanceof Error ? e : new Error(String(e));
         setError('Автосохранение не удалось. Не закрывай вкладку; экспортируй CSV: ' + saveFailure.current.message);
       });
@@ -266,6 +276,7 @@ export const NexusFinanceHub: React.FC = () => {
       await ensureSaved();
       setStorageAvailable(false);
       lockPrivateLedger();
+      clearPrivateFinance();
       setLedger([]);
       setLedgerLocked(true);
       setMessage('Реестр заблокирован на этой вкладке.');
@@ -286,6 +297,17 @@ export const NexusFinanceHub: React.FC = () => {
   const quality = useMemo(() => auditLedgerQuality(ledger), [ledger]);
   const transferAudit = useMemo(() => auditInternalTransferPairs(ledger), [ledger]);
   const duplicateGroups = useMemo(() => possibleDuplicateImports(ledger), [ledger]);
+  const personalMonths = useMemo(() =>
+    [...new Set(ledger.filter(r => r.contour === 'ЛИЧНЫЙ').map(r => r.month))].sort().reverse(),
+    [ledger],
+  );
+  const activePersonalMonth = personalMonth === 'ПОСЛЕДНИЙ'
+    ? (personalMonths[0] ?? '')
+    : personalMonth;
+  const personalPeriodStats = useMemo(() => computeStats(ledger.filter(r =>
+    r.contour === 'ЛИЧНЫЙ' && r.month === activePersonalMonth,
+  )), [ledger, activePersonalMonth]);
+
 
   const filtered = useCallback((set: BankRow[]) => set.filter(r => {
     const text = (r.counterparty_description + ' ' + r.bank + ' ' + r.category + ' ' + r.transaction_id).toLocaleLowerCase('ru');
@@ -294,21 +316,40 @@ export const NexusFinanceHub: React.FC = () => {
 
   const importFile = async (file: File) => {
     setError('');
+    setImportPreview(null);
     try {
-      const content = await file.text();
-      const header = content.replace(/^\uFEFF/, '').split(/\r?\n/, 1)[0];
-      if (header.includes('flow_type') && header.includes('transaction_id')) {
-        const imported = parseMaster(content);
-        const merged = combineMaster(ledger, imported);
-        setLedger(merged.rows);
-        setMessage('Импортировано ' + imported.length + ' строк из ' + file.name + ', новых: ' + merged.added + '. Повторы не добавлены.');
-      } else {
-        if (ledger.length === 0) throw Error('Сначала загрузи transactions.csv, затем CSV с решениями');
-        const merged = applyDecisions(ledger, content);
-        setLedger(merged.rows);
-        setMessage('Решений из ' + file.name + ' применено: ' + merged.updated + '. Без явного подтверждения они остаются на проверке.');
-      }
+      if (!loaded || ledgerLocked || !storageAvailable) throw Error('Сначала разблокируй локальный реестр');
+      if (file.size > 15 * 1024 * 1024) throw Error('Файл больше 15 МБ');
+      const plan = planCsvImport(ledger, await file.text());
+      setImportPreview({ plan, fileName: file.name, originalRows: ledger });
+      setMessage('Предварительная проверка завершена. Запись ещё не выполнена.');
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+  };
+
+  const confirmImport = () => {
+    setError('');
+    if (!importPreview) return;
+    try {
+      if (!loaded || ledgerLocked || !storageAvailable) throw Error('Реестр заблокирован');
+      if (ledger !== importPreview.originalRows) {
+        throw Error('Реестр изменился после предварительной проверки. Заново выбери CSV.');
+      }
+      if (!importPreview.plan.added && !importPreview.plan.changes) {
+        setMessage('Новых данных нет; реестр не изменён.');
+      } else {
+        setLedger(importPreview.plan.result);
+        setMessage(
+          'Подтверждён импорт ' + importPreview.fileName +
+          ': новых операций ' + importPreview.plan.added +
+          ', изменённых решений ' + importPreview.plan.changes +
+          ', повторов пропущено ' + importPreview.plan.repeated + '.',
+        );
+      }
+      setImportPreview(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setImportPreview(null);
+    }
   };
 
   const syncReviewedMaster = async (file: File) => {
@@ -377,6 +418,7 @@ export const NexusFinanceHub: React.FC = () => {
       if (chosen !== repeatRecoveryPasswordRef.current?.value) throw Error('Новые пароли не совпадают');
       const rows = parseMaster(await replacementFile.text());
       await rebuildLockedLedgerFromCSV(rows, chosen);
+      clearPrivateFinance();
       setPreviousArchiveAvailable(true);
       setLedger(rows);
       setStorageAvailable(true);
@@ -450,6 +492,28 @@ export const NexusFinanceHub: React.FC = () => {
         </Button>
       </div>
     </header>
+    {importPreview && !ledgerLocked && <Card>
+      <CardHeader><CardTitle className="text-base">Предварительная проверка импорта</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2 text-xs">
+          <Badge variant="outline">{importPreview.plan.kind === 'master' ? 'Банковские операции' : 'Решения по покупкам'}</Badge>
+          <Badge variant="outline">{importPreview.fileName}</Badge>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <div><p className={muted}>В файле</p><p className="text-xl font-semibold tabular-nums">{importPreview.plan.sourceCount}</p></div>
+          <div><p className={muted}>Новые строки</p><p className="text-xl font-semibold tabular-nums">{importPreview.plan.added}</p></div>
+          <div><p className={muted}>Повторы ID</p><p className="text-xl font-semibold tabular-nums">{importPreview.plan.repeated}</p></div>
+          <div><p className={muted}>Изменены решения</p><p className="text-xl font-semibold tabular-nums">{importPreview.plan.changes}</p></div>
+        </div>
+        <p className="text-xs text-zinc-400">Новых операций с флагом проверки: {importPreview.plan.pendingNew}. Изменение подтверждённых расходов после импорта: {money(importPreview.plan.expenseDeltaKopeks)}. Внутренние переводы не считаются расходами. До подтверждения данные не записываются.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={confirmImport} disabled={!importPreview.plan.added && !importPreview.plan.changes}>
+            <FileUp className="size-4" /> Подтвердить импорт
+          </Button>
+          <Button variant="outline" onClick={() => setImportPreview(null)}>Отмена</Button>
+        </div>
+      </CardContent>
+    </Card>}
     <div className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.035] p-3 text-xs text-zinc-300">
       <LockKeyhole className="mt-0.5 size-4 shrink-0" />
       <span>Данные хранятся в IndexedDB на этом устройстве, без передачи в Supabase. Это не облачный бэкап: обязательно экспортируй CSV после правок. Старые вручную введённые финансы NEXUS учитываются отдельно.</span>
@@ -621,6 +685,45 @@ export const NexusFinanceHub: React.FC = () => {
             <Metric title="Внутренние переводы" value={String(s.transferCount)} hint="Количество записей, не сумма расходов" />
           </>; })()}
         </section>
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <CardTitle className="text-base">Аналитика месяца</CardTitle>
+              <p className={muted}>Только подтверждённые операции личного контура. Непроверенные списания не включаются в расходы.</p>
+            </div>
+            <Select value={personalMonth} onValueChange={setPersonalMonth}>
+              <SelectTrigger className="w-48" aria-label="Выбери месяц для личных финансов">
+                <SelectValue placeholder="Месяц" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ПОСЛЕДНИЙ">Последний загруженный</SelectItem>
+                {personalMonths.map(m => <SelectItem value={m} key={m}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {activePersonalMonth ? <>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <Metric title="Расходы" value={money(personalPeriodStats.expense)} hint={activePersonalMonth} />
+                <Metric title="Доходы" value={money(personalPeriodStats.income)} hint="Только внешние" />
+                <Metric title="На проверке" value={String(personalPeriodStats.pendingCount)} hint={money(personalPeriodStats.pendingAmount) + ' по модулю'} />
+                <Metric title="Внутренние переводы" value={String(personalPeriodStats.transferCount)} hint="Не расходы" />
+              </div>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Категория подтверждённого расхода</TableHead>
+                  <TableHead className="text-right">За месяц</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>{personalPeriodStats.categories.map(c => <TableRow key={c.category}>
+                  <TableCell>{c.category}</TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">{money(c.amount)}</TableCell>
+                </TableRow>)}</TableBody>
+              </Table>
+              {!personalPeriodStats.categories.length && <p className={muted}>В выбранном месяце подтверждённых расходов по категориям пока нет.</p>}
+            </> : <p className={muted}>Нет загруженных операций личного контура.</p>}
+            <p className={muted}>Месячные лимиты пока не заданы пользователем; система не придумывает плановые суммы.</p>
+          </CardContent>
+        </Card>
         <FinanceGrid data={filtered(ledger.filter(r => r.contour === 'ЛИЧНЫЙ'))} mode="ledger" onEdit={update} />
       </TabsContent>
 

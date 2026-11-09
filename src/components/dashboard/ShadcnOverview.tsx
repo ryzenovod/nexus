@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useSyncExternalStore } from 'react';
 import { 
   CheckCircle2, 
   CalendarDays, 
@@ -25,6 +25,11 @@ import {
 import { NexusTask, Assignee } from '@/types/nexus';
 import { InlineNumber } from '@/components/ui/inline-edit';
 import { useNexusStore } from '@/store/useNexusStore';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { money } from '@/finance/ledger';
+import { getPrivateFinanceSnapshot, subscribePrivateFinance } from '@/finance/privateOverview';
 
 interface ShadcnOverviewProps {
   tasks: NexusTask[];
@@ -52,6 +57,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
   onNavigateTab,
 }) => {
   const { gcalEvents, budget, utilityBills, addTask, updateBudgetBalance, updateBudgetContributions } = useNexusStore();
+  const privateFinance = useSyncExternalStore(subscribePrivateFinance, getPrivateFinanceSnapshot);
   const [selectedRoom, setSelectedRoom] = useState<string>('Все');
   const [taskSearch, setTaskSearch] = useState<string>('');
   const [activeHubTask, setActiveHubTask] = useState<NexusTask | null>(null);
@@ -289,7 +295,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500 rounded-full blur-3xl opacity-20 pointer-events-none transition-opacity group-hover:opacity-35" />
 
           <div className="flex flex-row items-center justify-between pb-3">
-            <span className="text-xs font-medium text-zinc-400">Совместный бюджет пары</span>
+            <span className="text-xs font-medium text-zinc-400">Совместный бюджет · ручной</span>
             <div className="p-2 rounded-full bg-amber-500/10 text-amber-400">
               <CreditCard className="h-4 w-4" />
             </div>
@@ -349,7 +355,7 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20 pointer-events-none transition-opacity group-hover:opacity-35" />
 
           <div className="flex flex-row items-center justify-between pb-3">
-            <span className="text-xs font-medium text-zinc-400">ЖКХ Москвы (Ноябрь)</span>
+            <span className="text-xs font-medium text-zinc-400">ЖКХ · квитанции</span>
             <div className="p-2 rounded-full bg-purple-500/10 text-purple-400">
               <Home className="h-4 w-4" />
             </div>
@@ -364,6 +370,35 @@ export const ShadcnOverview: React.FC<ShadcnOverviewProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Private bank ledger is not the legacy manual joint budget above. */}
+      <Card>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CreditCard className="size-4" /> Банковский реестр
+              <Badge variant="outline">{privateFinance ? 'Локально · открыт' : 'Не загружено'}</Badge>
+            </CardTitle>
+            <p className="text-xs text-zinc-400">Отдельно от ручного бюджета; банковские суммы не передаются в Supabase.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => onNavigateTab('finances')}>Открыть финансы</Button>
+        </CardHeader>
+        <CardContent>
+          {privateFinance ? (
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <div><p className="text-xs text-zinc-400">Подтверждённые личные расходы</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums">{money(privateFinance.personalExpenseKopeks)}</p></div>
+              <div><p className="text-xs text-zinc-400">Совместные расходы</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums">{money(privateFinance.jointExpenseKopeks)}</p></div>
+              <div><p className="text-xs text-zinc-400">Внешние доходы</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums">{money(privateFinance.confirmedIncomeKopeks)}</p></div>
+              <div><p className="text-xs text-zinc-400">Требуют проверки</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums">{privateFinance.pendingCount} операций</p>
+                <p className="text-xs text-zinc-500">{money(privateFinance.pendingAmountKopeks)} по модулю</p></div>
+            </div>
+          ) : <p className="text-sm text-zinc-400">Чтобы показать банковские показатели здесь, открой финансовый реестр в этом сеансе NEXUS и разблокируй его при необходимости. Пока данные не открыты, суммы скрыты; ручной бюджет выше не является банковским балансом.</p>}
+        </CardContent>
+      </Card>
 
       {/* ── 2. 7-DAY WEEK CALENDAR TIMELINE (Zero Borders, Pure Floating Day Capsules) ── */}
       <div id="week-calendar-section" className="nexus-surface p-6 sm:p-8">

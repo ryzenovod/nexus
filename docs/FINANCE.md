@@ -76,3 +76,15 @@ When an encrypted finance ledger is already unlocked, the owner can choose «И�
 ## Potential duplicate imports
 
 Finance > Контроль качества displays groups of distinct transaction IDs sharing the exact observed bank, account, operation date, signed amount in kopeks and normalized merchant description. These are only possible import duplicates: two equal charges from the same merchant on one day may both be legitimate. The app never deletes, merges or silently excludes any of these records. Confirmation requires original bank evidence.
+
+## Private overview metrics
+
+The main Overview page receives **only a minimal in-memory projection** of the currently unlocked finance ledger after its write succeeds. It shows confirmed personal and joint expenses, external income and pending review counts; it never exports the bank rows to Zustand, Supabase or a public route. These figures disappear after locking the vault or reloading the page. If no finance session was opened, Overview shows an unloaded state instead of inventing figures. The historical manually managed couple budget is explicitly labeled as separate from the bank ledger.
+
+## Bank CSV preflight before import
+
+In Finance choose **Импорт CSV**. The app validates the canonical NEXUS ledger CSV or the joint decision CSV first, then shows a preview with the number of input rows, new transactions, repeated IDs, changed decisions, new review items and potential change in confirmed spending. No browser ledger write occurs until the user presses **Подтвердить импорт**. A mismatched bank transaction ID is rejected rather than silently replacing existing bank data. Press **Отмена** to discard the preview. Browser CSV import does not read arbitrary native bank XLSX or PDF files.
+
+## Personal monthly analytics
+
+The **Мои финансы** tab includes a month picker using the existing open-source shadcn/Radix Select and displays verified expense categories, income, flagged items and the number of internal transfers. All totals come from the local ledger and exclude unverified spending. Monthly spending ceilings are deliberately absent until the owner supplies amounts.
