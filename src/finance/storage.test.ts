@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { BankRow } from './ledger';
 import {
   enablePrivateEncryption, LedgerLockedError, loadPrivateLedger, lockPrivateLedger,
-  savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup,
+  savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup, changePrivateLedgerPassword,
   rebuildLockedLedgerFromCSV, exportPreviousEncryptedLedgerBackup, hasPreviousEncryptedLedgerBackup,
 } from './storage';
 
@@ -155,6 +155,41 @@ describe('Private finance encryption', () => {
     lockPrivateLedger();
     await expect(savePrivateLedger([])).rejects.toBeInstanceOf(LedgerLockedError);
     expect(await rawRecord()).toEqual(before);
+  });
+
+  it('changes password while already unlocked, preserving every private row', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'synthetic old password 1234');
+    const before = await rawRecord() as { iv: string; salt: string; data: string };
+    await changePrivateLedgerPassword([fixture], 'synthetic new password 5678');
+    const after = await rawRecord() as { iv: string; salt: string; data: string };
+    expect(after.iv).not.toBe(before.iv);
+    expect(after.salt).not.toBe(before.salt);
+    expect(after.data).not.toBe(before.data);
+    lockPrivateLedger();
+    await expect(unlockPrivateLedger('synthetic old password 1234')).rejects.toThrow('Неверный пароль');
+    await expect(unlockPrivateLedger('synthetic new password 5678')).resolves.toEqual([fixture]);
+  });
+
+  it('blocks password rotation if the vault is locked or the new password is weak', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'synthetic old password 1234');
+    const before = await rawRecord();
+    await expect(changePrivateLedgerPassword([fixture], 'short')).rejects.toThrow('12');
+    expect(await rawRecord()).toEqual(before);
+    lockPrivateLedger();
+    await expect(changePrivateLedgerPassword([fixture], 'synthetic new password 5678')).rejects.toBeInstanceOf(LedgerLockedError);
+    expect(await rawRecord()).toEqual(before);
+  });
+
+  it('aborts password rotation on stale encrypted ciphertext without corrupting it', async () => {
+    await savePrivateLedger([fixture]);
+    await enablePrivateEncryption([fixture], 'synthetic old password 1234');
+    const current = await rawRecord() as Record<string, unknown>;
+    const newer = { ...current, iv: 'different-editor-revision' };
+    await overwriteRawForTest(newer);
+    await expect(changePrivateLedgerPassword([fixture], 'synthetic new password 5678')).rejects.toThrow('другой вкладке');
+    expect(await rawRecord()).toEqual(newer);
   });
 
   it('exports only ciphertext and restores it safely into a clean browser profile', async () => {

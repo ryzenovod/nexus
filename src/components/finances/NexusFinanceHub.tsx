@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShadcnFinances } from './ShadcnFinances';
+import { auditInternalTransferPairs } from '@/finance/transferPairs';
 import {
   applyDecisions, combineMaster, computeStats, CONTOURS, DECISION_COLUMNS, DECISIONS,
   auditLedgerQuality, bankCoverage, editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
@@ -19,7 +20,7 @@ import {
 import {
   LedgerLockedError, enablePrivateEncryption, loadPrivateLedger, lockPrivateLedger,
   savePrivateLedger, unlockPrivateLedger, exportEncryptedLedgerBackup, importEncryptedLedgerBackup,
-  rebuildLockedLedgerFromCSV, exportPreviousEncryptedLedgerBackup, hasPreviousEncryptedLedgerBackup,
+  rebuildLockedLedgerFromCSV, exportPreviousEncryptedLedgerBackup, hasPreviousEncryptedLedgerBackup, changePrivateLedgerPassword,
 } from '@/finance/storage';
 
 type GridMode = 'ledger' | 'joint' | 'review';
@@ -149,6 +150,9 @@ export const NexusFinanceHub: React.FC = () => {
   const [encrypted, setEncrypted] = useState(false);
   const [protecting, setProtecting] = useState(false);
   const [showCsvRecovery, setShowCsvRecovery] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const newPasswordChangeRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordChangeRef = useRef<HTMLInputElement>(null);
   const [replacementFile, setReplacementFile] = useState<File | null>(null);
   const [replacementAcknowledged, setReplacementAcknowledged] = useState(false);
   const [previousArchiveAvailable, setPreviousArchiveAvailable] = useState(false);
@@ -234,6 +238,27 @@ export const NexusFinanceHub: React.FC = () => {
     }
   };
 
+  const changePassword = async () => {
+    setError('');
+    setProtecting(true);
+    try {
+      if (ledgerLocked || !storageAvailable || !encrypted) throw Error('Сначала разблокируй реестр');
+      const chosen = newPasswordChangeRef.current?.value || '';
+      if (chosen.length < 12) throw Error('Пароль должен содержать минимум 12 символов');
+      if (chosen !== confirmPasswordChangeRef.current?.value) throw Error('Новые пароли не совпадают');
+      await ensureSaved();
+      await changePrivateLedgerPassword(ledger, chosen);
+      setShowPasswordChange(false);
+      setMessage('Пароль реестра изменён. Сохрани новый пароль в своём менеджере паролей и выгрузи новую «Шифр. копию». Прежние копии открываются только старым паролем.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (newPasswordChangeRef.current) newPasswordChangeRef.current.value = '';
+      if (confirmPasswordChangeRef.current) confirmPasswordChangeRef.current.value = '';
+      setProtecting(false);
+    }
+  };
+
   const lock = async () => {
     setError('');
     try {
@@ -258,6 +283,7 @@ export const NexusFinanceHub: React.FC = () => {
   const bankList = useMemo(() => sources(ledger), [ledger]);
   const coverage = useMemo(() => bankCoverage(ledger), [ledger]);
   const quality = useMemo(() => auditLedgerQuality(ledger), [ledger]);
+  const transferAudit = useMemo(() => auditInternalTransferPairs(ledger), [ledger]);
 
   const filtered = useCallback((set: BankRow[]) => set.filter(r => {
     const text = (r.counterparty_description + ' ' + r.bank + ' ' + r.category + ' ' + r.transaction_id).toLocaleLowerCase('ru');
@@ -493,6 +519,9 @@ export const NexusFinanceHub: React.FC = () => {
           <>
             <Badge variant="outline" className="border-emerald-800/60 text-emerald-300">AES-GCM · зашифровано</Badge>
             <span className="min-w-52 flex-1 text-xs text-zinc-400">Данные на устройстве зашифрованы. Не забудь пароль — восстановить его нельзя.</span>
+            <Button variant="outline" disabled={protecting} onClick={() => setShowPasswordChange(v => !v)}>
+              <KeyRound className="size-4" /> Изменить пароль
+            </Button>
             <Button variant="outline" disabled={protecting} onClick={() => void lock()}><LockKeyhole className="size-4" /> Заблокировать</Button>
           </>
         ) : (
@@ -504,6 +533,26 @@ export const NexusFinanceHub: React.FC = () => {
         )}
       </div>
     ))}
+    {loaded && !ledgerLocked && encrypted && storageAvailable && showPasswordChange && (
+      <Card>
+        <CardHeader><CardTitle className="text-base">Новый пароль финансового реестра</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-zinc-400">Текущая вкладка уже разблокирована, поэтому старый пароль вводить не нужно. Новый пароль будет действовать после перезагрузки Safari. Запиши его в менеджер паролей; старые зашифрованные резервные копии по-прежнему требуют прежний пароль.</p>
+          <form onSubmit={e => { e.preventDefault(); void changePassword(); }} className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input ref={newPasswordChangeRef} type="password" autoComplete="new-password"
+                aria-label="Новый пароль открытого финансового реестра" placeholder="Новый пароль от 12 символов" />
+              <Input ref={confirmPasswordChangeRef} type="password" autoComplete="new-password"
+                aria-label="Повтор нового пароля реестра" placeholder="Повтори новый пароль" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={protecting}><KeyRound className="size-4" /> Сохранить новый пароль</Button>
+              <Button type="button" variant="outline" onClick={() => setShowPasswordChange(false)}>Отмена</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    )}
     {loaded && previousArchiveAvailable && <div className="flex flex-wrap items-center gap-3">
       <Button type="button" variant="outline" size="sm" onClick={() => void downloadPreviousEncryptedArchive()}>
         <ArrowDownToLine className="size-4" /> Скачать архив прежнего зашифрованного реестра
@@ -521,6 +570,7 @@ export const NexusFinanceHub: React.FC = () => {
         <TabsTrigger value="ledger">Операции</TabsTrigger>
         <TabsTrigger value="sources">Банки</TabsTrigger>
         <TabsTrigger value="quality">Контроль качества</TabsTrigger>
+        <TabsTrigger value="transfers">Связки переводов</TabsTrigger>
         <TabsTrigger value="review">На проверку ({ledger.filter(isPending).length})</TabsTrigger>
         <TabsTrigger value="old">Карты и ЖКХ</TabsTrigger>
       </TabsList>
@@ -682,6 +732,42 @@ export const NexusFinanceHub: React.FC = () => {
             {quality.banks.length===0 && <div className="p-6 text-sm text-zinc-500">Нет импортированных операций. Сначала добавь мастер-CSV.</div>}
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="transfers" className="space-y-5">
+        <div>
+          <h2 className="text-lg font-medium">Сверка внутренних переводов</h2>
+          <p className={muted}>Кандидаты на связку по двум банковским выпискам: точное совпадение суммы до копейки, разные банки, противоположные направления и даты в пределах трёх суток. Только одна возможная пара для каждой стороны. Это не подтверждение факта перевода.</p>
+        </div>
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Metric title="Пар-кандидатов" value={String(transferAudit.pairs.length)} hint="Требуют подтверждения по банковским выпискам" />
+          <Metric title="Неоднозначных списаний" value={String(transferAudit.ambiguousDebits.length)} hint="Несколько возможных встречных поступлений" />
+          <Metric title="Без встречного поступления" value={String(transferAudit.unmatchedDebits.length)} hint="Могут быть отсутствующие выписки" />
+          <Metric title="Без встречного списания" value={String(transferAudit.unmatchedCredits.length)} hint="Сведения об источнике отсутствуют" />
+        </section>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Уникальные пары-кандидаты</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Списание</TableHead>
+                <TableHead>Поступление</TableHead>
+                <TableHead className="text-right">Сумма</TableHead>
+                <TableHead className="text-right">Разница дат</TableHead>
+                <TableHead>Вывод</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>{transferAudit.pairs.map(pair=><TableRow key={pair.debit.transaction_id + ':' + pair.credit.transaction_id}>
+                <TableCell className="text-xs">{pair.debit.bank} · {pair.debit.date}</TableCell>
+                <TableCell className="text-xs">{pair.credit.bank} · {pair.credit.date}</TableCell>
+                <TableCell className="text-right tabular-nums">{money(pair.amountKopeks)}</TableCell>
+                <TableCell className="text-right tabular-nums">{pair.dayGap} дн.</TableCell>
+                <TableCell><Badge variant="outline">Кандидат, не подтверждено</Badge></TableCell>
+              </TableRow>)}</TableBody>
+            </Table>
+            {!transferAudit.pairs.length && <div className="p-6 text-sm text-zinc-400">Нет однозначных пар при текущем неполном покрытии банков. Это не означает, что переводов не было.</div>}
+          </CardContent>
+        </Card>
+        <p className={muted}>В учёте найдено {transferAudit.debitCount} списаний и {transferAudit.creditCount} поступлений с типом INTERNAL_TRANSFER. Поиск ничего не меняет в мастер-реестре, не признаёт доход и не уменьшает расходы. Для окончательного подтверждения нужны обе банковские операции.</p>
       </TabsContent>
 
       <TabsContent value="review" className="space-y-4">

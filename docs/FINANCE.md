@@ -64,3 +64,11 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 - The production shared-state RLS migration was applied and anonymous REST access was blocked on 2026-11-08. Supabase Auth users have not been enrolled; the separate bank ledger must remain local until user-scoped bank-data policies and end-to-end authentication tests exist.
 - No automatic bank API access, payments, card repayments or transfers; read-only parsing and review.
 - Browser persistence is local; export CSV for a durable backup.
+
+## Internal transfer candidate matching
+
+The «Связки переводов» tab uses a read-only one-to-one matcher: opposite signed amounts equal to a kopek, different observed banks, dates within three days. Ambiguous matches and unmatched records are shown separately. No pair changes flow types, owner allocations, spending, income, or settlements. Missing bank statements can produce zero matches without proving no transfers happened.
+
+## Change vault password
+
+When an encrypted finance ledger is already unlocked, the owner can choose «Изменить пароль» to re-encrypt it with a new owner-chosen password (at least 12 characters), without needing the old plaintext phrase. Each rotation creates a new salt and checks that the record has not changed in another tab. After rotation, export a fresh encrypted backup; older backups still require their original password. When locked without the old password, the separate CSV recovery workflow can create a new vault after explicit owner confirmation. A password offered by Safari for supabase.com is NOT the NEXUS finance ledger password.

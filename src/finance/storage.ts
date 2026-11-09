@@ -364,6 +364,38 @@ export async function hasPreviousEncryptedLedgerBackup(): Promise<boolean> {
   return isSealed(await getRaw(RECOVERY_ARCHIVE_KEY));
 }
 
+/**
+ * Re-encrypt an already UNLOCKED ledger using a new user-chosen password.
+ * Does not need the old plaintext passphrase: the current session proves
+ * the ability to decrypt the active encrypted record.
+ * Existing .nexus backups remain bound to their original password.
+ */
+export async function changePrivateLedgerPassword(rows: BankRow[], newPassword: string): Promise<void> {
+  if (!session) throw new LedgerLockedError();
+  if (newPassword.length < 12) throw new Error('Новый пароль должен содержать не менее 12 символов');
+  const previous = session;
+  const expectedRevision = previous.revision;
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const nextState: UnlockSession = {
+    key: await deriveKey(newPassword, salt, ROUNDS),
+    salt,
+    rounds: ROUNDS,
+    revision: '',
+  };
+  const updated = await seal(rows, nextState);
+  // Prevent a stale editor tab from replacing a newer encrypted revision.
+  await checkedWrite(updated, existing => {
+    if (!isSealed(existing)
+        || existing.salt !== toBase64(previous.salt)
+        || existing.rounds !== previous.rounds
+        || existing.iv !== expectedRevision) {
+      throw new Error('Реестр изменился в другой вкладке. Смена пароля остановлена.');
+    }
+  });
+  nextState.revision = updated.iv;
+  session = nextState; // Switch only after committed write.
+}
+
 export function lockPrivateLedger(): void {
   session = null;
 }
