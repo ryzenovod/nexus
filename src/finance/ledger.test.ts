@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   type BankRow, applyDecisions, combineMaster, computeStats, DECISION_COLUMNS,
-  editRow, exportCSV, isPending, kopeks, MASTER_COLUMNS, parseCSV,
+  bankCoverage, editRow, exportCSV, isPending, kopeks, MASTER_COLUMNS, parseCSV,
   parseMaster, reconcileVerifiedMaster, sources,
 } from './ledger';
 
@@ -69,6 +69,72 @@ describe('NEXUS local finance ledger', () => {
   it('never marks a REVIEW_REQUIRED row verified without reclassification', () => {
     const unresolved = { ...sample, flow_type: 'REVIEW_REQUIRED' as const };
     expect(editRow(unresolved, { needs_review: 'Нет' }).needs_review).toBe('Да');
+  });
+
+  it('reopens verification when an approved joint purchase is made undecided again', () => {
+    const approved = editRow(sample, {
+      shared_decision: 'ОБЩАЯ', review_confirmed: 'Да', payer: 'Егор',
+    });
+    expect(approved.needs_review).toBe('Нет');
+    expect(approved.review_confirmed).toBe('Да');
+    expect(computeStats([approved]).expense).toBe(15050);
+    const reverted = editRow(approved, { shared_decision: 'НЕ РЕШЕНО' });
+    expect(reverted.review_confirmed).toBe('Нет');
+    expect(reverted.needs_review).toBe('Да');
+    expect(computeStats([reverted]).expense).toBe(0);
+  });
+
+  it('requires renewed approval when flipping an approved purchase from joint to personal', () => {
+    const approved = editRow(sample, { shared_decision: 'ОБЩАЯ', review_confirmed: 'Да' });
+    const reverted = editRow(approved, { shared_decision: 'ЛИЧНАЯ' });
+    expect(reverted.contour).toBe('ЛИЧНЫЙ');
+    expect(reverted.needs_review).toBe('Да');
+    expect(reverted.review_confirmed).toBe('Нет');
+    const confirmed = editRow(reverted, { review_confirmed: 'Да' });
+    expect(confirmed.needs_review).toBe('Нет');
+  });
+
+  it('does not accept a confirmation without an explicit shared decision', () => {
+    const attempted = editRow(sample, { review_confirmed: 'Да' });
+    expect(attempted.needs_review).toBe('Да');
+    expect(attempted.review_confirmed).toBe('Нет');
+  });
+
+  it('never confirms an expense with unallocated contour by toggling the review flag', () => {
+    const unresolved = editRow(sample, { needs_review: 'Нет' });
+    expect(unresolved.needs_review).toBe('Да');
+    expect(computeStats([unresolved]).expense).toBe(0);
+  });
+
+  it('reopening a CSV decision excludes the previously confirmed expense', () => {
+    const approved = editRow(sample, { shared_decision: 'ОБЩАЯ', review_confirmed: 'Да' });
+    const csv = exportCSV([{ ...approved, shared_decision: 'НЕ РЕШЕНО', review_confirmed: 'Нет' }], DECISION_COLUMNS);
+    const reverted = applyDecisions([approved], csv).rows[0];
+    expect(reverted.needs_review).toBe('Да');
+    expect(reverted.review_confirmed).toBe('Нет');
+    expect(computeStats([reverted]).expense).toBe(0);
+  });
+
+  it('shows missing bank sources with no fabricated transactions or dates', () => {
+    const coverage = bankCoverage([sample]);
+    const sber = coverage.find(r => r.bank === 'Сбер');
+    const vtb = coverage.find(r => r.bank === 'ВТБ');
+    expect(sber).toEqual({ bank: 'Сбер', count: 0, first: null, last: null, imported: false });
+    expect(vtb).toMatchObject({ count: 0, imported: false });
+    expect(coverage.find(r => r.bank === 'Тестовый банк')).toMatchObject({
+      count: 1, imported: true, first: sample.date, last: sample.date,
+    });
+  });
+
+  it('normalizes known bank labels without double-counting accounts', () => {
+    const coverage = bankCoverage([
+      { ...sample, transaction_id: 'sber-1', bank: 'Сбер', date: '2026-10-01' },
+      { ...sample, transaction_id: 'sber-2', bank: 'Сбербанк', date: '2026-11-01' },
+    ]);
+    expect(coverage.find(r => r.bank === 'Сбер')).toEqual({
+      bank: 'Сбер', count: 2, first: '2026-10-01', last: '2026-11-01', imported: true,
+    });
+    expect(coverage.filter(r => r.bank === 'Сбер')).toHaveLength(1);
   });
 
   it('reports observed bank coverage without inventing missing records', () => {

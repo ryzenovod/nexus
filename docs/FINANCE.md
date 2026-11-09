@@ -49,6 +49,13 @@ Implemented in React at **Финансы и ЖКХ → Финансовый ре
 - The private Mac master has more recent reviewed categories than the encrypted Safari ledger. After unlocking Safari, use **Сверить мастер** to merge these decisions. No private bank rows are included in Git.
 - See the private local `~/Documents/NEXUS/STATE.md` for exact balances and reconciliation metrics.
 
+## Banking coverage and safe review operations
+
+- The **Банки** tab lists the six expected bank sources even if a statement is missing. It reports only transaction count and observed first/last dates; missing sources show zero and em dashes instead of invented dates.
+- An imported row does **not** certify full historical coverage. Sources absent from the browser ledger do not contribute to financial totals.
+- Reverting an approved shared purchase to *НЕ РЕШЕНО* or changing an approved decision reopens review. Unallocated expenses cannot become confirmed simply by toggling a status flag.
+- A failed autosave blocks locking, enabling encryption and exporting an encrypted backup until the failure is resolved. While the ledger is still open, use the unencrypted CSV export to preserve any unsaved corrections in a secure location.
+
 ## Boundaries
 
 - The legacy Карты и ЖКХ section uses local Zustand state and is not merged with the bank ledger. To prevent both couple members from seeing personal finances, **legacy transactions and cashback-card metadata are excluded from cloud upload and download**. The shared `nexus_finances` table has no client permissions until user-specific ownership rules exist.

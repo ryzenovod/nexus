@@ -139,17 +139,36 @@ export function applyDecisions(ledger:BankRow[],text:string){
     const next={...prev,payer:payer as Payer,shared_decision:decision as Decision,review_confirmed:confirmed as 'Да'|'Нет',note:x.note??prev.note,category:x.category||prev.category};
     if(decision==='ОБЩАЯ')next.contour='СОВМЕСТНЫЙ';
     if(decision==='ЛИЧНАЯ')next.contour='ЛИЧНЫЙ';
-    if(confirmed==='Да'&&decision!=='НЕ РЕШЕНО')next.needs_review='Нет';
+    if(decision==='НЕ РЕШЕНО'){
+      next.review_confirmed='Нет';
+      if(prev.shared_decision!=='НЕ РЕШЕНО'||next.contour==='НЕ РАСПРЕДЕЛЕНО')next.needs_review='Да';
+    }else if(confirmed==='Да')next.needs_review='Нет';
+    else if(decision!==prev.shared_decision || confirmed!==prev.review_confirmed)next.needs_review='Да';
     map.set(id,next);updated++;
   }
   return {rows:ledger.map(r=>map.get(r.transaction_id)!),updated};
 }
 export function editRow(row:BankRow,patch:Partial<BankRow>):BankRow{
   const next={...row,...patch};
+  const decisionChanged=patch.shared_decision!==undefined&&patch.shared_decision!==row.shared_decision;
+  const flowChanged=patch.flow_type!==undefined&&patch.flow_type!==row.flow_type;
   if(patch.shared_decision==='ОБЩАЯ')next.contour='СОВМЕСТНЫЙ';
   if(patch.shared_decision==='ЛИЧНАЯ')next.contour='ЛИЧНЫЙ';
-  if(next.flow_type==='REVIEW_REQUIRED')next.needs_review='Да';
-  else if(patch.review_confirmed==='Да'&&next.flow_type==='EXPENSE'&&next.shared_decision!=='НЕ РЕШЕНО')next.needs_review='Нет';
+  // Changing a previously confirmed decision explicitly reopens review.
+  if(decisionChanged||flowChanged||(patch.review_confirmed==='Нет'&&row.review_confirmed==='Да')){
+    next.needs_review='Да';
+    next.review_confirmed='Нет';
+  }
+  if(next.flow_type==='REVIEW_REQUIRED'||(next.flow_type==='EXPENSE'&&next.contour==='НЕ РАСПРЕДЕЛЕНО')){
+    next.needs_review='Да';
+    if(patch.review_confirmed==='Да')next.review_confirmed='Нет';
+  }else if(patch.review_confirmed==='Да'&&next.flow_type==='EXPENSE'&&next.shared_decision!=='НЕ РЕШЕНО'){
+    next.needs_review='Нет';
+    next.review_confirmed='Да';
+  }else if(patch.review_confirmed==='Да'){
+    next.review_confirmed='Нет';
+    next.needs_review='Да';
+  }
   return next;
 }
 export function computeStats(rows:BankRow[]){
@@ -177,6 +196,45 @@ export function sources(rows:BankRow[]){
   else{s.count++;if(r.date<s.first)s.first=r.date;if(r.date>s.last)s.last=r.date}}
   return [...map.values()].sort((a,b)=>a.bank.localeCompare(b.bank,'ru'));
 }
+/** Expected sources are configuration, not proof that any bank was imported. */
+const expectedBanks = [
+  { label: 'Альфа-Банк', aliases: ['Альфа-Банк', 'Альфа'] },
+  { label: 'ВБ Банк / WB', aliases: ['ВБ Банк', 'WB Банк', 'WB Кошелёк', 'ВБ Кошелёк'] },
+  { label: 'Т-Банк', aliases: ['Т-Банк', 'Тинькофф', 'Тинькофф Банк'] },
+  { label: 'Сбер', aliases: ['Сбер', 'Сбербанк', 'СберБанк'] },
+  { label: 'ВТБ', aliases: ['ВТБ'] },
+  { label: 'Ozon Банк', aliases: ['Ozon Банк', 'Озон Банк', 'Ozon', 'Озон'] },
+] as const;
+
+export interface SourceCoverage {
+  bank: string;
+  count: number;
+  first: string | null;
+  last: string | null;
+  imported: boolean;
+}
+
+export function bankCoverage(rows:BankRow[]):SourceCoverage[]{
+  const observed=sources(rows);
+  const claimed=new Set<string>();
+  const expected=expectedBanks.map(entry=>{
+    const matches=observed.filter(s=>entry.aliases.some(name=>name.toLocaleLowerCase('ru')===s.bank.toLocaleLowerCase('ru')));
+    for(const item of matches)claimed.add(item.bank);
+    return {
+      bank:entry.label,
+      count:matches.reduce((total,item)=>total+item.count,0),
+      first:matches.length?matches.map(item=>item.first).sort()[0]:null,
+      last:matches.length?matches.map(item=>item.last).sort().at(-1)!:null,
+      imported:matches.length>0,
+    };
+  });
+  return [
+    ...expected,
+    ...observed.filter(item=>!claimed.has(item.bank))
+      .map(item=>({bank:item.bank,count:item.count,first:item.first,last:item.last,imported:true})),
+  ];
+}
+
 export function exportCSV(rows:BankRow[],columns:(keyof BankRow)[]):string{
   const output=[columns.join(',')];
   for(const r of rows)output.push(columns.map(field=>{

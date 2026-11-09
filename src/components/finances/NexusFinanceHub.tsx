@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShadcnFinances } from './ShadcnFinances';
 import {
   applyDecisions, combineMaster, computeStats, CONTOURS, DECISION_COLUMNS, DECISIONS,
-  editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
+  bankCoverage, editRow, exportCSV, FLOWS, isPending, kopeks, MASTER_COLUMNS, money, parseMaster, PAYERS, reconcileVerifiedMaster, sources,
   type BankRow, type Contour,
 } from '@/finance/ledger';
 import {
@@ -155,6 +155,12 @@ export const NexusFinanceHub: React.FC = () => {
   const masterSyncRef = useRef<HTMLInputElement>(null);
   const encryptedBackupRef = useRef<HTMLInputElement>(null);
   const saveChain = useRef<Promise<void>>(Promise.resolve());
+  const saveFailure = useRef<Error | null>(null);
+  const ensureSaved = async () => {
+    await saveChain.current;
+    if (saveFailure.current) throw saveFailure.current;
+  };
+
 
   useEffect(() => {
     let active = true;
@@ -174,15 +180,19 @@ export const NexusFinanceHub: React.FC = () => {
   }, []);
   useEffect(() => {
     if (!loaded || !storageAvailable) return;
-    saveChain.current = saveChain.current.catch(() => {}).then(() => savePrivateLedger(ledger))
-      .catch(e => setError('Автосохранение не удалось. Экспортируй CSV: ' + String(e)));
+    saveChain.current = saveChain.current.then(() => savePrivateLedger(ledger))
+      .then(() => { saveFailure.current = null; })
+      .catch(e => {
+        saveFailure.current = e instanceof Error ? e : new Error(String(e));
+        setError('Автосохранение не удалось. Не закрывай вкладку; экспортируй CSV: ' + saveFailure.current.message);
+      });
   }, [ledger, loaded, storageAvailable]);
 
   const protect = async () => {
     setError('');
     setProtecting(true);
     try {
-      await saveChain.current;
+      await ensureSaved();
       await enablePrivateEncryption(ledger, passwordRef.current?.value || '');
       setEncrypted(true);
       setMessage('Реестр зашифрован AES-GCM. После обновления страницы потребуется пароль.');
@@ -215,7 +225,7 @@ export const NexusFinanceHub: React.FC = () => {
   const lock = async () => {
     setError('');
     try {
-      await saveChain.current;
+      await ensureSaved();
       setStorageAvailable(false);
       lockPrivateLedger();
       setLedger([]);
@@ -234,6 +244,7 @@ export const NexusFinanceHub: React.FC = () => {
   const stats = useMemo(() => computeStats(visible), [visible]);
   const jointStats = useMemo(() => computeStats(ledger.filter(r => r.contour === 'СОВМЕСТНЫЙ')), [ledger]);
   const bankList = useMemo(() => sources(ledger), [ledger]);
+  const coverage = useMemo(() => bankCoverage(ledger), [ledger]);
 
   const filtered = useCallback((set: BankRow[]) => set.filter(r => {
     const text = (r.counterparty_description + ' ' + r.bank + ' ' + r.category + ' ' + r.transaction_id).toLocaleLowerCase('ru');
@@ -281,7 +292,7 @@ export const NexusFinanceHub: React.FC = () => {
     setError('');
     try {
       // Do not export a stale revision while recent edits are still being saved.
-      await saveChain.current;
+      await ensureSaved();
       const contents = await exportEncryptedLedgerBackup();
       const today = new Date().toISOString().slice(0, 10);
       downloadFile('nexus-finance-encrypted-' + today + '.nexus', contents, 'application/json;charset=utf-8');
@@ -298,7 +309,7 @@ export const NexusFinanceHub: React.FC = () => {
         throw Error('Восстановление возможно только в пустом локальном реестре');
       }
       if (file.size > 15 * 1024 * 1024) throw Error('Файл резервной копии слишком большой');
-      await saveChain.current;
+      await ensureSaved();
       await importEncryptedLedgerBackup(await file.text());
       setEncrypted(true);
       setStorageAvailable(false);
@@ -472,18 +483,36 @@ export const NexusFinanceHub: React.FC = () => {
       </TabsContent>
 
       <TabsContent value="sources" className="space-y-4">
-        <h2 className="text-lg font-medium">Покрытие банков</h2>
-        <p className={muted}>Первая и последняя даты относятся только к загруженным строкам; по ним нельзя утверждать полноту выписки.</p>
-        <Card><CardContent className="overflow-x-auto p-0">
-          <table className="w-full min-w-[500px] text-left text-sm">
-            <thead><tr className="border-b border-white/10 text-zinc-400"><th className="p-3">Банк</th><th className="p-3">Операций</th><th className="p-3">Первая</th><th className="p-3">Последняя</th><th className="p-3">Покрытие</th></tr></thead>
-            <tbody>{bankList.map(s => <tr className="border-b border-white/[0.06]" key={s.bank}>
-              <td className="p-3">{s.bank}</td><td className="p-3 tabular-nums">{s.count}</td><td className="p-3">{s.first}</td><td className="p-3">{s.last}</td><td className="p-3 text-zinc-400">Не сверено полностью</td>
-            </tr>)}</tbody>
-          </table>
-          {bankList.length === 0 && <div className="p-6 text-sm text-zinc-500">Импортированных банков пока нет.</div>}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-medium">Покрытие банков</h2>
+            <p className={muted}>Даты получены только из импортированных операций; наличие строк не подтверждает полноту выписки.</p>
+          </div>
+          <span className="text-xs text-zinc-400">
+            {coverage.filter(item=>item.imported).length} из {coverage.length} источников представлены
+          </span>
+        </div>
+        <Card><CardContent className="p-0">
+          <Table className="min-w-[540px] text-sm">
+            <TableHeader><TableRow>
+              <TableHead>Банк / источник</TableHead>
+              <TableHead>Операций</TableHead>
+              <TableHead>Первая дата</TableHead>
+              <TableHead>Последняя дата</TableHead>
+              <TableHead>Статус</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>{coverage.map(item=><TableRow key={item.bank}>
+              <TableCell className="font-medium">{item.bank}</TableCell>
+              <TableCell className="tabular-nums">{item.count}</TableCell>
+              <TableCell className="tabular-nums">{item.first ?? '—'}</TableCell>
+              <TableCell className="tabular-nums">{item.last ?? '—'}</TableCell>
+              <TableCell className={item.imported?'text-zinc-300':'text-zinc-500'}>
+                {item.imported?'Строки загружены':'Нет загруженных строк'}
+              </TableCell>
+            </TableRow>)}</TableBody>
+          </Table>
         </CardContent></Card>
-        <p className={muted}>Неимпортированные источники из плана NEXUS: Сбер, ВТБ, Ozon — до появления их операций в реестре.</p>
+        <p className={muted}>Список ожидаемых источников — контроль загрузки, а не подтверждение наличия счетов или их остатков. Отсутствующие банки не участвуют в сводных суммах.</p>
       </TabsContent>
 
       <TabsContent value="review" className="space-y-4">

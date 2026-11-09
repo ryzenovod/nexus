@@ -62,6 +62,14 @@ describe('NEXUS public build security contract', () => {
     }
   });
 
+  it('checks autosave failures before locking or exporting encrypted backups', () => {
+    const component = read('src/components/finances/NexusFinanceHub.tsx');
+    expect(component).toContain('const saveFailure = useRef<Error | null>(null)');
+    expect(component).toContain('if (saveFailure.current) throw saveFailure.current');
+    expect(component).toContain('await ensureSaved()');
+    expect(component).toContain('Не закрывай вкладку');
+  });
+
   it('does not include public write bridge or browser bot token requests', () => {
     const server = read('vite.config.ts');
     expect(server).toContain("host: '127.0.0.1'");
